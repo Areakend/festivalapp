@@ -32,6 +32,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    flowType: 'pkce', // required for mobile OAuth (Google) via deep links
   },
 });
 
