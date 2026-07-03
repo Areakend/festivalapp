@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { colors, radii, spacing, typography } from '@/theme';
@@ -11,7 +12,7 @@ interface FestivalCardProps {
   stats?: FestivalCommunityStats;
 }
 
-/** Catalog card: cover placeholder, name, location, rating and DJ Mag badge. */
+/** Catalog card: cover photo (or letter placeholder), name, location, rating and DJ Mag badge. */
 export function FestivalCard({ festival, stats }: FestivalCardProps) {
   const router = useRouter();
 
@@ -22,9 +23,17 @@ export function FestivalCard({ festival, stats }: FestivalCardProps) {
         router.push({ pathname: '/festival/[slug]', params: { slug: festival.slug } })
       }
     >
-      {/* Cover placeholder until real images land (M5 asset pass) */}
       <View style={styles.cover}>
-        <Text style={styles.coverLetter}>{festival.name.charAt(0)}</Text>
+        {festival.cover_image_url ? (
+          <Image
+            source={{ uri: festival.cover_image_url }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            transition={150}
+          />
+        ) : (
+          <Text style={styles.coverLetter}>{festival.name.charAt(0)}</Text>
+        )}
         {festival.best_djmag_rank != null && (
           <View style={styles.rankBadge}>
             <Ionicons name="trophy" size={12} color={colors.rating} />
