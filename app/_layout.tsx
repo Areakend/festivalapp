@@ -62,6 +62,7 @@ export default function RootLayout() {
           {/* Route guards: signed-in users get the tabs, others the auth flow. */}
           <Stack.Protected guard={!!session}>
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="festival/[slug]" />
           </Stack.Protected>
           <Stack.Protected guard={!session}>
             <Stack.Screen name="(auth)" />
