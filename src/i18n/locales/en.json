@@ -1,0 +1,133 @@
+{
+  "common": {
+    "appName": "Festiq",
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "done": "Done",
+    "search": "Search",
+    "seeAll": "See all",
+    "comingSoon": "Coming soon"
+  },
+  "tabs": {
+    "home": "Home",
+    "discover": "Discover",
+    "rankings": "Rankings",
+    "djmag": "Top 100",
+    "profile": "Profile"
+  },
+  "onboarding": {
+    "tagline": "Track every beat.",
+    "subtitle": "Log your festivals, climb the DJ Mag Top 100, and turn any lineup into a playlist.",
+    "getStarted": "Get started"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset password",
+    "resetSent": "Check your inbox for the reset link",
+    "signInWithGoogle": "Continue with Google",
+    "signOut": "Sign out",
+    "noAccount": "No account yet? Sign up",
+    "haveAccount": "Already have an account? Sign in",
+    "invalidEmail": "Please enter a valid email",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordMismatch": "Passwords do not match"
+  },
+  "festival": {
+    "lineup": "Lineup",
+    "stats": "Stats",
+    "reviews": "Reviews",
+    "capacity": "Capacity",
+    "stages": "Stages",
+    "genres": "Genres",
+    "website": "Official website",
+    "attended": "Attended",
+    "planned": "Planned",
+    "wishlist": "Wishlist",
+    "favorite": "Favorite",
+    "markAttended": "Mark as attended",
+    "addPlanned": "Mark as planned",
+    "addWishlist": "Add to wishlist",
+    "rateReview": "Rate & review",
+    "generatePlaylist": "Generate playlist",
+    "communityRating": "Community rating",
+    "ratingsCount": "{{count}} ratings",
+    "djmagRank": "DJ Mag rank",
+    "bestRank": "Best rank ever",
+    "rankingHistory": "Ranking history",
+    "editionYear": "Edition {{year}}"
+  },
+  "review": {
+    "yourRating": "Your rating",
+    "comment": "Comment (optional)",
+    "lineupRating": "Lineup",
+    "productionRating": "Production",
+    "soundRating": "Sound quality",
+    "organizationRating": "Organization",
+    "atmosphereRating": "Atmosphere",
+    "valueRating": "Value for money",
+    "submit": "Submit review",
+    "editReview": "Edit review",
+    "sortNewest": "Newest",
+    "sortHighest": "Highest rated"
+  },
+  "profile": {
+    "myFestivals": "My festivals",
+    "festivalsAttended": "Festivals attended",
+    "countriesVisited": "Countries visited",
+    "avgRatingGiven": "Average rating given",
+    "topRated": "Your top rated",
+    "editProfile": "Edit profile",
+    "displayName": "Display name",
+    "country": "Country",
+    "language": "Language",
+    "favoriteGenres": "Favorite genres",
+    "spotifyConnected": "Spotify connected",
+    "spotifyNotConnected": "Spotify not connected",
+    "connectSpotify": "Connect Spotify"
+  },
+  "djmag": {
+    "title": "DJ Mag Top 100",
+    "progress": "You have attended {{count}}/100 DJ Mag festivals",
+    "attendedOnly": "Attended",
+    "notAttended": "Not attended",
+    "filterCountry": "Country"
+  },
+  "rankings": {
+    "title": "Community rankings",
+    "global": "Global",
+    "byGenre": "By genre",
+    "byCountry": "By country",
+    "confidence": "Based on {{count}} ratings"
+  },
+  "spotify": {
+    "generating": "Building your playlist…",
+    "artistsFound": "Artists in lineup",
+    "artistsMatched": "Matched on Spotify",
+    "tracksAdded": "Tracks added",
+    "skippedArtists": "Skipped artists",
+    "openInSpotify": "Open in Spotify",
+    "previewPlaylist": "Preview playlist",
+    "connectPrompt": "Connect Spotify to save this playlist to your account"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "account": "Account",
+    "about": "About"
+  },
+  "empty": {
+    "noFestivals": "No festivals yet",
+    "noReviews": "No reviews yet — be the first!",
+    "noResults": "No results for your search"
+  }
+}

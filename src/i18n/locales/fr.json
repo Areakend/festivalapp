@@ -1,0 +1,133 @@
+{
+  "common": {
+    "appName": "Festiq",
+    "loading": "Chargement…",
+    "error": "Une erreur est survenue",
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "done": "Terminé",
+    "search": "Rechercher",
+    "seeAll": "Tout voir",
+    "comingSoon": "Bientôt disponible"
+  },
+  "tabs": {
+    "home": "Accueil",
+    "discover": "Découvrir",
+    "rankings": "Classements",
+    "djmag": "Top 100",
+    "profile": "Profil"
+  },
+  "onboarding": {
+    "tagline": "Vis chaque beat.",
+    "subtitle": "Note tes festivals, grimpe dans le DJ Mag Top 100 et transforme chaque lineup en playlist.",
+    "getStarted": "Commencer"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "resetSent": "Consulte ta boîte mail pour le lien de réinitialisation",
+    "signInWithGoogle": "Continuer avec Google",
+    "signOut": "Se déconnecter",
+    "noAccount": "Pas encore de compte ? Inscris-toi",
+    "haveAccount": "Déjà un compte ? Connecte-toi",
+    "invalidEmail": "Adresse e-mail invalide",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
+    "passwordMismatch": "Les mots de passe ne correspondent pas"
+  },
+  "festival": {
+    "lineup": "Lineup",
+    "stats": "Statistiques",
+    "reviews": "Avis",
+    "capacity": "Capacité",
+    "stages": "Scènes",
+    "genres": "Genres",
+    "website": "Site officiel",
+    "attended": "Fait",
+    "planned": "Prévu",
+    "wishlist": "Wishlist",
+    "favorite": "Favori",
+    "markAttended": "Marquer comme fait",
+    "addPlanned": "Marquer comme prévu",
+    "addWishlist": "Ajouter à la wishlist",
+    "rateReview": "Noter et commenter",
+    "generatePlaylist": "Générer la playlist",
+    "communityRating": "Note de la communauté",
+    "ratingsCount": "{{count}} notes",
+    "djmagRank": "Classement DJ Mag",
+    "bestRank": "Meilleur classement",
+    "rankingHistory": "Historique du classement",
+    "editionYear": "Édition {{year}}"
+  },
+  "review": {
+    "yourRating": "Ta note",
+    "comment": "Commentaire (optionnel)",
+    "lineupRating": "Lineup",
+    "productionRating": "Production",
+    "soundRating": "Qualité sonore",
+    "organizationRating": "Organisation",
+    "atmosphereRating": "Ambiance",
+    "valueRating": "Rapport qualité-prix",
+    "submit": "Publier l'avis",
+    "editReview": "Modifier l'avis",
+    "sortNewest": "Plus récents",
+    "sortHighest": "Mieux notés"
+  },
+  "profile": {
+    "myFestivals": "Mes festivals",
+    "festivalsAttended": "Festivals faits",
+    "countriesVisited": "Pays visités",
+    "avgRatingGiven": "Note moyenne donnée",
+    "topRated": "Tes mieux notés",
+    "editProfile": "Modifier le profil",
+    "displayName": "Nom affiché",
+    "country": "Pays",
+    "language": "Langue",
+    "favoriteGenres": "Genres préférés",
+    "spotifyConnected": "Spotify connecté",
+    "spotifyNotConnected": "Spotify non connecté",
+    "connectSpotify": "Connecter Spotify"
+  },
+  "djmag": {
+    "title": "DJ Mag Top 100",
+    "progress": "Tu as fait {{count}}/100 festivals du DJ Mag",
+    "attendedOnly": "Faits",
+    "notAttended": "Pas encore faits",
+    "filterCountry": "Pays"
+  },
+  "rankings": {
+    "title": "Classement communautaire",
+    "global": "Mondial",
+    "byGenre": "Par genre",
+    "byCountry": "Par pays",
+    "confidence": "Basé sur {{count}} notes"
+  },
+  "spotify": {
+    "generating": "Création de ta playlist…",
+    "artistsFound": "Artistes du lineup",
+    "artistsMatched": "Trouvés sur Spotify",
+    "tracksAdded": "Titres ajoutés",
+    "skippedArtists": "Artistes ignorés",
+    "openInSpotify": "Ouvrir dans Spotify",
+    "previewPlaylist": "Aperçu de la playlist",
+    "connectPrompt": "Connecte Spotify pour enregistrer cette playlist sur ton compte"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "account": "Compte",
+    "about": "À propos"
+  },
+  "empty": {
+    "noFestivals": "Aucun festival pour l'instant",
+    "noReviews": "Pas encore d'avis — sois le premier !",
+    "noResults": "Aucun résultat pour ta recherche"
+  }
+}

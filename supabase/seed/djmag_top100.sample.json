@@ -1,0 +1,20 @@
+{
+  "$comment": "Curated DJ Mag Top 100 Festivals dataset. DJ Mag has no public API, so this list is maintained manually. Extend to 100 entries following this exact shape, then import with: npx tsx scripts/import-djmag.ts (TODO: script in phase 2 — for now entries can be inserted via seed.sql pattern). 'slug' must match festivals.slug; unknown festivals are created on import.",
+  "year": 2025,
+  "entries": [
+    { "rank": 1, "slug": "tomorrowland", "name": "Tomorrowland", "country": "BE" },
+    { "rank": 2, "slug": "edc-las-vegas", "name": "EDC Las Vegas", "country": "US" },
+    { "rank": 3, "slug": "ultra-miami", "name": "Ultra Music Festival", "country": "US" },
+    { "rank": 4, "slug": "creamfields", "name": "Creamfields", "country": "GB" },
+    { "rank": 5, "slug": "untold", "name": "Untold", "country": "RO" },
+    { "rank": 6, "slug": "electric-love", "name": "Electric Love", "country": "AT" },
+    { "rank": 7, "slug": "world-club-dome", "name": "World Club Dome", "country": "DE" },
+    { "rank": 8, "slug": "awakenings", "name": "Awakenings", "country": "NL" },
+    { "rank": 9, "slug": "neversea", "name": "Neversea", "country": "RO" },
+    { "rank": 10, "slug": "balaton-sound", "name": "Balaton Sound", "country": "HU" },
+    { "rank": 12, "slug": "exit", "name": "EXIT Festival", "country": "RS" },
+    { "rank": 15, "slug": "parookaville", "name": "Parookaville", "country": "DE" },
+    { "rank": 18, "slug": "mysteryland", "name": "Mysteryland", "country": "NL" },
+    { "rank": 20, "slug": "defqon-1", "name": "Defqon.1", "country": "NL" }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "common": {
+    "appName": "Festiq",
+    "loading": "Cargando…",
+    "error": "Algo salió mal",
+    "retry": "Reintentar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "done": "Listo",
+    "search": "Buscar",
+    "seeAll": "Ver todo",
+    "comingSoon": "Próximamente"
+  },
+  "tabs": {
+    "home": "Inicio",
+    "discover": "Descubrir",
+    "rankings": "Rankings",
+    "djmag": "Top 100",
+    "profile": "Perfil"
+  },
+  "onboarding": {
+    "tagline": "Sigue cada beat.",
+    "subtitle": "Registra tus festivales, sube en el DJ Mag Top 100 y convierte cualquier lineup en una playlist.",
+    "getStarted": "Empezar"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signUp": "Registrarse",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer contraseña",
+    "resetSent": "Revisa tu correo para el enlace de restablecimiento",
+    "signInWithGoogle": "Continuar con Google",
+    "signOut": "Cerrar sesión",
+    "noAccount": "¿No tienes cuenta? Regístrate",
+    "haveAccount": "¿Ya tienes cuenta? Inicia sesión",
+    "invalidEmail": "Introduce un correo válido",
+    "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+    "passwordMismatch": "Las contraseñas no coinciden"
+  },
+  "festival": {
+    "lineup": "Lineup",
+    "stats": "Estadísticas",
+    "reviews": "Reseñas",
+    "capacity": "Capacidad",
+    "stages": "Escenarios",
+    "genres": "Géneros",
+    "website": "Sitio oficial",
+    "attended": "Asistido",
+    "planned": "Planeado",
+    "wishlist": "Lista de deseos",
+    "favorite": "Favorito",
+    "markAttended": "Marcar como asistido",
+    "addPlanned": "Marcar como planeado",
+    "addWishlist": "Añadir a la lista de deseos",
+    "rateReview": "Valorar y reseñar",
+    "generatePlaylist": "Generar playlist",
+    "communityRating": "Valoración de la comunidad",
+    "ratingsCount": "{{count}} valoraciones",
+    "djmagRank": "Puesto DJ Mag",
+    "bestRank": "Mejor puesto histórico",
+    "rankingHistory": "Historial de ranking",
+    "editionYear": "Edición {{year}}"
+  },
+  "review": {
+    "yourRating": "Tu valoración",
+    "comment": "Comentario (opcional)",
+    "lineupRating": "Lineup",
+    "productionRating": "Producción",
+    "soundRating": "Calidad de sonido",
+    "organizationRating": "Organización",
+    "atmosphereRating": "Ambiente",
+    "valueRating": "Relación calidad-precio",
+    "submit": "Publicar reseña",
+    "editReview": "Editar reseña",
+    "sortNewest": "Más recientes",
+    "sortHighest": "Mejor valoradas"
+  },
+  "profile": {
+    "myFestivals": "Mis festivales",
+    "festivalsAttended": "Festivales asistidos",
+    "countriesVisited": "Países visitados",
+    "avgRatingGiven": "Valoración media dada",
+    "topRated": "Tus mejor valorados",
+    "editProfile": "Editar perfil",
+    "displayName": "Nombre visible",
+    "country": "País",
+    "language": "Idioma",
+    "favoriteGenres": "Géneros favoritos",
+    "spotifyConnected": "Spotify conectado",
+    "spotifyNotConnected": "Spotify no conectado",
+    "connectSpotify": "Conectar Spotify"
+  },
+  "djmag": {
+    "title": "DJ Mag Top 100",
+    "progress": "Has asistido a {{count}}/100 festivales del DJ Mag",
+    "attendedOnly": "Asistidos",
+    "notAttended": "No asistidos",
+    "filterCountry": "País"
+  },
+  "rankings": {
+    "title": "Ranking de la comunidad",
+    "global": "Global",
+    "byGenre": "Por género",
+    "byCountry": "Por país",
+    "confidence": "Basado en {{count}} valoraciones"
+  },
+  "spotify": {
+    "generating": "Creando tu playlist…",
+    "artistsFound": "Artistas en el lineup",
+    "artistsMatched": "Encontrados en Spotify",
+    "tracksAdded": "Canciones añadidas",
+    "skippedArtists": "Artistas omitidos",
+    "openInSpotify": "Abrir en Spotify",
+    "previewPlaylist": "Vista previa de la playlist",
+    "connectPrompt": "Conecta Spotify para guardar esta playlist en tu cuenta"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "language": "Idioma",
+    "account": "Cuenta",
+    "about": "Acerca de"
+  },
+  "empty": {
+    "noFestivals": "Aún no hay festivales",
+    "noReviews": "Aún no hay reseñas — ¡sé el primero!",
+    "noResults": "Sin resultados para tu búsqueda"
+  }
+}
