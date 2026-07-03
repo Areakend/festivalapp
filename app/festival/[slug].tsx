@@ -12,9 +12,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { useState } from 'react';
+
 import { Chip } from '@/components/ui/Chip';
 import { Button } from '@/components/ui/Button';
+import { ReviewCard } from '@/components/review/ReviewCard';
 import { useFestivalDetail, useMyStatuses, useToggleStatus } from '@/features/festivals/api';
+import { useFestivalReviews, useMyReview, type ReviewSort } from '@/features/reviews/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag, formatCompact } from '@/utils/format';
 import type { FestivalStatus } from '@/types/domain';
@@ -32,8 +36,11 @@ export default function FestivalDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  const [reviewSort, setReviewSort] = useState<ReviewSort>('newest');
   const { data, isLoading } = useFestivalDetail(slug);
   const { data: myStatuses } = useMyStatuses();
+  const { data: reviews } = useFestivalReviews(data?.festival.id, reviewSort);
+  const { data: myReview } = useMyReview(data?.festival.id);
   const toggleStatus = useToggleStatus();
 
   if (isLoading || !data) {
@@ -136,13 +143,35 @@ export default function FestivalDetailScreen() {
           </>
         )}
 
-        {/* Reviews (M4) + playlist (M5) entry points */}
+        {/* Reviews */}
+        <Text style={styles.sectionTitle}>{t('festival.reviews')}</Text>
+        <View style={styles.sortRow}>
+          <Chip
+            label={t('review.sortNewest')}
+            active={reviewSort === 'newest'}
+            onPress={() => setReviewSort('newest')}
+          />
+          <Chip
+            label={t('review.sortHighest')}
+            active={reviewSort === 'highest'}
+            onPress={() => setReviewSort('highest')}
+          />
+        </View>
+        {reviews && reviews.length > 0 ? (
+          <View style={styles.reviewList}>
+            {reviews.map((review) => (
+              <ReviewCard key={review.id} review={review} />
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.noReviews}>{t('empty.noReviews')}</Text>
+        )}
+
+        {/* Actions */}
         <View style={styles.actions}>
           <Button
-            label={`${t('festival.rateReview')} — ${t('common.comingSoon')}`}
-            variant="secondary"
-            onPress={() => {}}
-            disabled
+            label={myReview ? t('review.editReview') : t('festival.rateReview')}
+            onPress={() => router.push({ pathname: '/review/[slug]', params: { slug } })}
           />
           <Button
             label={`${t('festival.generatePlaylist')} — ${t('common.comingSoon')}`}
@@ -297,4 +326,11 @@ const styles = StyleSheet.create({
     color: colors.rating,
   },
   actions: { gap: spacing.sm, marginTop: spacing.lg },
+  sortRow: { flexDirection: 'row', gap: spacing.sm },
+  reviewList: { gap: spacing.md },
+  noReviews: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.sm,
+    color: colors.textMuted,
+  },
 });
