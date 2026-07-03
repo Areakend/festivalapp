@@ -11,6 +11,7 @@ import { useSessionStore } from '@/features/auth/session-store';
 import { useFestivals, useMyStatuses } from '@/features/festivals/api';
 import { useMyReviews } from '@/features/reviews/api';
 import { useDjMagTop100, useMyProfile, useUpdateProfile } from '@/features/profile/api';
+import { useSpotifyConnect, useSpotifyStatus } from '@/features/spotify/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { colors, radii, spacing, typography } from '@/theme';
 
@@ -33,6 +34,8 @@ export default function ProfileScreen() {
   const { data: myReviews } = useMyReviews();
   const { data: djmag } = useDjMagTop100();
   const updateProfile = useUpdateProfile();
+  const { data: spotifyStatus } = useSpotifyStatus();
+  const { connect: connectSpotify, ready: spotifyReady } = useSpotifyConnect();
 
   const [name, setName] = useState('');
   useEffect(() => {
@@ -137,6 +140,22 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {/* Spotify */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Spotify</Text>
+        <Text style={spotifyStatus ? styles.spotifyOn : styles.spotifyOff}>
+          {spotifyStatus ? t('profile.spotifyConnected') : t('profile.spotifyNotConnected')}
+        </Text>
+        {!spotifyStatus && (
+          <Button
+            label={t('profile.connectSpotify')}
+            variant="secondary"
+            onPress={() => void connectSpotify()}
+            disabled={!spotifyReady}
+          />
+        )}
+      </View>
+
       <Button label={t('auth.signOut')} variant="secondary" onPress={() => void signOut()} />
     </ScrollView>
   );
@@ -212,4 +231,14 @@ const styles = StyleSheet.create({
     color: colors.rating,
   },
   langRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  spotifyOn: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.spotify,
+  },
+  spotifyOff: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.sm,
+    color: colors.textMuted,
+  },
 });
