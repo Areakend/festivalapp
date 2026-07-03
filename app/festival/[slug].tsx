@@ -10,6 +10,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { useState } from 'react';
@@ -68,7 +69,16 @@ export default function FestivalDetailScreen() {
         <Pressable style={styles.back} onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.coverLetter}>{festival.name.charAt(0)}</Text>
+        {festival.cover_image_url ? (
+          <Image
+            source={{ uri: festival.cover_image_url }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            transition={150}
+          />
+        ) : (
+          <Text style={styles.coverLetter}>{festival.name.charAt(0)}</Text>
+        )}
       </View>
 
       <View style={styles.body}>
