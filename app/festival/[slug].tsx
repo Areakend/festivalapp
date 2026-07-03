@@ -174,10 +174,10 @@ export default function FestivalDetailScreen() {
             onPress={() => router.push({ pathname: '/review/[slug]', params: { slug } })}
           />
           <Button
-            label={`${t('festival.generatePlaylist')} — ${t('common.comingSoon')}`}
+            label={t('festival.generatePlaylist')}
             variant="secondary"
-            onPress={() => {}}
-            disabled
+            onPress={() => router.push({ pathname: '/playlist/[slug]', params: { slug } })}
+            disabled={data.editions.length === 0}
           />
           {festival.official_website && (
             <Button
