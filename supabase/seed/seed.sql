@@ -2,8 +2,8 @@
 -- Festiq — sample seed data
 -- 12 well-known festivals, 2026 editions, DJ Mag rankings and a
 -- sample lineup for Tomorrowland 2026 (for playlist generation).
--- The full DJ Mag Top 100 is curated in djmag_top100.sample.json
--- and imported with scripts/import-djmag (see docs).
+-- The full DJ Mag Top 100 (2024-2026) is seeded by djmag_top100.sql
+
 -- ============================================================
 
 insert into public.festivals
@@ -56,22 +56,8 @@ select id, 2026,
   slug = 'tomorrowland'
 from public.festivals;
 
--- ---------- DJ Mag rankings (sample; full list via import script) ----------
-insert into public.djmag_rankings (festival_id, year, rank_position)
-select f.id, r.year, r.rank
-from (values
-  ('tomorrowland', 2025, 1), ('tomorrowland', 2024, 1),
-  ('edc-las-vegas', 2025, 2), ('edc-las-vegas', 2024, 3),
-  ('ultra-miami', 2025, 3), ('ultra-miami', 2024, 2),
-  ('creamfields', 2025, 4), ('creamfields', 2024, 5),
-  ('untold', 2025, 5), ('untold', 2024, 4),
-  ('awakenings', 2025, 8), ('awakenings', 2024, 9),
-  ('exit', 2025, 12), ('exit', 2024, 11),
-  ('parookaville', 2025, 15), ('parookaville', 2024, 17),
-  ('mysteryland', 2025, 18), ('mysteryland', 2024, 16),
-  ('defqon-1', 2025, 20), ('defqon-1', 2024, 22)
-) as r(slug, year, rank)
-join public.festivals f on f.slug = r.slug;
+-- DJ Mag rankings live in djmag_top100.sql (real 2024/2025/2026 lists,
+-- fetched from djmag.com) — run that file after this one.
 
 -- ---------- sample artists + Tomorrowland 2026 lineup ----------
 insert into public.artists (name, spotify_artist_id, genres) values
