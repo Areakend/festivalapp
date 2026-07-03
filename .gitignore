@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# native builds
+ios/
+android/
+
+# environment — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# misc
+*.log
+.DS_Store
+*.tsbuildinfo
+
+# Supabase local dev
+supabase/.temp/
+supabase/.branches/

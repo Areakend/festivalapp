@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Festiq",
+    "slug": "festiq",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "festiq",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "backgroundColor": "#0B0B14",
+    "ios": {
+      "bundleIdentifier": "com.areakend.festiq",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.areakend.festiq",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0B14"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-localization",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
