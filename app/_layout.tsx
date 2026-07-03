@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   useFonts,
@@ -16,8 +17,10 @@ import {
 
 import '@/i18n'; // side-effect: initializes i18next with device language
 import { colors } from '@/theme';
+import { initSessionListener, useSessionStore } from '@/features/auth/session-store';
 
 SplashScreen.preventAutoHideAsync();
+initSessionListener();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +32,7 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
+  const { session, initialized } = useSessionStore();
   const [fontsLoaded] = useFonts({
     SpaceGrotesk_500Medium,
     SpaceGrotesk_700Bold,
@@ -37,21 +41,33 @@ export default function RootLayout() {
     Inter_600SemiBold,
   });
 
-  useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded]);
+  const ready = fontsLoaded && initialized;
 
-  if (!fontsLoaded) return null;
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
+
+  if (!ready) return null;
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-        }}
-      />
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <StatusBar style="light" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        >
+          {/* Route guards: signed-in users get the tabs, others the auth flow. */}
+          <Stack.Protected guard={!!session}>
+            <Stack.Screen name="(tabs)" />
+          </Stack.Protected>
+          <Stack.Protected guard={!session}>
+            <Stack.Screen name="(auth)" />
+          </Stack.Protected>
+        </Stack>
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }
