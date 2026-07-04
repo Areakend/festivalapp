@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/Button';
@@ -24,6 +25,7 @@ const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
 
 export default function ProfileScreen() {
   const { t, i18n } = useTranslation();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const session = useSessionStore((s) => s.session);
 
@@ -88,7 +90,7 @@ export default function ProfileScreen() {
         <StatBox value={String(stats.attended)} label={t('profile.festivalsAttended')} />
         <StatBox value={String(stats.countries)} label={t('profile.countriesVisited')} />
         <StatBox
-          value={stats.avgRating != null ? `★ ${stats.avgRating.toFixed(1)}` : '–'}
+          value={stats.avgRating != null ? `${stats.avgRating.toFixed(1)}/20` : '–'}
           label={t('profile.avgRatingGiven')}
         />
         <StatBox value={`${stats.djmagCount}/100`} label={t('djmag.title')} />
@@ -137,7 +139,12 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <Button label={t('auth.signOut')} variant="secondary" onPress={() => void signOut()} />
+      <Button
+        label={t('friends.title')}
+        variant="secondary"
+        onPress={() => router.push('/friends')}
+      />
+      <Button label={t('auth.signOut')} variant="ghost" onPress={() => void signOut()} />
     </ScrollView>
   );
 }

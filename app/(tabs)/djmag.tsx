@@ -169,7 +169,7 @@ function Top100Row({
       {myRating != null && (
         <View style={styles.myRating}>
           <Ionicons name="star" size={12} color={colors.rating} />
-          <Text style={styles.myRatingText}>{myRating.toFixed(1)}</Text>
+          <Text style={styles.myRatingText}>{Number(myRating).toFixed(0)}/20</Text>
         </View>
       )}
       <Ionicons

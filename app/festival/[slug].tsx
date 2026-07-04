@@ -3,6 +3,7 @@ import {
   Linking,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -13,10 +14,11 @@ import { useTranslation } from 'react-i18next';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Chip } from '@/components/ui/Chip';
 import { Button } from '@/components/ui/Button';
+import { RatingBar } from '@/components/ui/RatingBar';
 import { ReviewCard } from '@/components/review/ReviewCard';
 import { useFestivalDetail, useMyStatuses, useToggleStatus } from '@/features/festivals/api';
 import { useFestivalReviews, useMyReview, type ReviewSort } from '@/features/reviews/api';
@@ -43,6 +45,30 @@ export default function FestivalDetailScreen() {
   const { data: reviews } = useFestivalReviews(data?.festival.id, reviewSort);
   const { data: myReview } = useMyReview(data?.festival.id);
   const toggleStatus = useToggleStatus();
+
+  // Average of each sub-rating across all community reviews (only rated ones).
+  const subAverages = useMemo(() => {
+    const defs = [
+      { key: 'lineup_rating', label: t('review.lineupRating') },
+      { key: 'production_rating', label: t('review.productionRating') },
+      { key: 'sound_rating', label: t('review.soundRating') },
+      { key: 'organization_rating', label: t('review.organizationRating') },
+      { key: 'atmosphere_rating', label: t('review.atmosphereRating') },
+      { key: 'value_rating', label: t('review.valueRating') },
+    ] as const;
+    return defs
+      .map(({ key, label }) => {
+        const values = (reviews ?? [])
+          .map((r) => r[key])
+          .filter((v): v is number => v != null);
+        return {
+          key,
+          label,
+          value: values.length ? values.reduce((sum, v) => sum + v, 0) / values.length : 0,
+        };
+      })
+      .filter((entry) => entry.value > 0);
+  }, [reviews, t]);
 
   if (isLoading || !data) {
     return (
@@ -121,7 +147,7 @@ export default function FestivalDetailScreen() {
         <View style={styles.statsGrid}>
           <StatBox
             label={t('festival.communityRating')}
-            value={stats && stats.rating_count > 0 ? `★ ${stats.avg_rating.toFixed(1)}` : '–'}
+            value={stats && stats.rating_count > 0 ? `${stats.avg_rating.toFixed(1)}/20` : '–'}
             hint={stats ? t('festival.ratingsCount', { count: stats.rating_count }) : undefined}
           />
           <StatBox
@@ -134,6 +160,18 @@ export default function FestivalDetailScreen() {
             value={festival.capacity != null ? formatCompact(festival.capacity, i18n.language) : '–'}
           />
         </View>
+
+        {/* Rating breakdown — community averages per category */}
+        {subAverages.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>{t('review.breakdown')}</Text>
+            <View style={styles.breakdownCard}>
+              {subAverages.map(({ key, label, value }) => (
+                <RatingBar key={key} label={label} value={value} />
+              ))}
+            </View>
+          </>
+        )}
 
         {/* Description */}
         {festival.description && <Text style={styles.description}>{festival.description}</Text>}
@@ -188,6 +226,15 @@ export default function FestivalDetailScreen() {
             variant="secondary"
             onPress={() => {}}
             disabled
+          />
+          <Button
+            label={t('common.share')}
+            variant="ghost"
+            onPress={() =>
+              void Share.share({
+                message: `${festival.name} — Festiq · https://github.com/Areakend/festivalapp`,
+              })
+            }
           />
           {festival.official_website && (
             <Button
@@ -337,6 +384,14 @@ const styles = StyleSheet.create({
   },
   actions: { gap: spacing.sm, marginTop: spacing.lg },
   sortRow: { flexDirection: 'row', gap: spacing.sm },
+  breakdownCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
   reviewList: { gap: spacing.md },
   noReviews: {
     fontFamily: typography.fonts.body,

@@ -9,6 +9,8 @@
     "delete": "Verwijderen",
     "edit": "Bewerken",
     "done": "Klaar",
+    "clear": "Wissen",
+    "share": "Delen",
     "search": "Zoeken",
     "seeAll": "Alles bekijken",
     "comingSoon": "Binnenkort beschikbaar"
@@ -78,7 +80,23 @@
     "submit": "Review plaatsen",
     "editReview": "Review bewerken",
     "sortNewest": "Nieuwste",
-    "sortHighest": "Hoogst beoordeeld"
+    "sortHighest": "Hoogst beoordeeld",
+    "breakdown": "Beoordelingsdetails"
+  },
+  "discover": {
+    "sort": "Sorteren",
+    "sortPopular": "Populairst",
+    "sortName": "A–Z",
+    "sortRank": "DJ Mag-positie"
+  },
+  "friends": {
+    "title": "Vrienden",
+    "add": "Vriend toevoegen",
+    "searchUsers": "Gebruikers zoeken",
+    "requests": "Vriendschapsverzoeken",
+    "accept": "Accepteren",
+    "requestSent": "Verzoek verzonden",
+    "noFriends": "Nog geen vrienden — voeg er een paar toe!"
   },
   "profile": {
     "myFestivals": "Mijn festivals",

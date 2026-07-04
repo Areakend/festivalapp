@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { StarRating } from '@/components/ui/StarRating';
+import { ratingColor } from '@/components/ui/RatingBar';
 import { colors, radii, spacing, typography } from '@/theme';
 import type { ReviewWithAuthor } from '@/features/reviews/api';
 
-/** A single community review: author, rating, optional comment, date. */
+/** A single community review: author, /20 score badge, optional comment, date. */
 export function ReviewCard({ review }: { review: ReviewWithAuthor }) {
   const { i18n } = useTranslation();
   const date = new Intl.DateTimeFormat(i18n.language, {
@@ -13,6 +13,7 @@ export function ReviewCard({ review }: { review: ReviewWithAuthor }) {
     month: 'short',
     year: 'numeric',
   }).format(new Date(review.created_at));
+  const color = ratingColor(review.overall_rating);
 
   return (
     <View style={styles.card}>
@@ -20,10 +21,14 @@ export function ReviewCard({ review }: { review: ReviewWithAuthor }) {
         <Text style={styles.author} numberOfLines={1}>
           {review.profiles?.display_name ?? '—'}
         </Text>
-        <Text style={styles.date}>{date}</Text>
+        <View style={[styles.badge, { borderColor: color }]}>
+          <Text style={[styles.badgeText, { color }]}>
+            {Number(review.overall_rating).toFixed(0)}/20
+          </Text>
+        </View>
       </View>
-      <StarRating value={review.overall_rating} size={16} />
       {review.comment ? <Text style={styles.comment}>{review.comment}</Text> : null}
+      <Text style={styles.date}>{date}</Text>
     </View>
   );
 }
@@ -37,22 +42,37 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  header: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
   author: {
     fontFamily: typography.fonts.bodySemiBold,
     fontSize: typography.sizes.sm,
     color: colors.text,
     flexShrink: 1,
   },
-  date: {
-    fontFamily: typography.fonts.body,
-    fontSize: typography.sizes.xs,
-    color: colors.textMuted,
+  badge: {
+    borderWidth: 1,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
+  badgeText: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: typography.sizes.sm,
   },
   comment: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
     lineHeight: 21,
+  },
+  date: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
   },
 });
