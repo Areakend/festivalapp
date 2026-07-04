@@ -33,19 +33,27 @@ async function functionsErrorMessage(error: unknown): Promise<string> {
 /**
  * AuthRequest.promptAsync also goes through WebBrowser.openAuthSessionAsync
  * under the hood, so it's subject to the same Android quirk as Google sign-in:
- * the OS can deliver the festiq://spotify/callback redirect straight to the
- * router instead of back through that promise. The codeVerifier only lives
- * in memory on the AuthRequest instance, so we stash it here while a request
- * is in flight so the callback screen can finish the exchange itself.
+ * the OS can deliver the festiq://spotify/callback redirect to BOTH the
+ * router and back through that promise. The codeVerifier only lives in
+ * memory on the AuthRequest instance, so we stash it here while a request is
+ * in flight — whichever side (this module's own flow, or the callback
+ * screen) reads and clears it first "claims" the code, so the authorization
+ * code never gets sent to Spotify's token endpoint twice (which fails with
+ * invalid_grant, since codes are single-use).
  */
 let pendingSpotifyAuth: { codeVerifier: string; redirectUri: string } | null = null;
 
-export async function completeSpotifyAuthFromDeepLink(code: string) {
-  if (!pendingSpotifyAuth) return;
-  const { codeVerifier, redirectUri } = pendingSpotifyAuth;
+function claimPendingSpotifyAuth() {
+  const claimed = pendingSpotifyAuth;
   pendingSpotifyAuth = null;
+  return claimed;
+}
+
+export async function completeSpotifyAuthFromDeepLink(code: string) {
+  const claimed = claimPendingSpotifyAuth();
+  if (!claimed) return;
   await supabase.functions
-    .invoke('spotify-auth', { body: { code, codeVerifier, redirectUri } })
+    .invoke('spotify-auth', { body: { code, codeVerifier: claimed.codeVerifier, redirectUri: claimed.redirectUri } })
     .catch(() => {});
 }
 
@@ -95,13 +103,16 @@ export function useConnectSpotify() {
       // hand off to the browser session.
       await request.makeAuthUrlAsync(discovery);
       pendingSpotifyAuth = { codeVerifier: request.codeVerifier!, redirectUri };
-      let result;
-      try {
-        result = await request.promptAsync(discovery);
-      } finally {
-        pendingSpotifyAuth = null;
+      const result = await request.promptAsync(discovery);
+      if (result.type !== 'success') {
+        claimPendingSpotifyAuth();
+        return; // user cancelled — not an error
       }
-      if (result.type !== 'success') return; // user cancelled — not an error
+
+      // If the callback screen already claimed and exchanged this code (the
+      // Android deep-link race above), don't send it to Spotify a second
+      // time — it would fail with invalid_grant since codes are single-use.
+      if (!claimPendingSpotifyAuth()) return;
 
       const { error } = await supabase.functions.invoke('spotify-auth', {
         body: { code: result.params.code, codeVerifier: request.codeVerifier, redirectUri },
