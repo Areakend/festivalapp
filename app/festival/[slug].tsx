@@ -20,7 +20,12 @@ import { Chip } from '@/components/ui/Chip';
 import { Button } from '@/components/ui/Button';
 import { RatingBar } from '@/components/ui/RatingBar';
 import { ReviewCard } from '@/components/review/ReviewCard';
-import { useFestivalDetail, useMyStatuses, useToggleStatus } from '@/features/festivals/api';
+import {
+  useEditionLineup,
+  useFestivalDetail,
+  useMyStatuses,
+  useToggleStatus,
+} from '@/features/festivals/api';
 import { useFestivalReviews, useMyReview, type ReviewSort } from '@/features/reviews/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag, formatCompact } from '@/utils/format';
@@ -45,6 +50,9 @@ export default function FestivalDetailScreen() {
   const { data: reviews } = useFestivalReviews(data?.festival.id, reviewSort);
   const { data: myReview } = useMyReview(data?.festival.id);
   const toggleStatus = useToggleStatus();
+
+  const lineupEdition = data?.editions.find((e) => e.lineup_published);
+  const { data: lineup } = useEditionLineup(lineupEdition?.id);
 
   // Average of each sub-rating across all community reviews (only rated ones).
   const subAverages = useMemo(() => {
@@ -177,6 +185,20 @@ export default function FestivalDetailScreen() {
         {/* Description */}
         {festival.description && <Text style={styles.description}>{festival.description}</Text>}
 
+        {/* Lineup of the most recent published edition */}
+        {lineupEdition && lineup && lineup.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>
+              {t('festival.lineup')} · {lineupEdition.year}
+            </Text>
+            <View style={styles.lineupWrap}>
+              {lineup.map((entry) => (
+                <Chip key={entry.artists.id} label={entry.artists.name} />
+              ))}
+            </View>
+          </>
+        )}
+
         {/* DJ Mag ranking history */}
         {rankings.length > 0 && (
           <>
@@ -301,6 +323,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   genreRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  lineupWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   statusRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

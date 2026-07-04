@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -164,7 +164,11 @@ export default function ProfileScreen() {
           <Button
             label={t('profile.connectSpotify')}
             variant="secondary"
-            onPress={() => connectSpotify.mutate()}
+            onPress={() =>
+              connectSpotify.mutate(undefined, {
+                onError: (error) => Alert.alert(t('common.error'), error.message),
+              })
+            }
             loading={connectSpotify.isPending}
           />
         )}

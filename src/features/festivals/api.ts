@@ -48,6 +48,7 @@ export interface FestivalDetail {
 export function useFestivalDetail(slug: string) {
   return useQuery({
     queryKey: ['festival', slug],
+    enabled: !!slug,
     queryFn: async (): Promise<FestivalDetail> => {
       const { data: festival, error } = await supabase
         .from('festivals')
@@ -82,6 +83,29 @@ export function useFestivalDetail(slug: string) {
         rankings: (rankings.data ?? []) as DjMagRanking[],
         stats: (stats.data ?? undefined) as FestivalCommunityStats | undefined,
       };
+    },
+  });
+}
+
+export interface LineupEntry {
+  order_index: number;
+  artists: { id: string; name: string; genres: string[] };
+}
+
+/** Announced lineup of an edition, headliners first. */
+export function useEditionLineup(editionId: string | undefined) {
+  return useQuery({
+    queryKey: ['lineup', editionId],
+    enabled: !!editionId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('edition_artists')
+        .select('order_index, artists(id, name, genres)')
+        .eq('edition_id', editionId!)
+        .eq('announced', true)
+        .order('order_index');
+      if (error) throw error;
+      return data as unknown as LineupEntry[];
     },
   });
 }

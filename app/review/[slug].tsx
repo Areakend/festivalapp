@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, TextInput } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput } from 'react-native';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +8,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { RatingBar, ratingColor } from '@/components/ui/RatingBar';
 import { useFestivalDetail } from '@/features/festivals/api';
-import { useMyReview, useUpsertReview } from '@/features/reviews/api';
+import { useDeleteReview, useMyReview, useUpsertReview } from '@/features/reviews/api';
 import { colors, radii, spacing, typography } from '@/theme';
 
 const SUB_RATINGS = [
@@ -39,6 +39,7 @@ export default function ReviewScreen() {
   const { data: detail } = useFestivalDetail(slug);
   const { data: myReview, isFetched } = useMyReview(detail?.festival.id);
   const upsert = useUpsertReview();
+  const deleteReview = useDeleteReview();
 
   const [overall, setOverall] = useState(0);
   const [comment, setComment] = useState('');
@@ -67,18 +68,42 @@ export default function ReviewScreen() {
 
   const submit = async () => {
     if (!detail || overall < 1) return;
-    await upsert.mutateAsync({
-      festivalId: detail.festival.id,
-      overall_rating: overall,
-      comment: comment.trim() || null,
-      lineup_rating: subs.lineup_rating || null,
-      production_rating: subs.production_rating || null,
-      side_quest_rating: subs.side_quest_rating || null,
-      organization_rating: subs.organization_rating || null,
-      atmosphere_rating: subs.atmosphere_rating || null,
-      value_rating: subs.value_rating || null,
-    });
-    router.back();
+    try {
+      await upsert.mutateAsync({
+        festivalId: detail.festival.id,
+        overall_rating: overall,
+        comment: comment.trim() || null,
+        lineup_rating: subs.lineup_rating || null,
+        production_rating: subs.production_rating || null,
+        side_quest_rating: subs.side_quest_rating || null,
+        organization_rating: subs.organization_rating || null,
+        atmosphere_rating: subs.atmosphere_rating || null,
+        value_rating: subs.value_rating || null,
+      });
+      router.back();
+    } catch (error) {
+      Alert.alert(t('common.error'), (error as Error).message);
+    }
+  };
+
+  const confirmDelete = () => {
+    if (!detail || !myReview) return;
+    Alert.alert(t('common.delete'), detail.festival.name, [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.delete'),
+        style: 'destructive',
+        onPress: () => {
+          deleteReview.mutate(
+            { reviewId: myReview.id, festivalId: detail.festival.id },
+            {
+              onSuccess: () => router.back(),
+              onError: (error) => Alert.alert(t('common.error'), error.message),
+            },
+          );
+        },
+      },
+    ]);
   };
 
   return (
@@ -126,6 +151,14 @@ export default function ReviewScreen() {
         loading={upsert.isPending}
         disabled={overall < 1 || !isFetched}
       />
+      {myReview && (
+        <Button
+          label={t('common.delete')}
+          variant="ghost"
+          onPress={confirmDelete}
+          loading={deleteReview.isPending}
+        />
+      )}
       <Button label={t('common.cancel')} variant="ghost" onPress={() => router.back()} />
     </Screen>
   );

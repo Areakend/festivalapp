@@ -95,6 +95,27 @@ export function useUpsertReview() {
   });
 }
 
+/** Delete the signed-in user's review (RLS restricts to own rows). */
+export function useDeleteReview() {
+  const queryClient = useQueryClient();
+  const userId = useSessionStore((s) => s.session?.user.id);
+
+  return useMutation({
+    mutationFn: async ({ reviewId }: { reviewId: string; festivalId: string }) => {
+      if (!userId) throw new Error('Not signed in');
+      const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
+      if (error) throw error;
+    },
+    onSettled: (_data, _err, { festivalId }) => {
+      queryClient.invalidateQueries({ queryKey: ['reviews', festivalId] });
+      queryClient.invalidateQueries({ queryKey: ['my-review', festivalId] });
+      queryClient.invalidateQueries({ queryKey: ['my-reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['festivals'] }); // community stats changed
+      queryClient.invalidateQueries({ queryKey: ['festival'] });
+    },
+  });
+}
+
 /** All reviews written by the signed-in user (profile stats). */
 export function useMyReviews() {
   const userId = useSessionStore((s) => s.session?.user.id);
