@@ -3,6 +3,7 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import * as Updates from 'expo-updates';
 
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
@@ -80,6 +81,26 @@ export default function ProfileScreen() {
   const changeLanguage = (lang: SupportedLanguage) => {
     void i18n.changeLanguage(lang);
     updateProfile.mutate({ preferred_language: lang });
+  };
+
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const checkForUpdate = async () => {
+    setCheckingUpdate(true);
+    try {
+      const result = await Updates.checkForUpdateAsync();
+      if (!result.isAvailable) {
+        Alert.alert('Mises à jour', 'Tu es déjà sur la dernière version disponible.');
+        return;
+      }
+      await Updates.fetchUpdateAsync();
+      Alert.alert('Mises à jour', 'Nouvelle version téléchargée, l’app va redémarrer.', [
+        { text: 'OK', onPress: () => void Updates.reloadAsync() },
+      ]);
+    } catch (error) {
+      Alert.alert('Mises à jour', error instanceof Error ? error.message : String(error));
+    } finally {
+      setCheckingUpdate(false);
+    }
   };
 
   return (
@@ -172,6 +193,26 @@ export default function ProfileScreen() {
             loading={connectSpotify.isPending}
           />
         )}
+      </View>
+
+      {/* Diagnostics: which build/update is actually running on this device */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Diagnostics</Text>
+        <Text style={styles.email}>Updates activées : {Updates.isEnabled ? 'oui' : 'non'}</Text>
+        <Text style={styles.email}>
+          Update ID : {Updates.updateId ?? '— (bundle embarqué, aucune mise à jour appliquée)'}
+        </Text>
+        <Text style={styles.email}>Channel : {Updates.channel ?? '—'}</Text>
+        <Text style={styles.email}>Runtime version : {Updates.runtimeVersion ?? '—'}</Text>
+        <Text style={styles.email}>
+          Publiée le : {Updates.createdAt ? Updates.createdAt.toLocaleString() : '—'}
+        </Text>
+        <Button
+          label="Vérifier les mises à jour"
+          variant="secondary"
+          onPress={() => void checkForUpdate()}
+          loading={checkingUpdate}
+        />
       </View>
 
       <Button
