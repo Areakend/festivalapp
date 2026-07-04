@@ -78,7 +78,8 @@ export default function FestivalDetailScreen() {
     );
   }
 
-  const { festival, rankings, stats } = data;
+  const { festival, editions, rankings, stats } = data;
+  const hasLineup = editions.some((e) => e.lineup_published);
   const activeStatuses = new Set(
     (myStatuses ?? [])
       .filter((s) => s.festival_id === festival.id)
@@ -222,10 +223,10 @@ export default function FestivalDetailScreen() {
             onPress={() => router.push({ pathname: '/review/[slug]', params: { slug } })}
           />
           <Button
-            label={`${t('festival.generatePlaylist')} — ${t('common.comingSoon')}`}
+            label={t('festival.generatePlaylist')}
             variant="secondary"
-            onPress={() => {}}
-            disabled
+            onPress={() => router.push({ pathname: '/playlist/[slug]', params: { slug } })}
+            disabled={!hasLineup}
           />
           <Button
             label={t('common.share')}
