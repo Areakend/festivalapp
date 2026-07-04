@@ -22,4 +22,4 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - run: eas update --branch preview --channel preview --message "${{ github.event.head_commit.message }}" --non-interactive
+      - run: eas update --channel preview --message "Auto-publish ${{ github.sha }}" --non-interactive
