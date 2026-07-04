@@ -27,6 +27,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1ec3a118-4625-478d-9388-284f1d435b92"
+      }
+    },
+    "owner": "areakend"
   }
 }
