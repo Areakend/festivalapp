@@ -111,7 +111,8 @@
     "favoriteGenres": "Géneros favoritos",
     "spotifyConnected": "Spotify conectado",
     "spotifyNotConnected": "Spotify no conectado",
-    "connectSpotify": "Conectar Spotify"
+    "connectSpotify": "Conectar Spotify",
+    "disconnectSpotify": "Desconectar Spotify"
   },
   "djmag": {
     "title": "DJ Mag Top 100",

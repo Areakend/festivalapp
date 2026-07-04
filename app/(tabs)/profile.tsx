@@ -12,6 +12,11 @@ import { useSessionStore } from '@/features/auth/session-store';
 import { useFestivals, useMyStatuses } from '@/features/festivals/api';
 import { useMyReviews } from '@/features/reviews/api';
 import { useDjMagTop100, useMyProfile, useUpdateProfile } from '@/features/profile/api';
+import {
+  useConnectSpotify,
+  useDisconnectSpotify,
+  useSpotifyConnection,
+} from '@/features/spotify/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { colors, radii, spacing, typography } from '@/theme';
 
@@ -35,6 +40,9 @@ export default function ProfileScreen() {
   const { data: myReviews } = useMyReviews();
   const { data: djmag } = useDjMagTop100();
   const updateProfile = useUpdateProfile();
+  const { data: spotifyConnection } = useSpotifyConnection();
+  const connectSpotify = useConnectSpotify();
+  const disconnectSpotify = useDisconnectSpotify();
 
   const [name, setName] = useState('');
   useEffect(() => {
@@ -137,6 +145,29 @@ export default function ProfileScreen() {
             />
           ))}
         </View>
+      </View>
+
+      {/* Spotify */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Spotify</Text>
+        <Text style={styles.email}>
+          {spotifyConnection ? t('profile.spotifyConnected') : t('profile.spotifyNotConnected')}
+        </Text>
+        {spotifyConnection ? (
+          <Button
+            label={t('profile.disconnectSpotify')}
+            variant="ghost"
+            onPress={() => disconnectSpotify.mutate()}
+            loading={disconnectSpotify.isPending}
+          />
+        ) : (
+          <Button
+            label={t('profile.connectSpotify')}
+            variant="secondary"
+            onPress={() => connectSpotify.mutate()}
+            loading={connectSpotify.isPending}
+          />
+        )}
       </View>
 
       <Button

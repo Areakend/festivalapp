@@ -59,6 +59,10 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: colors.background },
           }}
         >
+          {/* Always mounted: lands OAuth redirects while the code exchange resolves. */}
+          <Stack.Screen name="auth/callback" />
+          <Stack.Screen name="spotify/callback" />
+
           {/* Route guards: signed-in users get the tabs, others the auth flow. */}
           <Stack.Protected guard={!!session}>
             <Stack.Screen name="(tabs)" />
