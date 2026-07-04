@@ -34,6 +34,12 @@
         "projectId": "1ec3a118-4625-478d-9388-284f1d435b92"
       }
     },
-    "owner": "areakend"
+    "owner": "areakend",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/1ec3a118-4625-478d-9388-284f1d435b92"
+    }
   }
 }
