@@ -59,11 +59,16 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: colors.background },
           }}
         >
-          {/* Always mounted: lands OAuth redirects while the code exchange resolves. */}
-          <Stack.Screen name="auth/callback" />
-          <Stack.Screen name="spotify/callback" />
-
-          {/* Route guards: signed-in users get the tabs, others the auth flow. */}
+          {/*
+            Route guards: signed-in users get the tabs, others the auth flow.
+            These come first so that whichever group is active always ends up
+            first in the navigator's routeNames. When a guard flips (e.g. on
+            login) React Navigation drops the now-invalid group from the
+            stack's route history and, if nothing remains, falls back to
+            routeNames[0] — if that were "auth/callback" below, every login
+            would land the user on that bare spinner screen instead of the
+            signed-in stack.
+          */}
           <Stack.Protected guard={!!session}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="festival/[slug]" />
@@ -75,6 +80,10 @@ export default function RootLayout() {
           <Stack.Protected guard={!session}>
             <Stack.Screen name="(auth)" />
           </Stack.Protected>
+
+          {/* Always mounted: lands OAuth redirects while the code exchange resolves. */}
+          <Stack.Screen name="auth/callback" />
+          <Stack.Screen name="spotify/callback" />
         </Stack>
       </QueryClientProvider>
     </SafeAreaProvider>
