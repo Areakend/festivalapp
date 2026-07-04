@@ -12,6 +12,25 @@ const discovery = {
 };
 
 /**
+ * supabase-js's FunctionsHttpError message is always the generic
+ * "Edge Function returned a non-2xx status code" — the actual reason the
+ * spotify-auth function rejected the request (bad Spotify credentials,
+ * code/verifier mismatch, etc.) is in the response body on error.context.
+ */
+async function functionsErrorMessage(error: unknown): Promise<string> {
+  const context = (error as { context?: Response }).context;
+  if (context) {
+    try {
+      const body = await context.clone().json();
+      if (typeof body?.error === 'string') return body.error;
+    } catch {
+      // fall through to the generic message below
+    }
+  }
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
  * AuthRequest.promptAsync also goes through WebBrowser.openAuthSessionAsync
  * under the hood, so it's subject to the same Android quirk as Google sign-in:
  * the OS can deliver the festiq://spotify/callback redirect straight to the
@@ -87,7 +106,7 @@ export function useConnectSpotify() {
       const { error } = await supabase.functions.invoke('spotify-auth', {
         body: { code: result.params.code, codeVerifier: request.codeVerifier, redirectUri },
       });
-      if (error) throw error;
+      if (error) throw new Error(await functionsErrorMessage(error));
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['spotify-connection'] });
