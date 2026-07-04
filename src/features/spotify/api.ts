@@ -11,6 +11,25 @@ const discovery = {
   authorizationEndpoint: 'https://accounts.spotify.com/authorize',
 };
 
+/**
+ * AuthRequest.promptAsync also goes through WebBrowser.openAuthSessionAsync
+ * under the hood, so it's subject to the same Android quirk as Google sign-in:
+ * the OS can deliver the festiq://spotify/callback redirect straight to the
+ * router instead of back through that promise. The codeVerifier only lives
+ * in memory on the AuthRequest instance, so we stash it here while a request
+ * is in flight so the callback screen can finish the exchange itself.
+ */
+let pendingSpotifyAuth: { codeVerifier: string; redirectUri: string } | null = null;
+
+export async function completeSpotifyAuthFromDeepLink(code: string) {
+  if (!pendingSpotifyAuth) return;
+  const { codeVerifier, redirectUri } = pendingSpotifyAuth;
+  pendingSpotifyAuth = null;
+  await supabase.functions
+    .invoke('spotify-auth', { body: { code, codeVerifier, redirectUri } })
+    .catch(() => {});
+}
+
 export interface SpotifyConnectionStatus {
   user_id: string;
   spotify_user_id: string;
@@ -53,7 +72,16 @@ export function useConnectSpotify() {
         usePKCE: true,
         responseType: AuthSession.ResponseType.Code,
       });
-      const result = await request.promptAsync(discovery);
+      // Populate codeVerifier up front so it's available to stash before we
+      // hand off to the browser session.
+      await request.makeAuthUrlAsync(discovery);
+      pendingSpotifyAuth = { codeVerifier: request.codeVerifier!, redirectUri };
+      let result;
+      try {
+        result = await request.promptAsync(discovery);
+      } finally {
+        pendingSpotifyAuth = null;
+      }
       if (result.type !== 'success') return; // user cancelled — not an error
 
       const { error } = await supabase.functions.invoke('spotify-auth', {
