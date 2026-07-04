@@ -89,7 +89,10 @@ export default function ProfileScreen() {
     try {
       const result = await Updates.checkForUpdateAsync();
       if (!result.isAvailable) {
-        Alert.alert('Mises à jour', 'Tu es déjà sur la dernière version disponible.');
+        Alert.alert(
+          'Mises à jour',
+          `Aucune mise à jour trouvée. Raison : ${result.reason ?? '—'}`,
+        );
         return;
       }
       await Updates.fetchUpdateAsync();
@@ -200,8 +203,9 @@ export default function ProfileScreen() {
         <Text style={styles.cardTitle}>Diagnostics</Text>
         <Text style={styles.email}>Updates activées : {Updates.isEnabled ? 'oui' : 'non'}</Text>
         <Text style={styles.email}>
-          Update ID : {Updates.updateId ?? '— (bundle embarqué, aucune mise à jour appliquée)'}
+          Lancement : {Updates.isEmbeddedLaunch ? 'bundle embarqué (build)' : 'mise à jour OTA'}
         </Text>
+        <Text style={styles.email}>Update ID : {Updates.updateId ?? '—'}</Text>
         <Text style={styles.email}>Channel : {Updates.channel ?? '—'}</Text>
         <Text style={styles.email}>Runtime version : {Updates.runtimeVersion ?? '—'}</Text>
         <Text style={styles.email}>
