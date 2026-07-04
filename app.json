@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Festiq",
+    "name": "Mainstage",
     "slug": "festiq",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -8,6 +8,7 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "backgroundColor": "#0B0B14",
+    "icon": "./assets/icon.png",
     "ios": {
       "bundleIdentifier": "com.areakend.festiq",
       "supportsTablet": false
@@ -15,6 +16,7 @@
     "android": {
       "package": "com.areakend.festiq",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0B0B14"
       },
       "edgeToEdgeEnabled": true

@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Festiq",
+    "appName": "Mainstage",
     "loading": "Laden…",
     "error": "Etwas ist schiefgelaufen",
     "retry": "Erneut versuchen",
@@ -81,7 +81,9 @@
     "editReview": "Bewertung bearbeiten",
     "sortNewest": "Neueste",
     "sortHighest": "Am besten bewertet",
-    "breakdown": "Bewertungsdetails"
+    "breakdown": "Bewertungsdetails",
+    "aiSummary": "Zusammenfassung der Bewertungen",
+    "aiDisclaimer": "KI-generiert aus Community-Bewertungen"
   },
   "discover": {
     "sort": "Sortieren",

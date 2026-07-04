@@ -26,7 +26,12 @@ import {
   useMyStatuses,
   useToggleStatus,
 } from '@/features/festivals/api';
-import { useFestivalReviews, useMyReview, type ReviewSort } from '@/features/reviews/api';
+import {
+  useFestivalReviews,
+  useMyReview,
+  useReviewSummary,
+  type ReviewSort,
+} from '@/features/reviews/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag, formatCompact } from '@/utils/format';
 import type { FestivalStatus } from '@/types/domain';
@@ -53,6 +58,11 @@ export default function FestivalDetailScreen() {
 
   const lineupEdition = data?.editions.find((e) => e.lineup_published);
   const { data: lineup } = useEditionLineup(lineupEdition?.id);
+  const { data: aiSummary } = useReviewSummary(
+    data?.festival.id,
+    i18n.language,
+    reviews?.length ?? 0,
+  );
 
   // Average of each sub-rating across all community reviews (only rated ones).
   const subAverages = useMemo(() => {
@@ -216,6 +226,19 @@ export default function FestivalDetailScreen() {
 
         {/* Reviews */}
         <Text style={styles.sectionTitle}>{t('festival.reviews')}</Text>
+
+        {/* AI summary of community reviews (à la Google Maps) */}
+        {aiSummary?.summary && (
+          <View style={styles.aiCard}>
+            <View style={styles.aiHeader}>
+              <Ionicons name="sparkles" size={16} color={colors.accent} />
+              <Text style={styles.aiTitle}>{t('review.aiSummary')}</Text>
+            </View>
+            <Text style={styles.aiText}>{aiSummary.summary}</Text>
+            <Text style={styles.aiDisclaimer}>{t('review.aiDisclaimer')}</Text>
+          </View>
+        )}
+
         <View style={styles.sortRow}>
           <Chip
             label={t('review.sortNewest')}
@@ -255,7 +278,7 @@ export default function FestivalDetailScreen() {
             variant="ghost"
             onPress={() =>
               void Share.share({
-                message: `${festival.name} — Festiq · https://github.com/Areakend/festivalapp`,
+                message: `${festival.name} — Mainstage · https://github.com/Areakend/festivalapp`,
               })
             }
           />
@@ -324,6 +347,31 @@ const styles = StyleSheet.create({
   },
   genreRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   lineupWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  aiCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  aiHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  aiTitle: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: typography.sizes.sm,
+    color: colors.text,
+  },
+  aiText: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    lineHeight: 20,
+  },
+  aiDisclaimer: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+  },
   statusRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

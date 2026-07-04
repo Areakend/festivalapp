@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Festiq",
+    "appName": "Mainstage",
     "loading": "Loading…",
     "error": "Something went wrong",
     "retry": "Retry",
@@ -81,7 +81,9 @@
     "editReview": "Edit review",
     "sortNewest": "Newest",
     "sortHighest": "Highest rated",
-    "breakdown": "Rating details"
+    "breakdown": "Rating details",
+    "aiSummary": "Review summary",
+    "aiDisclaimer": "AI-generated from community reviews"
   },
   "discover": {
     "sort": "Sort",
