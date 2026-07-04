@@ -3,9 +3,6 @@
 -- archive (monthly picks, Sept 2024 - Oct 2026), not covered by
 -- the DJ Mag Top 100 nor the earlier personal-review batch.
 --
--- Three names are uncertain due to likely OCR/typos in the source
--- document (flagged TODO below) — added with a best-effort guess
--- rather than blocking on it, consistent with the DJ Mag seed.
 -- Regional franchise editions (Lollapalooza Berlin, Time Warp
 -- Spain, World Club Dome Malta) are separate rows, matching how
 -- Ultra Korea / Ultra Japan / EDC Mexico etc. are already modeled.
@@ -27,8 +24,7 @@ values
   ('RFM Somnii', 'rfm-somnii', 'An electronic music festival in Portugal, sponsored by radio station RFM.', 'PT', null, '{edm}'),
   ('Dreamfields', 'dreamfields', 'A Dutch electronic music festival.', 'NL', null, '{edm,trance}'),
   ('Ostend Beach Festival', 'ostend-beach-festival', 'A beachside house/EDM festival in Ostend.', 'BE', 'Ostend', '{house,edm}'),
-  -- TODO verify: source listed only "EMF - France", full name/location unconfirmed.
-  ('EMF', 'emf-france', 'An electronic music festival in France (name unconfirmed — check official branding).', 'FR', null, '{electronic}'),
+  ('Les Déferlantes', 'les-deferlantes', 'One of the biggest contemporary music festivals in the south of France, at the Jardins du Lydia on the Mediterranean coast. Formerly branded EMF.', 'FR', 'Le Barcarès', '{pop,rock,electro,rap}'),
   ('Echelon Festival', 'echelon-festival', 'An electronic music festival in Germany.', 'DE', null, '{electronic}'),
   ('Delta Festival', 'delta-festival', 'An electronic music festival in Marseille.', 'FR', 'Marseille', '{electronic}'),
   ('Dream Village', 'dream-village', 'A Dutch hardstyle-scene festival.', 'NL', null, '{hardstyle}'),
@@ -36,8 +32,5 @@ values
   ('Lollapalooza Berlin', 'lollapalooza-berlin', 'The Berlin edition of the Lollapalooza festival brand.', 'DE', 'Berlin', '{rock,pop,hiphop,electronic}'),
   ('Time Warp Spain', 'time-warp-spain', 'The Madrid edition of the Time Warp techno festival brand.', 'ES', 'Madrid', '{techno}'),
   ('World Club Dome Malta', 'world-club-dome-malta', 'The Malta ("Island") edition of the World Club Dome festival brand.', 'MT', null, '{edm,house}'),
-  -- TODO verify: source listed "Hide Park - Germany" — possibly a mistranscription of a UK "Hyde Park" event; location/name unconfirmed.
-  ('Hide Park', 'hide-park', 'Name and location unconfirmed from source material — verify before relying on this entry.', 'DE', null, '{}'),
-  -- TODO verify: source listed "Woodstoig - Germany" — likely a mistranscription; could not confirm the real festival name.
-  ('Woodstoig', 'woodstoig', 'Name and location unconfirmed from source material — verify before relying on this entry.', 'DE', null, '{}')
+  ('Woodstoig', 'woodstoig', 'A German electronic music festival celebrating "Love, Peace & Harmonie", running since the mid-2010s. Multiple stages spanning techno, house, drum and bass and hard techno.', 'DE', null, '{techno,house,dnb,hard techno}')
 on conflict (slug) do nothing;
