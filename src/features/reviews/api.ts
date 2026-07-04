@@ -95,6 +95,33 @@ export function useUpsertReview() {
   });
 }
 
+/**
+ * AI summary of a festival's community reviews (Google-Maps style).
+ * The Edge Function caches per (festival, language) and only regenerates
+ * when the review count changes; `enabled` avoids pointless calls when
+ * there are too few reviews to summarize.
+ */
+export function useReviewSummary(
+  festivalId: string | undefined,
+  language: string,
+  reviewCount: number,
+) {
+  return useQuery({
+    queryKey: ['review-summary', festivalId, language, reviewCount],
+    enabled: !!festivalId && reviewCount >= 2,
+    staleTime: 60 * 60_000,
+    retry: false,
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke<{
+        summary: string | null;
+        reviewCount: number;
+      }>('summarize-reviews', { body: { festivalId, language } });
+      if (error) throw error;
+      return data!;
+    },
+  });
+}
+
 /** Delete the signed-in user's review (RLS restricts to own rows). */
 export function useDeleteReview() {
   const queryClient = useQueryClient();

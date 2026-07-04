@@ -1,5 +1,5 @@
 /**
- * Festiq design tokens — dark-first, festival/nightlife aesthetic.
+ * Mainstage design tokens — dark-first, festival/nightlife aesthetic.
  * All UI components should consume these tokens instead of hardcoding values.
  */
 

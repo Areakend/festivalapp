@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Festiq",
+    "appName": "Mainstage",
     "loading": "Chargement…",
     "error": "Une erreur est survenue",
     "retry": "Réessayer",
@@ -81,7 +81,9 @@
     "editReview": "Modifier l'avis",
     "sortNewest": "Plus récents",
     "sortHighest": "Mieux notés",
-    "breakdown": "Détail des notes"
+    "breakdown": "Détail des notes",
+    "aiSummary": "Résumé des avis",
+    "aiDisclaimer": "Généré par IA à partir des avis de la communauté"
   },
   "discover": {
     "sort": "Trier",

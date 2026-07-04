@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Festiq",
+    "appName": "Mainstage",
     "loading": "Laden…",
     "error": "Er is iets misgegaan",
     "retry": "Opnieuw proberen",
@@ -81,7 +81,9 @@
     "editReview": "Review bewerken",
     "sortNewest": "Nieuwste",
     "sortHighest": "Hoogst beoordeeld",
-    "breakdown": "Beoordelingsdetails"
+    "breakdown": "Beoordelingsdetails",
+    "aiSummary": "Samenvatting van reviews",
+    "aiDisclaimer": "Door AI gegenereerd op basis van community-reviews"
   },
   "discover": {
     "sort": "Sorteren",
