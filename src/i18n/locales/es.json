@@ -9,6 +9,8 @@
     "delete": "Eliminar",
     "edit": "Editar",
     "done": "Listo",
+    "clear": "Borrar",
+    "share": "Compartir",
     "search": "Buscar",
     "seeAll": "Ver todo",
     "comingSoon": "Próximamente"
@@ -78,7 +80,23 @@
     "submit": "Publicar reseña",
     "editReview": "Editar reseña",
     "sortNewest": "Más recientes",
-    "sortHighest": "Mejor valoradas"
+    "sortHighest": "Mejor valoradas",
+    "breakdown": "Detalle de valoraciones"
+  },
+  "discover": {
+    "sort": "Ordenar",
+    "sortPopular": "Más populares",
+    "sortName": "A–Z",
+    "sortRank": "Puesto DJ Mag"
+  },
+  "friends": {
+    "title": "Amigos",
+    "add": "Añadir amigo",
+    "searchUsers": "Buscar usuarios",
+    "requests": "Solicitudes de amistad",
+    "accept": "Aceptar",
+    "requestSent": "Solicitud enviada",
+    "noFriends": "Aún no tienes amigos — ¡añade algunos!"
   },
   "profile": {
     "myFestivals": "Mis festivales",

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput } from 'react-native';
+import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
-import { StarRating } from '@/components/ui/StarRating';
+import { RatingBar, ratingColor } from '@/components/ui/RatingBar';
 import { useFestivalDetail } from '@/features/festivals/api';
 import { useMyReview, useUpsertReview } from '@/features/reviews/api';
 import { colors, radii, spacing, typography } from '@/theme';
@@ -29,7 +30,7 @@ const SUB_LABEL_KEYS: Record<SubRatingKey, string> = {
   value_rating: 'review.valueRating',
 };
 
-/** Create or edit the signed-in user's review for a festival. */
+/** Create or edit the signed-in user's /20 review for a festival. */
 export default function ReviewScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const { t } = useTranslation();
@@ -53,7 +54,7 @@ export default function ReviewScreen() {
   // Prefill when editing an existing review.
   useEffect(() => {
     if (!myReview) return;
-    setOverall(myReview.overall_rating);
+    setOverall(Math.round(myReview.overall_rating));
     setComment(myReview.comment ?? '');
     setSubs((prev) => {
       const next = { ...prev };
@@ -87,19 +88,24 @@ export default function ReviewScreen() {
       </Text>
       <Text style={styles.festivalName}>{detail?.festival.name ?? '…'}</Text>
 
+      {/* Overall /20 — big score + tap bar */}
       <View style={styles.card}>
         <Text style={styles.sectionLabel}>{t('review.yourRating')} *</Text>
-        <StarRating value={overall} onChange={setOverall} size={36} />
+        <Text style={[styles.bigScore, overall > 0 && { color: ratingColor(overall) }]}>
+          {overall > 0 ? overall : '–'}
+          <Text style={styles.bigScoreMax}>/20</Text>
+        </Text>
+        <RatingBar value={overall} onChange={setOverall} />
       </View>
 
+      {/* Sub-ratings /20 */}
       <View style={styles.card}>
         {SUB_RATINGS.map((key) => (
-          <StarRating
+          <RatingBar
             key={key}
             label={t(SUB_LABEL_KEYS[key])}
             value={subs[key]}
             onChange={(v) => setSubs((prev) => ({ ...prev, [key]: v }))}
-            size={20}
           />
         ))}
       </View>
@@ -151,6 +157,16 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
+  },
+  bigScore: {
+    fontFamily: typography.fonts.heading,
+    fontSize: 48,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
+  bigScoreMax: {
+    fontSize: typography.sizes.lg,
+    color: colors.textMuted,
   },
   comment: {
     backgroundColor: colors.surface,

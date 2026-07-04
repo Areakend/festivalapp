@@ -9,6 +9,8 @@
     "delete": "Delete",
     "edit": "Edit",
     "done": "Done",
+    "clear": "Clear",
+    "share": "Share",
     "search": "Search",
     "seeAll": "See all",
     "comingSoon": "Coming soon"
@@ -78,7 +80,23 @@
     "submit": "Submit review",
     "editReview": "Edit review",
     "sortNewest": "Newest",
-    "sortHighest": "Highest rated"
+    "sortHighest": "Highest rated",
+    "breakdown": "Rating details"
+  },
+  "discover": {
+    "sort": "Sort",
+    "sortPopular": "Most popular",
+    "sortName": "A–Z",
+    "sortRank": "DJ Mag rank"
+  },
+  "friends": {
+    "title": "Friends",
+    "add": "Add friend",
+    "searchUsers": "Search users",
+    "requests": "Friend requests",
+    "accept": "Accept",
+    "requestSent": "Request sent",
+    "noFriends": "No friends yet — add some!"
   },
   "profile": {
     "myFestivals": "My festivals",
