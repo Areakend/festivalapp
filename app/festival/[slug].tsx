@@ -51,7 +51,7 @@ export default function FestivalDetailScreen() {
     const defs = [
       { key: 'lineup_rating', label: t('review.lineupRating') },
       { key: 'production_rating', label: t('review.productionRating') },
-      { key: 'sound_rating', label: t('review.soundRating') },
+      { key: 'side_quest_rating', label: t('review.sideQuestRating') },
       { key: 'organization_rating', label: t('review.organizationRating') },
       { key: 'atmosphere_rating', label: t('review.atmosphereRating') },
       { key: 'value_rating', label: t('review.valueRating') },

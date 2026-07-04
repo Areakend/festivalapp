@@ -14,7 +14,7 @@ import { colors, radii, spacing, typography } from '@/theme';
 const SUB_RATINGS = [
   'lineup_rating',
   'production_rating',
-  'sound_rating',
+  'side_quest_rating',
   'organization_rating',
   'atmosphere_rating',
   'value_rating',
@@ -24,7 +24,7 @@ type SubRatingKey = (typeof SUB_RATINGS)[number];
 const SUB_LABEL_KEYS: Record<SubRatingKey, string> = {
   lineup_rating: 'review.lineupRating',
   production_rating: 'review.productionRating',
-  sound_rating: 'review.soundRating',
+  side_quest_rating: 'review.sideQuestRating',
   organization_rating: 'review.organizationRating',
   atmosphere_rating: 'review.atmosphereRating',
   value_rating: 'review.valueRating',
@@ -45,7 +45,7 @@ export default function ReviewScreen() {
   const [subs, setSubs] = useState<Record<SubRatingKey, number>>({
     lineup_rating: 0,
     production_rating: 0,
-    sound_rating: 0,
+    side_quest_rating: 0,
     organization_rating: 0,
     atmosphere_rating: 0,
     value_rating: 0,
@@ -73,7 +73,7 @@ export default function ReviewScreen() {
       comment: comment.trim() || null,
       lineup_rating: subs.lineup_rating || null,
       production_rating: subs.production_rating || null,
-      sound_rating: subs.sound_rating || null,
+      side_quest_rating: subs.side_quest_rating || null,
       organization_rating: subs.organization_rating || null,
       atmosphere_rating: subs.atmosphere_rating || null,
       value_rating: subs.value_rating || null,

@@ -86,7 +86,7 @@ export interface Review {
   comment: string | null;
   lineup_rating: number | null;
   production_rating: number | null;
-  sound_rating: number | null;
+  side_quest_rating: number | null;
   organization_rating: number | null;
   atmosphere_rating: number | null;
   value_rating: number | null;

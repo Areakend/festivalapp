@@ -73,7 +73,7 @@
     "comment": "Commentaire (optionnel)",
     "lineupRating": "Lineup",
     "productionRating": "Production",
-    "soundRating": "Qualité sonore",
+    "sideQuestRating": "Quêtes annexes",
     "organizationRating": "Organisation",
     "atmosphereRating": "Ambiance",
     "valueRating": "Rapport qualité-prix",
