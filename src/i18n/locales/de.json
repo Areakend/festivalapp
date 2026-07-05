@@ -114,11 +114,7 @@
     "spotifyConnected": "Spotify verbunden",
     "spotifyNotConnected": "Spotify nicht verbunden",
     "connectSpotify": "Spotify verbinden",
-    "disconnectSpotify": "Spotify trennen",
-    "deezerConnected": "Deezer verbunden",
-    "deezerNotConnected": "Deezer nicht verbunden",
-    "connectDeezer": "Deezer verbinden",
-    "disconnectDeezer": "Deezer trennen"
+    "disconnectSpotify": "Spotify trennen"
   },
   "djmag": {
     "title": "DJ Mag Top 100",
@@ -144,8 +140,12 @@
     "previewPlaylist": "Playlist-Vorschau",
     "connectPrompt": "Verbinde Spotify, um diese Playlist in deinem Konto zu speichern"
   },
-  "deezer": {
-    "connectPrompt": "Verbinde Deezer, um diese Playlist in deinem Konto zu speichern"
+  "export": {
+    "title": "Universeller Export",
+    "description": "Kein Konto nötig: Jeder Titel öffnet sich direkt in Deezer oder als Spotify-Suche.",
+    "generate": "Export erstellen",
+    "deezer": "Deezer",
+    "spotify": "Spotify"
   },
   "settings": {
     "title": "Einstellungen",
