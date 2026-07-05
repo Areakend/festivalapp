@@ -18,6 +18,29 @@ async function spotifyFetch(path: string, accessToken: string, init?: RequestIni
   return res.json();
 }
 
+/**
+ * "Get Artist's Top Tracks" returns 403 for apps that don't have Spotify's
+ * Extended Quota Mode approval (a Development Mode restriction, not
+ * something wrong with any specific artist) — fall back to a plain track
+ * search for that artist, which stays on the unrestricted /search endpoint.
+ */
+async function getArtistTracks(
+  spotifyArtistId: string,
+  artistName: string,
+  accessToken: string,
+): Promise<string[]> {
+  try {
+    const topTracks = await spotifyFetch(`/artists/${spotifyArtistId}/top-tracks?market=US`, accessToken);
+    return (topTracks.tracks ?? []).slice(0, TRACKS_PER_ARTIST).map((t: { uri: string }) => t.uri);
+  } catch {
+    const search = await spotifyFetch(
+      `/search?type=track&limit=${TRACKS_PER_ARTIST}&q=${encodeURIComponent(`artist:"${artistName}"`)}`,
+      accessToken,
+    );
+    return (search.tracks?.items ?? []).map((t: { uri: string }) => t.uri);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -84,28 +107,38 @@ Deno.serve(async (req) => {
       artists: { id: string; name: string; spotify_artist_id: string | null };
     }[]) {
       const artist = entry.artists;
-      let spotifyArtistId = artist.spotify_artist_id;
+      // A single artist's Spotify calls failing (rate limit, API-level
+      // restriction, transient error...) shouldn't take down the whole
+      // playlist — skip that artist and keep going.
+      try {
+        let spotifyArtistId = artist.spotify_artist_id;
 
-      if (!spotifyArtistId) {
-        const search = await spotifyFetch(
-          `/search?type=artist&limit=1&q=${encodeURIComponent(artist.name)}`,
-          accessToken,
-        );
-        spotifyArtistId = search.artists?.items?.[0]?.id ?? null;
-        if (spotifyArtistId) {
-          await supabase.from('artists').update({ spotify_artist_id: spotifyArtistId }).eq('id', artist.id);
+        if (!spotifyArtistId) {
+          const search = await spotifyFetch(
+            `/search?type=artist&limit=1&q=${encodeURIComponent(artist.name)}`,
+            accessToken,
+          );
+          spotifyArtistId = search.artists?.items?.[0]?.id ?? null;
+          if (spotifyArtistId) {
+            await supabase.from('artists').update({ spotify_artist_id: spotifyArtistId }).eq('id', artist.id);
+          }
         }
-      }
 
-      if (!spotifyArtistId) {
+        if (!spotifyArtistId) {
+          skippedArtists.push(artist.name);
+          continue;
+        }
+
+        const tracks = await getArtistTracks(spotifyArtistId, artist.name, accessToken);
+        if (tracks.length === 0) {
+          skippedArtists.push(artist.name);
+          continue;
+        }
+
+        matchedArtists += 1;
+        trackUris.push(...tracks);
+      } catch {
         skippedArtists.push(artist.name);
-        continue;
-      }
-
-      matchedArtists += 1;
-      const topTracks = await spotifyFetch(`/artists/${spotifyArtistId}/top-tracks?market=US`, accessToken);
-      for (const track of (topTracks.tracks ?? []).slice(0, TRACKS_PER_ARTIST)) {
-        trackUris.push(track.uri);
       }
     }
 
