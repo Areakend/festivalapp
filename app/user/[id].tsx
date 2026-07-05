@@ -1,28 +1,31 @@
 import { useMemo } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { FestivalPosterCard } from '@/components/festival/FestivalPosterCard';
+import { ScheduleRow } from '@/components/festival/ScheduleRow';
 import { ratingColor } from '@/components/ui/RatingBar';
-import { useFestivals } from '@/features/festivals/api';
+import { useFestivals, type CatalogItem } from '@/features/festivals/api';
 import { useFriendProfile } from '@/features/friends/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
 import type { FestivalStatus } from '@/types/domain';
 
-const SECTIONS: { status: FestivalStatus; labelKey: string; color: string }[] = [
-  { status: 'attended', labelKey: 'festival.attended', color: colors.statusAttended },
-  { status: 'wishlist', labelKey: 'festival.wishlist', color: colors.statusWishlist },
-  { status: 'planned', labelKey: 'festival.planned', color: colors.statusPlanned },
+const SECTIONS: { status: FestivalStatus; labelKey: string; icon: string; color: string }[] = [
+  { status: 'attended', labelKey: 'festival.attended', icon: 'checkmark-circle', color: colors.statusAttended },
+  { status: 'planned', labelKey: 'festival.planned', icon: 'calendar', color: colors.statusPlanned },
+  { status: 'wishlist', labelKey: 'festival.wishlist', icon: 'heart', color: colors.statusWishlist },
 ];
 
-/** A friend's public profile: stats, tracked festivals, top ratings. */
+/**
+ * A friend's public profile: stats, tracked festivals grouped exactly like
+ * Home (same ScheduleRow — date block, name, meta, chevron), top ratings.
+ */
 export default function FriendProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -37,7 +40,7 @@ export default function FriendProfileScreen() {
       items: data.statuses
         .filter((s) => s.status === section.status)
         .map((s) => byId.get(s.festival_id))
-        .filter((item): item is NonNullable<typeof item> => item != null),
+        .filter((item): item is CatalogItem => item != null),
     })).filter((s) => s.items.length > 0);
     const attended = data.statuses.filter((s) => s.status === 'attended');
     const countries = new Set(
@@ -52,6 +55,12 @@ export default function FriendProfileScreen() {
       }));
     return { sections, attendedCount: attended.length, countryCount: countries.size, topRated };
   }, [data, catalog]);
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
+
+  const openFestival = (item: CatalogItem) =>
+    router.push({ pathname: '/festival/[slug]', params: { slug: item.festival.slug } });
 
   return (
     <ScrollView
@@ -81,35 +90,53 @@ export default function FriendProfileScreen() {
 
           {computed.sections.map((section) => (
             <View key={section.status} style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: section.color }]}>
-                {t(section.labelKey)} · {section.items.length}
-              </Text>
-              <FlatList
-                horizontal
-                data={section.items}
-                keyExtractor={(item) => item.festival.id}
-                renderItem={({ item }) => (
-                  <FestivalPosterCard festival={item.festival} stats={item.stats} />
-                )}
-                contentContainerStyle={styles.carousel}
-                showsHorizontalScrollIndicator={false}
-              />
+              <View style={styles.sectionHeader}>
+                <Ionicons name={section.icon as never} size={18} color={section.color} />
+                <Text style={[styles.sectionTitle, { color: section.color }]}>
+                  {t(section.labelKey)}
+                </Text>
+                <Text style={styles.sectionCount}>{section.items.length}</Text>
+              </View>
+              <View style={styles.list}>
+                {section.items.map((item) => (
+                  <ScheduleRow
+                    key={item.festival.id}
+                    item={item}
+                    meta={
+                      item.nextEdition
+                        ? `${formatDate(item.nextEdition.start_date)}${
+                            item.nextEdition.end_date ? ` – ${formatDate(item.nextEdition.end_date)}` : ''
+                          }`
+                        : t('home.dateTbc')
+                    }
+                    locale={i18n.language}
+                    onPress={() => openFestival(item)}
+                  />
+                ))}
+              </View>
             </View>
           ))}
 
           {computed.topRated.length > 0 && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>{t('profile.topRated')}</Text>
-              {computed.topRated.map((entry, index) => (
-                <View key={index} style={styles.topRow}>
-                  <Text style={styles.topName} numberOfLines={1}>
-                    {entry.name}
-                  </Text>
-                  <Text style={[styles.topRating, { color: ratingColor(entry.rating) }]}>
-                    {Number(entry.rating).toFixed(0)}/20
-                  </Text>
-                </View>
-              ))}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Ionicons name="star" size={18} color={colors.rating} />
+                <Text style={[styles.sectionTitle, { color: colors.rating }]}>
+                  {t('profile.topRated')}
+                </Text>
+              </View>
+              <View style={styles.card}>
+                {computed.topRated.map((entry, index) => (
+                  <View key={index} style={styles.topRow}>
+                    <Text style={styles.topName} numberOfLines={1}>
+                      {entry.name}
+                    </Text>
+                    <Text style={[styles.topRating, { color: ratingColor(entry.rating) }]}>
+                      {Number(entry.rating).toFixed(0)}/20
+                    </Text>
+                  </View>
+                ))}
+              </View>
             </View>
           )}
         </>
@@ -165,12 +192,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   section: { gap: spacing.md },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xl,
+  },
   sectionTitle: {
     fontFamily: typography.fonts.headingMedium,
     fontSize: typography.sizes.lg,
-    paddingHorizontal: spacing.xl,
   },
-  carousel: { gap: spacing.md, paddingHorizontal: spacing.xl },
+  sectionCount: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: typography.sizes.sm,
+    color: colors.textMuted,
+  },
+  list: { gap: spacing.sm, paddingHorizontal: spacing.xl },
   card: {
     marginHorizontal: spacing.xl,
     backgroundColor: colors.surface,
@@ -179,11 +216,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     padding: spacing.lg,
     gap: spacing.md,
-  },
-  cardTitle: {
-    fontFamily: typography.fonts.headingMedium,
-    fontSize: typography.sizes.md,
-    color: colors.text,
   },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
   topName: {

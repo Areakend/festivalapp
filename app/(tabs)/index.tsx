@@ -1,13 +1,5 @@
 import { useMemo } from 'react';
-import {
-  FlatList,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Button } from '@/components/ui/Button';
-import { FestivalPosterCard } from '@/components/festival/FestivalPosterCard';
+import { ScheduleRow } from '@/components/festival/ScheduleRow';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
 import { useDjMagTop100 } from '@/features/profile/api';
 import { colors, radii, spacing, typography } from '@/theme';
@@ -167,47 +159,25 @@ export default function Home() {
           </View>
           <View style={styles.agendaList}>
             {agenda.map(({ item, daysUntil, happeningNow }) => (
-              <Pressable
+              <ScheduleRow
                 key={item.festival.id}
-                style={({ pressed }) => [styles.agendaRow, pressed && { opacity: 0.8 }]}
+                item={item}
+                meta={
+                  happeningNow
+                    ? t('home.happeningNow')
+                    : daysUntil != null
+                      ? t('home.inDays', { count: daysUntil })
+                      : t('home.dateTbc')
+                }
+                locale={i18n.language}
                 onPress={() => openFestival(item)}
-              >
-                <View style={styles.agendaDate}>
-                  {item.nextEdition ? (
-                    <>
-                      <Text style={styles.agendaDay}>
-                        {new Date(item.nextEdition.start_date).getDate()}
-                      </Text>
-                      <Text style={styles.agendaMonth}>
-                        {new Date(item.nextEdition.start_date)
-                          .toLocaleDateString(i18n.language, { month: 'short' })
-                          .replace('.', '')}
-                      </Text>
-                    </>
-                  ) : (
-                    <Text style={styles.agendaTbc}>?</Text>
-                  )}
-                </View>
-                <View style={styles.agendaBody}>
-                  <Text style={styles.agendaName} numberOfLines={1}>
-                    {item.festival.name}
-                  </Text>
-                  <Text style={styles.agendaMeta}>
-                    {happeningNow
-                      ? t('home.happeningNow')
-                      : daysUntil != null
-                        ? t('home.inDays', { count: daysUntil })
-                        : t('home.dateTbc')}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </Pressable>
+              />
             ))}
           </View>
         </View>
       )}
 
-      {/* Wishlist & favorites shelves */}
+      {/* Wishlist & favorites, same row format as the schedule above */}
       {[
         { key: 'wishlist', items: wishlist, labelKey: 'festival.wishlist', icon: 'heart', color: colors.statusWishlist },
         { key: 'favorite', items: favorites, labelKey: 'festival.favorite', icon: 'star', color: colors.statusFavorite },
@@ -222,16 +192,23 @@ export default function Home() {
               </Text>
               <Text style={styles.sectionCount}>{section.items.length}</Text>
             </View>
-            <FlatList
-              horizontal
-              data={section.items}
-              keyExtractor={(item) => item.festival.id}
-              renderItem={({ item }) => (
-                <FestivalPosterCard festival={item.festival} stats={item.stats} />
-              )}
-              contentContainerStyle={styles.carousel}
-              showsHorizontalScrollIndicator={false}
-            />
+            <View style={styles.agendaList}>
+              {section.items.map((item) => (
+                <ScheduleRow
+                  key={item.festival.id}
+                  item={item}
+                  meta={
+                    item.nextEdition
+                      ? `${formatDate(item.nextEdition.start_date)}${
+                          item.nextEdition.end_date ? ` – ${formatDate(item.nextEdition.end_date)}` : ''
+                        }`
+                      : t('home.dateTbc')
+                  }
+                  locale={i18n.language}
+                  onPress={() => openFestival(item)}
+                />
+              ))}
+            </View>
           </View>
         ))}
 
@@ -343,53 +320,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   agendaList: { gap: spacing.sm, paddingHorizontal: spacing.xl },
-  agendaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    padding: spacing.md,
-  },
-  agendaDate: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.sm,
-    backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  agendaDay: {
-    fontFamily: typography.fonts.heading,
-    fontSize: typography.sizes.lg,
-    color: colors.text,
-    lineHeight: 22,
-  },
-  agendaMonth: {
-    fontFamily: typography.fonts.bodyMedium,
-    fontSize: typography.sizes.xs,
-    color: colors.statusPlanned,
-    textTransform: 'uppercase',
-  },
-  agendaTbc: {
-    fontFamily: typography.fonts.heading,
-    fontSize: typography.sizes.lg,
-    color: colors.textMuted,
-  },
-  agendaBody: { flex: 1, gap: 2 },
-  agendaName: {
-    fontFamily: typography.fonts.bodyMedium,
-    fontSize: typography.sizes.sm,
-    color: colors.text,
-  },
-  agendaMeta: {
-    fontFamily: typography.fonts.body,
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
-  },
-  carousel: { gap: spacing.md, paddingHorizontal: spacing.xl },
   empty: { alignItems: 'center', marginTop: spacing.xxxl, gap: spacing.xl },
   emptyText: {
     fontFamily: typography.fonts.body,

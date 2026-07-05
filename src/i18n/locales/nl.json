@@ -99,7 +99,10 @@
     "periodAll": "Alle data",
     "periodUpcoming": "Binnenkort",
     "period3m": "Komende 3 maanden",
-    "period6m": "Komende 6 maanden"
+    "period6m": "Komende 6 maanden",
+    "periodCustom": "Eigen periode",
+    "periodFrom": "Van",
+    "periodTo": "Tot"
   },
   "friends": {
     "title": "Vrienden",
