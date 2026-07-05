@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { PanResponder, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radii, spacing, typography } from '@/theme';
 
@@ -13,33 +14,60 @@ export function ratingColor(value: number): string {
 
 interface RatingBarProps {
   value: number; // 0–20 (0 = not rated yet)
-  /** When provided, the bar becomes a 20-segment tap input. */
+  /** When provided, the bar becomes a 20-segment slide/tap input. */
   onChange?: (value: number) => void;
   label?: string;
 }
 
 /**
- * /20 rating control. Input mode: 20 tappable segments.
+ * /20 rating control. Input mode: drag anywhere across the 20 segments
+ * (or tap one directly) to set the value — a single continuous gesture
+ * reads much faster than tapping 20 separate targets one at a time.
  * Display mode: thin progress bar. Both show the "x/20" value.
  */
 export function RatingBar({ value, onChange, label }: RatingBarProps) {
+  const [width, setWidth] = useState(0);
+  const widthRef = useRef(0);
+
+  const valueFromX = (x: number) => {
+    const w = widthRef.current;
+    if (w <= 0) return value;
+    const clamped = Math.min(Math.max(x, 0), w);
+    return Math.min(MAX, Math.max(1, Math.ceil((clamped / w) * MAX)));
+  };
+
+  const panResponder = useMemo(() => {
+    if (!onChange) return null;
+    return PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (e) => onChange(valueFromX(e.nativeEvent.locationX)),
+      onPanResponderMove: (e) => onChange(valueFromX(e.nativeEvent.locationX)),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onChange]);
+
   return (
     <View style={styles.container}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <View style={styles.row}>
         {onChange ? (
-          <View style={styles.segments}>
-            {Array.from({ length: MAX }, (_, i) => i + 1).map((step) => (
-              <Pressable
-                key={step}
-                style={[
-                  styles.segment,
-                  step <= value && { backgroundColor: ratingColor(value) },
-                ]}
-                onPress={() => onChange(step)}
-                hitSlop={{ top: 10, bottom: 10 }}
-              />
-            ))}
+          <View
+            style={styles.segments}
+            onLayout={(e) => {
+              widthRef.current = e.nativeEvent.layout.width;
+              setWidth(e.nativeEvent.layout.width);
+            }}
+            hitSlop={{ top: 12, bottom: 12 }}
+            {...panResponder!.panHandlers}
+          >
+            {width > 0 &&
+              Array.from({ length: MAX }, (_, i) => i + 1).map((step) => (
+                <View
+                  key={step}
+                  style={[styles.segment, step <= value && { backgroundColor: ratingColor(value) }]}
+                />
+              ))}
           </View>
         ) : (
           <View style={styles.track}>
