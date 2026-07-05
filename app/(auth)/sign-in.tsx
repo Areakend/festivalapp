@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
+import { UpdateDiagnostics } from '@/components/ui/UpdateDiagnostics';
 import { signInSchema, type SignInInput } from '@/features/auth/schemas';
 import { signInWithEmail, signInWithGoogle } from '@/features/auth/api';
 import { colors, spacing, typography } from '@/theme';
@@ -101,6 +102,8 @@ export default function SignIn() {
           onPress={() => router.replace('/sign-up')}
         />
       </View>
+
+      <UpdateDiagnostics />
     </Screen>
   );
 }
