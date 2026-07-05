@@ -49,12 +49,21 @@ function claimPendingSpotifyAuth() {
   return claimed;
 }
 
-export async function completeSpotifyAuthFromDeepLink(code: string) {
+/**
+ * Returns null when this deep link wasn't ours to handle (the other path
+ * already claimed it), or a { error } object describing what happened —
+ * error is undefined on success. Never throws: the caller always has
+ * something to show the user instead of a silent failure.
+ */
+export async function completeSpotifyAuthFromDeepLink(
+  code: string,
+): Promise<{ error?: string } | null> {
   const claimed = claimPendingSpotifyAuth();
-  if (!claimed) return;
-  await supabase.functions
-    .invoke('spotify-auth', { body: { code, codeVerifier: claimed.codeVerifier, redirectUri: claimed.redirectUri } })
-    .catch(() => {});
+  if (!claimed) return null;
+  const { error } = await supabase.functions.invoke('spotify-auth', {
+    body: { code, codeVerifier: claimed.codeVerifier, redirectUri: claimed.redirectUri },
+  });
+  return { error: error ? await functionsErrorMessage(error) : undefined };
 }
 
 export interface SpotifyConnectionStatus {

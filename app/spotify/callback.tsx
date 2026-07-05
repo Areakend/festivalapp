@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Alert, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -26,8 +26,11 @@ export default function SpotifyCallbackScreen() {
 
     (async () => {
       if (typeof code === 'string') {
-        await completeSpotifyAuthFromDeepLink(code);
+        const result = await completeSpotifyAuthFromDeepLink(code);
         void queryClient.invalidateQueries({ queryKey: ['spotify-connection'] });
+        if (result?.error) {
+          Alert.alert('Spotify', result.error);
+        }
       }
       router.replace('/profile');
     })();
