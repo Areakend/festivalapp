@@ -16,14 +16,15 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Chip } from '@/components/ui/Chip';
 import { FilterSheet } from '@/components/ui/FilterSheet';
+import { DateRangeSheet } from '@/components/ui/DateRangeSheet';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
 import { useMyReviews } from '@/features/reviews/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
 
 type SortKey = 'top100' | 'community' | 'myRating' | 'date' | 'name';
-type PeriodKey = 'all' | 'upcoming' | '3m' | '6m';
-type SheetKey = 'genre' | 'country' | 'sort' | 'period' | null;
+type PeriodKey = 'all' | 'upcoming' | '3m' | '6m' | 'custom';
+type SheetKey = 'genre' | 'country' | 'sort' | 'period' | 'customDates' | null;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -46,6 +47,7 @@ export default function FestivalsScreen() {
   const [top100Only, setTop100Only] = useState(false);
   const [attendedOnly, setAttendedOnly] = useState(false);
   const [period, setPeriod] = useState<PeriodKey>('all');
+  const [customRange, setCustomRange] = useState<{ from: Date; to: Date } | null>(null);
   const [sort, setSort] = useState<SortKey>('community');
   const [openSheet, setOpenSheet] = useState<SheetKey>(null);
 
@@ -61,6 +63,7 @@ export default function FestivalsScreen() {
     upcoming: t('discover.periodUpcoming'),
     '3m': t('discover.period3m'),
     '6m': t('discover.period6m'),
+    custom: t('discover.periodCustom'),
   };
 
   const attendedIds = useMemo(
@@ -94,8 +97,15 @@ export default function FestivalsScreen() {
     if (!data) return [];
     const q = search.trim().toLowerCase();
     const now = Date.now();
+    const periodStart = period === 'custom' && customRange ? customRange.from.getTime() : now;
     const periodEnd =
-      period === '3m' ? now + 92 * DAY_MS : period === '6m' ? now + 183 * DAY_MS : Infinity;
+      period === '3m'
+        ? now + 92 * DAY_MS
+        : period === '6m'
+          ? now + 183 * DAY_MS
+          : period === 'custom' && customRange
+            ? customRange.to.getTime()
+            : Infinity;
 
     const result = data.filter((item) => {
       const { festival, nextEdition } = item;
@@ -106,7 +116,9 @@ export default function FestivalsScreen() {
       if (attendedOnly && !attendedIds.has(festival.id)) return false;
       if (period !== 'all') {
         if (!nextEdition) return false;
-        if (new Date(nextEdition.start_date).getTime() > periodEnd) return false;
+        const start = new Date(nextEdition.start_date).getTime();
+        if (start > periodEnd) return false;
+        if (period === 'custom' && start < periodStart) return false;
       }
       return true;
     });
@@ -129,15 +141,34 @@ export default function FestivalsScreen() {
           return a.festival.name.localeCompare(b.festival.name);
       }
     });
-  }, [data, search, genre, country, top100Only, attendedOnly, period, sort, attendedIds, myRatingByFestival]);
+  }, [
+    data,
+    search,
+    genre,
+    country,
+    top100Only,
+    attendedOnly,
+    period,
+    customRange,
+    sort,
+    attendedIds,
+    myRatingByFestival,
+  ]);
 
   const top100Attended = useMemo(
     () => (data ?? []).filter((i) => i.djmagRank != null && attendedIds.has(i.festival.id)).length,
     [data, attendedIds],
   );
 
-  const formatDate = (iso: string) =>
+  const formatDate = (iso: string | Date) =>
     new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
+
+  const periodChipLabel =
+    period === 'all'
+      ? t('discover.period')
+      : period === 'custom' && customRange
+        ? `${formatDate(customRange.from)} – ${formatDate(customRange.to)}`
+        : PERIOD_LABELS[period];
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
@@ -182,7 +213,7 @@ export default function FestivalsScreen() {
           onPress={() => setOpenSheet('country')}
         />
         <Chip
-          label={period === 'all' ? t('discover.period') : PERIOD_LABELS[period]}
+          label={periodChipLabel}
           active={period !== 'all'}
           activeColor={colors.statusPlanned}
           onPress={() => setOpenSheet('period')}
@@ -270,7 +301,26 @@ export default function FestivalsScreen() {
           label: PERIOD_LABELS[key],
         }))}
         selected={period}
-        onSelect={(v) => setPeriod((v as PeriodKey) ?? 'all')}
+        onSelect={(v) => {
+          if (v === 'custom') {
+            // Opens its own sheet instead of applying immediately —
+            // FilterSheet's onClose (called right after onSelect) would
+            // otherwise dismiss it before the user picks any dates.
+            setOpenSheet('customDates');
+            return;
+          }
+          setPeriod((v as PeriodKey) ?? 'all');
+        }}
+        onClose={() => setOpenSheet((s) => (s === 'period' ? null : s))}
+      />
+      <DateRangeSheet
+        visible={openSheet === 'customDates'}
+        from={customRange?.from ?? new Date()}
+        to={customRange?.to ?? new Date(Date.now() + 30 * DAY_MS)}
+        onApply={(from, to) => {
+          setCustomRange({ from, to });
+          setPeriod('custom');
+        }}
         onClose={() => setOpenSheet(null)}
       />
       <FilterSheet

@@ -99,7 +99,10 @@
     "periodAll": "Alle Termine",
     "periodUpcoming": "Demnächst",
     "period3m": "Nächste 3 Monate",
-    "period6m": "Nächste 6 Monate"
+    "period6m": "Nächste 6 Monate",
+    "periodCustom": "Eigener Zeitraum",
+    "periodFrom": "Von",
+    "periodTo": "Bis"
   },
   "friends": {
     "title": "Freunde",

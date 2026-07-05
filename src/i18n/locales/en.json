@@ -99,7 +99,10 @@
     "periodAll": "Any date",
     "periodUpcoming": "Upcoming",
     "period3m": "Next 3 months",
-    "period6m": "Next 6 months"
+    "period6m": "Next 6 months",
+    "periodCustom": "Custom range",
+    "periodFrom": "From",
+    "periodTo": "To"
   },
   "friends": {
     "title": "Friends",

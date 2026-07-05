@@ -26,7 +26,8 @@
       "expo-secure-store",
       "expo-localization",
       "expo-web-browser",
-      "expo-updates"
+      "expo-updates",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
