@@ -11,28 +11,79 @@ import type {
   UserFestivalStatus,
 } from '@/types/domain';
 
+export interface CatalogItem {
+  festival: Festival;
+  stats: FestivalCommunityStats | undefined;
+  /** Soonest edition starting today or later (undefined if none is dated). */
+  nextEdition: { year: number; start_date: string; end_date: string | null } | undefined;
+  /** Position in the most recent DJ Mag Top 100 (undefined if not ranked this year). */
+  djmagRank: number | undefined;
+}
+
 /**
- * Catalog is small for the MVP, so we fetch it once with stats and filter
- * client-side. TODO(phase 2): server-side search/pagination once the catalog
- * grows past a few hundred rows.
+ * Catalog is small for the MVP, so we fetch it once with stats, upcoming
+ * edition dates and current DJ Mag ranks, then filter client-side.
+ * TODO(phase 2): server-side search/pagination once the catalog grows.
  */
 export function useFestivals() {
   return useQuery({
     queryKey: ['festivals'],
-    queryFn: async () => {
-      const [festivals, stats] = await Promise.all([
+    queryFn: async (): Promise<CatalogItem[]> => {
+      const today = new Date().toISOString().slice(0, 10);
+      const [festivals, stats, editions, latestRank] = await Promise.all([
         supabase.from('festivals').select('*').order('name'),
         supabase.from('festival_community_stats').select('*'),
+        supabase
+          .from('festival_editions')
+          .select('festival_id, year, start_date, end_date')
+          .gte('start_date', today)
+          .order('start_date'),
+        supabase
+          .from('djmag_rankings')
+          .select('year')
+          .order('year', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
       ]);
       if (festivals.error) throw festivals.error;
       if (stats.error) throw stats.error;
+      if (editions.error) throw editions.error;
+
+      let rankByFestival = new Map<string, number>();
+      if (latestRank.data) {
+        const { data: rankings, error: rankError } = await supabase
+          .from('djmag_rankings')
+          .select('festival_id, rank_position')
+          .eq('year', latestRank.data.year);
+        if (rankError) throw rankError;
+        rankByFestival = new Map(rankings.map((r) => [r.festival_id, r.rank_position]));
+      }
 
       const statsById = new Map<string, FestivalCommunityStats>(
         (stats.data as FestivalCommunityStats[]).map((s) => [s.festival_id, s]),
       );
+      // editions come back sorted by start_date, so the first hit per
+      // festival is its next upcoming one.
+      const nextEditionByFestival = new Map<
+        string,
+        { year: number; start_date: string; end_date: string | null }
+      >();
+      for (const e of editions.data as {
+        festival_id: string;
+        year: number;
+        start_date: string;
+        end_date: string | null;
+      }[]) {
+        if (!nextEditionByFestival.has(e.festival_id)) {
+          nextEditionByFestival.set(e.festival_id, e);
+        }
+      }
+
       return (festivals.data as Festival[]).map((festival) => ({
         festival,
         stats: statsById.get(festival.id),
+        nextEdition: nextEditionByFestival.get(festival.id),
+        djmagRank: rankByFestival.get(festival.id),
       }));
     },
   });

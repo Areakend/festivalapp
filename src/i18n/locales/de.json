@@ -20,7 +20,8 @@
     "discover": "Entdecken",
     "rankings": "Ranglisten",
     "djmag": "Top 100",
-    "profile": "Profil"
+    "profile": "Profil",
+    "festivals": "Festivals"
   },
   "onboarding": {
     "tagline": "Track every beat.",
@@ -89,7 +90,16 @@
     "sort": "Sortieren",
     "sortPopular": "Am beliebtesten",
     "sortName": "A–Z",
-    "sortRank": "DJ-Mag-Platzierung"
+    "sortRank": "DJ-Mag-Platzierung",
+    "sortTop100": "DJ-Mag-Platzierung",
+    "sortCommunity": "Community-Bewertung",
+    "sortMyRating": "Meine Bewertungen",
+    "sortDate": "Datum",
+    "period": "Zeitraum",
+    "periodAll": "Alle Termine",
+    "periodUpcoming": "Demnächst",
+    "period3m": "Nächste 3 Monate",
+    "period6m": "Nächste 6 Monate"
   },
   "friends": {
     "title": "Freunde",
@@ -157,5 +167,13 @@
     "noFestivals": "Noch keine Festivals",
     "noReviews": "Noch keine Bewertungen — sei der Erste!",
     "noResults": "Keine Ergebnisse für deine Suche"
+  },
+  "home": {
+    "nextFestival": "Dein nächstes Festival",
+    "inDays_one": "In {{count}} Tag",
+    "inDays_other": "In {{count}} Tagen",
+    "happeningNow": "Läuft gerade!",
+    "planning": "Mein Plan",
+    "dateTbc": "Termine folgen"
   }
 }

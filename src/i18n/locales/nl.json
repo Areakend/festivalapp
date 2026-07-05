@@ -20,7 +20,8 @@
     "discover": "Ontdekken",
     "rankings": "Ranglijsten",
     "djmag": "Top 100",
-    "profile": "Profiel"
+    "profile": "Profiel",
+    "festivals": "Festivals"
   },
   "onboarding": {
     "tagline": "Volg elke beat.",
@@ -89,7 +90,16 @@
     "sort": "Sorteren",
     "sortPopular": "Populairst",
     "sortName": "A–Z",
-    "sortRank": "DJ Mag-positie"
+    "sortRank": "DJ Mag-positie",
+    "sortTop100": "DJ Mag-positie",
+    "sortCommunity": "Communityscore",
+    "sortMyRating": "Mijn beoordelingen",
+    "sortDate": "Datum",
+    "period": "Periode",
+    "periodAll": "Alle data",
+    "periodUpcoming": "Binnenkort",
+    "period3m": "Komende 3 maanden",
+    "period6m": "Komende 6 maanden"
   },
   "friends": {
     "title": "Vrienden",
@@ -157,5 +167,13 @@
     "noFestivals": "Nog geen festivals",
     "noReviews": "Nog geen reviews — wees de eerste!",
     "noResults": "Geen resultaten voor je zoekopdracht"
+  },
+  "home": {
+    "nextFestival": "Je volgende festival",
+    "inDays_one": "Over {{count}} dag",
+    "inDays_other": "Over {{count}} dagen",
+    "happeningNow": "Nu bezig!",
+    "planning": "Mijn agenda",
+    "dateTbc": "Data volgen nog"
   }
 }

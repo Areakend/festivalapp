@@ -20,7 +20,8 @@
     "discover": "Discover",
     "rankings": "Rankings",
     "djmag": "Top 100",
-    "profile": "Profile"
+    "profile": "Profile",
+    "festivals": "Festivals"
   },
   "onboarding": {
     "tagline": "Track every beat.",
@@ -89,7 +90,16 @@
     "sort": "Sort",
     "sortPopular": "Most popular",
     "sortName": "A–Z",
-    "sortRank": "DJ Mag rank"
+    "sortRank": "DJ Mag rank",
+    "sortTop100": "DJ Mag rank",
+    "sortCommunity": "Community rating",
+    "sortMyRating": "My ratings",
+    "sortDate": "Date",
+    "period": "Period",
+    "periodAll": "Any date",
+    "periodUpcoming": "Upcoming",
+    "period3m": "Next 3 months",
+    "period6m": "Next 6 months"
   },
   "friends": {
     "title": "Friends",
@@ -157,5 +167,13 @@
     "noFestivals": "No festivals yet",
     "noReviews": "No reviews yet — be the first!",
     "noResults": "No results for your search"
+  },
+  "home": {
+    "nextFestival": "Your next festival",
+    "inDays_one": "In {{count}} day",
+    "inDays_other": "In {{count}} days",
+    "happeningNow": "Happening now!",
+    "planning": "My schedule",
+    "dateTbc": "Dates TBC"
   }
 }

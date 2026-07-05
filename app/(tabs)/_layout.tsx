@@ -30,22 +30,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="discover"
         options={{
-          title: t('tabs.discover'),
+          title: t('tabs.festivals'),
           tabBarIcon: ({ color, size }) => <Ionicons name="compass" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="rankings"
-        options={{
-          title: t('tabs.rankings'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="podium" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="djmag"
-        options={{
-          title: t('tabs.djmag'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="trophy" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
