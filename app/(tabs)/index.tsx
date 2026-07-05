@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Button } from '@/components/ui/Button';
+import { ScheduleRow } from '@/components/festival/ScheduleRow';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
 import { useDjMagTop100 } from '@/features/profile/api';
 import { colors, radii, spacing, typography } from '@/theme';
@@ -230,45 +231,6 @@ function QuickStat({ value, label, color }: { value: string; label: string; colo
   );
 }
 
-/** One row shared by the schedule, wishlist and favorites sections. */
-function ScheduleRow({
-  item,
-  meta,
-  locale,
-  onPress,
-}: {
-  item: CatalogItem;
-  meta: string;
-  locale: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable style={({ pressed }) => [styles.agendaRow, pressed && { opacity: 0.8 }]} onPress={onPress}>
-      <View style={styles.agendaDate}>
-        {item.nextEdition ? (
-          <>
-            <Text style={styles.agendaDay}>{new Date(item.nextEdition.start_date).getDate()}</Text>
-            <Text style={styles.agendaMonth}>
-              {new Date(item.nextEdition.start_date)
-                .toLocaleDateString(locale, { month: 'short' })
-                .replace('.', '')}
-            </Text>
-          </>
-        ) : (
-          <Text style={styles.agendaTbc}>?</Text>
-        )}
-      </View>
-      <View style={styles.agendaBody}>
-        <Text style={styles.agendaName} numberOfLines={1}>
-          {item.festival.name}
-        </Text>
-        <Text style={styles.agendaMeta}>{meta}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { gap: spacing.xl },
@@ -358,52 +320,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   agendaList: { gap: spacing.sm, paddingHorizontal: spacing.xl },
-  agendaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    padding: spacing.md,
-  },
-  agendaDate: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.sm,
-    backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  agendaDay: {
-    fontFamily: typography.fonts.heading,
-    fontSize: typography.sizes.lg,
-    color: colors.text,
-    lineHeight: 22,
-  },
-  agendaMonth: {
-    fontFamily: typography.fonts.bodyMedium,
-    fontSize: typography.sizes.xs,
-    color: colors.statusPlanned,
-    textTransform: 'uppercase',
-  },
-  agendaTbc: {
-    fontFamily: typography.fonts.heading,
-    fontSize: typography.sizes.lg,
-    color: colors.textMuted,
-  },
-  agendaBody: { flex: 1, gap: 2 },
-  agendaName: {
-    fontFamily: typography.fonts.bodyMedium,
-    fontSize: typography.sizes.sm,
-    color: colors.text,
-  },
-  agendaMeta: {
-    fontFamily: typography.fonts.body,
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
-  },
   empty: { alignItems: 'center', marginTop: spacing.xxxl, gap: spacing.xl },
   emptyText: {
     fontFamily: typography.fonts.body,
