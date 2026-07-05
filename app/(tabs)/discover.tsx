@@ -21,7 +21,7 @@ import { useMyReviews } from '@/features/reviews/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
 
-type SortKey = 'top100' | 'community' | 'myRating' | 'popular' | 'date' | 'name';
+type SortKey = 'top100' | 'community' | 'myRating' | 'date' | 'name';
 type PeriodKey = 'all' | 'upcoming' | '3m' | '6m';
 type SheetKey = 'genre' | 'country' | 'sort' | 'period' | null;
 
@@ -53,7 +53,6 @@ export default function FestivalsScreen() {
     top100: t('discover.sortTop100'),
     community: t('discover.sortCommunity'),
     myRating: t('discover.sortMyRating'),
-    popular: t('discover.sortPopular'),
     date: t('discover.sortDate'),
     name: t('discover.sortName'),
   };
@@ -121,8 +120,6 @@ export default function FestivalsScreen() {
           return (b.stats?.bayesian_score ?? 0) - (a.stats?.bayesian_score ?? 0);
         case 'myRating':
           return (myRating(b) ?? -1) - (myRating(a) ?? -1);
-        case 'popular':
-          return (b.stats?.rating_count ?? 0) - (a.stats?.rating_count ?? 0);
         case 'date': {
           const ad = a.nextEdition ? new Date(a.nextEdition.start_date).getTime() : Infinity;
           const bd = b.nextEdition ? new Date(b.nextEdition.start_date).getTime() : Infinity;
@@ -222,18 +219,9 @@ export default function FestivalsScreen() {
               tintColor={colors.primary}
             />
           }
-          renderItem={({ item, index }) => (
+          renderItem={({ item }) => (
             <FestivalRow
               item={item}
-              position={
-                sort === 'top100' || top100Only
-                  ? item.djmagRank != null
-                    ? `#${item.djmagRank}`
-                    : '—'
-                  : sort === 'community'
-                    ? String(index + 1)
-                    : undefined
-              }
               attended={attendedIds.has(item.festival.id)}
               myRating={myRatingByFestival.get(item.festival.id)}
               dateLabel={
@@ -302,42 +290,46 @@ export default function FestivalsScreen() {
 
 function FestivalRow({
   item,
-  position,
   attended,
   myRating,
   dateLabel,
   onPress,
 }: {
   item: CatalogItem;
-  position: string | undefined;
   attended: boolean;
   myRating: number | undefined;
   dateLabel: string | undefined;
   onPress: () => void;
 }) {
   const { festival, stats } = item;
+  const hasCommunity = stats != null && stats.rating_count > 0;
   return (
     <Pressable style={({ pressed }) => [styles.row, pressed && { opacity: 0.8 }]} onPress={onPress}>
-      {position != null && <Text style={styles.rank}>{position}</Text>}
       <View style={styles.rowBody}>
         <Text style={styles.rowName} numberOfLines={1}>
           {countryFlag(festival.country)} {festival.name}
         </Text>
-        <View style={styles.rowMetaLine}>
-          {dateLabel != null && <Text style={styles.rowDate}>{dateLabel}</Text>}
-          {stats != null && stats.rating_count > 0 && (
-            <Text style={styles.rowCommunity}>
-              ★ {Number(stats.avg_rating).toFixed(1)}/20 · {stats.rating_count}
-            </Text>
+        {/* Always rendered so every row has the same height, dated or not. */}
+        <Text style={styles.rowDate} numberOfLines={1}>
+          {dateLabel ?? ' '}
+        </Text>
+      </View>
+      <View style={styles.ratingBlock}>
+        <View style={styles.communityRating}>
+          <Ionicons name="star" size={12} color={hasCommunity ? colors.rating : colors.textMuted} />
+          <Text style={[styles.communityRatingText, !hasCommunity && { color: colors.textMuted }]}>
+            {hasCommunity ? `${Number(stats.avg_rating).toFixed(1)}/20` : '–'}
+          </Text>
+        </View>
+        <View style={styles.myRating}>
+          {myRating != null && (
+            <>
+              <Ionicons name="person" size={10} color={colors.textMuted} />
+              <Text style={styles.myRatingText}>{myRating.toFixed(0)}/20</Text>
+            </>
           )}
         </View>
       </View>
-      {myRating != null && (
-        <View style={styles.myRating}>
-          <Ionicons name="star" size={12} color={colors.rating} />
-          <Text style={styles.myRatingText}>{myRating.toFixed(0)}/20</Text>
-        </View>
-      )}
       <Ionicons
         name={attended ? 'checkmark-circle' : 'ellipse-outline'}
         size={22}
@@ -413,13 +405,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radii.md,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  rank: {
-    fontFamily: typography.fonts.heading,
-    fontSize: typography.sizes.md,
-    color: colors.primary,
-    width: 44,
+    height: 64, // fixed: every row identical, rated/dated or not
   },
   rowBody: { flex: 1, gap: 2 },
   rowName: {
@@ -427,22 +413,24 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.text,
   },
-  rowMetaLine: { flexDirection: 'row', gap: spacing.md },
   rowDate: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.xs,
     color: colors.statusPlanned,
+    minHeight: 15,
   },
-  rowCommunity: {
+  ratingBlock: { alignItems: 'flex-end', gap: 2, width: 66 },
+  communityRating: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  communityRatingText: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: typography.sizes.sm,
+    color: colors.rating,
+  },
+  myRating: { flexDirection: 'row', alignItems: 'center', gap: 3, minHeight: 13 },
+  myRatingText: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.xs,
     color: colors.textMuted,
-  },
-  myRating: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  myRatingText: {
-    fontFamily: typography.fonts.bodySemiBold,
-    fontSize: typography.sizes.xs,
-    color: colors.rating,
   },
   empty: { alignItems: 'center', marginTop: spacing.xxxl },
   emptyText: {
