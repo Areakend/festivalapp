@@ -16,21 +16,24 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Button } from '@/components/ui/Button';
 import { FestivalPosterCard } from '@/components/festival/FestivalPosterCard';
-import { useFestivals, useMyStatuses } from '@/features/festivals/api';
+import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
 import { useDjMagTop100 } from '@/features/profile/api';
 import { colors, radii, spacing, typography } from '@/theme';
-import type { FestivalStatus } from '@/types/domain';
 
-const SECTIONS: { status: FestivalStatus; labelKey: string; icon: string; color: string }[] = [
-  { status: 'attended', labelKey: 'festival.attended', icon: 'checkmark-circle', color: colors.statusAttended },
-  { status: 'planned', labelKey: 'festival.planned', icon: 'calendar', color: colors.statusPlanned },
-  { status: 'wishlist', labelKey: 'festival.wishlist', icon: 'heart', color: colors.statusWishlist },
-  { status: 'favorite', labelKey: 'festival.favorite', icon: 'star', color: colors.statusFavorite },
-];
+const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Home: quick stats + one horizontal carousel per tracking status. */
+interface AgendaEntry {
+  item: CatalogItem;
+  daysUntil: number | null; // null = planned but no confirmed date
+  happeningNow: boolean;
+}
+
+/**
+ * Home: countdown to the next planned festival, chronological agenda of
+ * everything planned, quick stats, wishlist & favorites shelves.
+ */
 export default function Home() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
@@ -39,30 +42,65 @@ export default function Home() {
   const { data: myStatuses } = useMyStatuses();
   const { data: djmag } = useDjMagTop100();
 
-  const { sections, attendedCount, wishlistCount, djmagCount } = useMemo(() => {
-    const byId = new Map((catalog ?? []).map((item) => [item.festival.id, item]));
-    const built = SECTIONS.map((section) => ({
-      ...section,
-      items: (myStatuses ?? [])
-        .filter((s) => s.status === section.status)
-        .map((s) => byId.get(s.festival_id))
-        .filter((item): item is NonNullable<typeof item> => item != null),
-    }));
-    const attendedIds = new Set(
-      (myStatuses ?? []).filter((s) => s.status === 'attended').map((s) => s.festival_id),
-    );
-    return {
-      sections: built.filter((s) => s.items.length > 0),
-      attendedCount: attendedIds.size,
-      wishlistCount: (myStatuses ?? []).filter((s) => s.status === 'wishlist').length,
-      djmagCount: (djmag?.entries ?? []).filter((e) => attendedIds.has(e.festivals.id)).length,
-    };
-  }, [catalog, myStatuses, djmag]);
+  const { agenda, next, wishlist, favorites, attendedCount, wishlistCount, djmagCount } =
+    useMemo(() => {
+      const byId = new Map((catalog ?? []).map((item) => [item.festival.id, item]));
+      const idsWith = (status: string) =>
+        (myStatuses ?? []).filter((s) => s.status === status).map((s) => s.festival_id);
+
+      const now = Date.now();
+      const agenda: AgendaEntry[] = idsWith('planned')
+        .map((id) => byId.get(id))
+        .filter((item): item is CatalogItem => item != null)
+        .map((item) => {
+          if (!item.nextEdition) return { item, daysUntil: null, happeningNow: false };
+          const start = new Date(item.nextEdition.start_date).getTime();
+          const end = item.nextEdition.end_date
+            ? new Date(item.nextEdition.end_date).getTime() + DAY_MS
+            : start + DAY_MS;
+          return {
+            item,
+            daysUntil: Math.max(0, Math.ceil((start - now) / DAY_MS)),
+            happeningNow: now >= start && now < end,
+          };
+        })
+        .sort((a, b) => {
+          // dated first (soonest on top), undated at the end
+          if (a.daysUntil == null) return b.daysUntil == null ? 0 : 1;
+          if (b.daysUntil == null) return -1;
+          return a.daysUntil - b.daysUntil;
+        });
+
+      const next = agenda.find((e) => e.daysUntil != null) ?? null;
+
+      const attendedIds = new Set(idsWith('attended'));
+      return {
+        agenda,
+        next,
+        wishlist: idsWith('wishlist')
+          .map((id) => byId.get(id))
+          .filter((item): item is CatalogItem => item != null),
+        favorites: idsWith('favorite')
+          .map((id) => byId.get(id))
+          .filter((item): item is CatalogItem => item != null),
+        attendedCount: attendedIds.size,
+        wishlistCount: idsWith('wishlist').length,
+        djmagCount: (djmag?.entries ?? []).filter((e) => attendedIds.has(e.festivals.id)).length,
+      };
+    }, [catalog, myStatuses, djmag]);
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ['festivals'] });
     void queryClient.invalidateQueries({ queryKey: ['my-statuses'] });
   };
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
+
+  const openFestival = (item: CatalogItem) =>
+    router.push({ pathname: '/festival/[slug]', params: { slug: item.festival.slug } });
+
+  const hasAnything = agenda.length > 0 || wishlist.length > 0 || favorites.length > 0;
 
   return (
     <ScrollView
@@ -75,29 +113,108 @@ export default function Home() {
         <RefreshControl refreshing={isRefetching} onRefresh={refresh} tintColor={colors.primary} />
       }
     >
-      {/* Header: title + friends shortcut */}
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>{t('profile.myFestivals')}</Text>
+        <Text style={styles.title}>{t('common.appName')}</Text>
         <Pressable style={styles.friendsButton} onPress={() => router.push('/friends')} hitSlop={8}>
           <Ionicons name="people" size={22} color={colors.primary} />
         </Pressable>
       </View>
 
-      {/* Quick stats strip */}
+      {/* Countdown hero — the single thing you open the app for */}
+      {next && next.item.nextEdition && (
+        <Pressable
+          style={({ pressed }) => [styles.heroWrap, pressed && { opacity: 0.9 }]}
+          onPress={() => openFestival(next.item)}
+        >
+          <View style={styles.hero}>
+            <Text style={styles.heroLabel}>{t('home.nextFestival')}</Text>
+            <Text style={styles.heroCountdown}>
+              {next.happeningNow
+                ? t('home.happeningNow')
+                : t('home.inDays', { count: next.daysUntil ?? 0 })}
+            </Text>
+            <Text style={styles.heroName} numberOfLines={1}>
+              {next.item.festival.name}
+            </Text>
+            <Text style={styles.heroDate}>
+              {formatDate(next.item.nextEdition.start_date)}
+              {next.item.nextEdition.end_date
+                ? ` – ${formatDate(next.item.nextEdition.end_date)}`
+                : ''}
+              {next.item.festival.city ? ` · ${next.item.festival.city}` : ''}
+            </Text>
+          </View>
+        </Pressable>
+      )}
+
+      {/* Quick stats */}
       <View style={styles.statsRow}>
         <QuickStat value={String(attendedCount)} label={t('festival.attended')} color={colors.statusAttended} />
         <QuickStat value={String(wishlistCount)} label={t('festival.wishlist')} color={colors.statusWishlist} />
         <QuickStat value={`${djmagCount}/100`} label="DJ Mag" color={colors.rating} />
       </View>
 
-      {sections.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>{t('empty.noFestivals')}</Text>
-          <Button label={t('tabs.discover')} onPress={() => router.push('/discover')} />
+      {/* Chronological agenda of planned festivals */}
+      {agenda.length > 0 && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="calendar" size={18} color={colors.statusPlanned} />
+            <Text style={[styles.sectionTitle, { color: colors.statusPlanned }]}>
+              {t('home.planning')}
+            </Text>
+            <Text style={styles.sectionCount}>{agenda.length}</Text>
+          </View>
+          <View style={styles.agendaList}>
+            {agenda.map(({ item, daysUntil, happeningNow }) => (
+              <Pressable
+                key={item.festival.id}
+                style={({ pressed }) => [styles.agendaRow, pressed && { opacity: 0.8 }]}
+                onPress={() => openFestival(item)}
+              >
+                <View style={styles.agendaDate}>
+                  {item.nextEdition ? (
+                    <>
+                      <Text style={styles.agendaDay}>
+                        {new Date(item.nextEdition.start_date).getDate()}
+                      </Text>
+                      <Text style={styles.agendaMonth}>
+                        {new Date(item.nextEdition.start_date)
+                          .toLocaleDateString(i18n.language, { month: 'short' })
+                          .replace('.', '')}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={styles.agendaTbc}>?</Text>
+                  )}
+                </View>
+                <View style={styles.agendaBody}>
+                  <Text style={styles.agendaName} numberOfLines={1}>
+                    {item.festival.name}
+                  </Text>
+                  <Text style={styles.agendaMeta}>
+                    {happeningNow
+                      ? t('home.happeningNow')
+                      : daysUntil != null
+                        ? t('home.inDays', { count: daysUntil })
+                        : t('home.dateTbc')}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </Pressable>
+            ))}
+          </View>
         </View>
-      ) : (
-        sections.map((section) => (
-          <View key={section.status} style={styles.section}>
+      )}
+
+      {/* Wishlist & favorites shelves */}
+      {[
+        { key: 'wishlist', items: wishlist, labelKey: 'festival.wishlist', icon: 'heart', color: colors.statusWishlist },
+        { key: 'favorite', items: favorites, labelKey: 'festival.favorite', icon: 'star', color: colors.statusFavorite },
+      ]
+        .filter((s) => s.items.length > 0)
+        .map((section) => (
+          <View key={section.key} style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name={section.icon as never} size={18} color={section.color} />
               <Text style={[styles.sectionTitle, { color: section.color }]}>
@@ -116,7 +233,13 @@ export default function Home() {
               showsHorizontalScrollIndicator={false}
             />
           </View>
-        ))
+        ))}
+
+      {!hasAnything && (
+        <View style={styles.empty}>
+          <Text style={styles.emptyText}>{t('empty.noFestivals')}</Text>
+          <Button label={t('tabs.festivals')} onPress={() => router.push('/discover')} />
+        </View>
       )}
     </ScrollView>
   );
@@ -151,6 +274,33 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radii.full,
     padding: spacing.md,
+  },
+  heroWrap: { paddingHorizontal: spacing.xl },
+  hero: {
+    backgroundColor: colors.primary,
+    borderRadius: radii.lg,
+    padding: spacing.xl,
+    gap: spacing.xs,
+  },
+  heroLabel: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: 'rgba(255,255,255,0.75)',
+  },
+  heroCountdown: {
+    fontFamily: typography.fonts.heading,
+    fontSize: 40,
+    color: colors.textOnPrimary,
+  },
+  heroName: {
+    fontFamily: typography.fonts.headingMedium,
+    fontSize: typography.sizes.lg,
+    color: colors.textOnPrimary,
+  },
+  heroDate: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.sm,
+    color: 'rgba(255,255,255,0.75)',
   },
   statsRow: {
     flexDirection: 'row',
@@ -191,6 +341,53 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.bodySemiBold,
     fontSize: typography.sizes.sm,
     color: colors.textMuted,
+  },
+  agendaList: { gap: spacing.sm, paddingHorizontal: spacing.xl },
+  agendaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: spacing.md,
+  },
+  agendaDate: {
+    width: 48,
+    height: 48,
+    borderRadius: radii.sm,
+    backgroundColor: colors.surfaceElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  agendaDay: {
+    fontFamily: typography.fonts.heading,
+    fontSize: typography.sizes.lg,
+    color: colors.text,
+    lineHeight: 22,
+  },
+  agendaMonth: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.xs,
+    color: colors.statusPlanned,
+    textTransform: 'uppercase',
+  },
+  agendaTbc: {
+    fontFamily: typography.fonts.heading,
+    fontSize: typography.sizes.lg,
+    color: colors.textMuted,
+  },
+  agendaBody: { flex: 1, gap: 2 },
+  agendaName: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.text,
+  },
+  agendaMeta: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
   },
   carousel: { gap: spacing.md, paddingHorizontal: spacing.xl },
   empty: { alignItems: 'center', marginTop: spacing.xxxl, gap: spacing.xl },
