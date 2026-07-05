@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
+import { functionsErrorMessage } from '@/lib/functions';
 
 export interface ExportTrack {
   artistName: string;
@@ -29,7 +30,7 @@ export function useGeneratePlaylistExport() {
         'generate-playlist-export',
         { body: { festivalId, editionId } },
       );
-      if (error) throw error;
+      if (error) throw new Error(await functionsErrorMessage(error));
       return data!;
     },
   });

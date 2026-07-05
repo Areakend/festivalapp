@@ -2,6 +2,7 @@ import * as AuthSession from 'expo-auth-session';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
+import { functionsErrorMessage } from '@/lib/functions';
 import { useSessionStore } from '@/features/auth/session-store';
 
 const SPOTIFY_CLIENT_ID = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID!;
@@ -10,25 +11,6 @@ const SCOPES = ['playlist-modify-public', 'playlist-modify-private'];
 const discovery = {
   authorizationEndpoint: 'https://accounts.spotify.com/authorize',
 };
-
-/**
- * supabase-js's FunctionsHttpError message is always the generic
- * "Edge Function returned a non-2xx status code" — the actual reason the
- * spotify-auth function rejected the request (bad Spotify credentials,
- * code/verifier mismatch, etc.) is in the response body on error.context.
- */
-async function functionsErrorMessage(error: unknown): Promise<string> {
-  const context = (error as { context?: Response }).context;
-  if (context) {
-    try {
-      const body = await context.clone().json();
-      if (typeof body?.error === 'string') return body.error;
-    } catch {
-      // fall through to the generic message below
-    }
-  }
-  return error instanceof Error ? error.message : String(error);
-}
 
 /**
  * AuthRequest.promptAsync also goes through WebBrowser.openAuthSessionAsync
@@ -164,7 +146,7 @@ export function useGeneratePlaylist() {
       const { data, error } = await supabase.functions.invoke<GeneratePlaylistResult>('generate-playlist', {
         body: { festivalId, editionId },
       });
-      if (error) throw error;
+      if (error) throw new Error(await functionsErrorMessage(error));
       return data!;
     },
   });
