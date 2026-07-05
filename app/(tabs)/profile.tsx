@@ -18,6 +18,7 @@ import {
   useDisconnectSpotify,
   useSpotifyConnection,
 } from '@/features/spotify/api';
+import { useConnectDeezer, useDisconnectDeezer, useDeezerConnection } from '@/features/deezer/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { colors, radii, spacing, typography } from '@/theme';
 
@@ -44,6 +45,9 @@ export default function ProfileScreen() {
   const { data: spotifyConnection } = useSpotifyConnection();
   const connectSpotify = useConnectSpotify();
   const disconnectSpotify = useDisconnectSpotify();
+  const { data: deezerConnection } = useDeezerConnection();
+  const connectDeezer = useConnectDeezer();
+  const disconnectDeezer = useDisconnectDeezer();
 
   const [name, setName] = useState('');
   useEffect(() => {
@@ -194,6 +198,33 @@ export default function ProfileScreen() {
               })
             }
             loading={connectSpotify.isPending}
+          />
+        )}
+      </View>
+
+      {/* Deezer */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Deezer</Text>
+        <Text style={styles.email}>
+          {deezerConnection ? t('profile.deezerConnected') : t('profile.deezerNotConnected')}
+        </Text>
+        {deezerConnection ? (
+          <Button
+            label={t('profile.disconnectDeezer')}
+            variant="ghost"
+            onPress={() => disconnectDeezer.mutate()}
+            loading={disconnectDeezer.isPending}
+          />
+        ) : (
+          <Button
+            label={t('profile.connectDeezer')}
+            variant="secondary"
+            onPress={() =>
+              connectDeezer.mutate(undefined, {
+                onError: (error) => Alert.alert(t('common.error'), error.message),
+              })
+            }
+            loading={connectDeezer.isPending}
           />
         )}
       </View>

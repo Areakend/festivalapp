@@ -84,6 +84,7 @@ export default function RootLayout() {
           {/* Always mounted: lands OAuth redirects while the code exchange resolves. */}
           <Stack.Screen name="auth/callback" />
           <Stack.Screen name="spotify/callback" />
+          <Stack.Screen name="deezer/callback" />
         </Stack>
       </QueryClientProvider>
     </SafeAreaProvider>
