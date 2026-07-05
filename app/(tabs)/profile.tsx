@@ -3,11 +3,11 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import * as Updates from 'expo-updates';
 
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { TextField } from '@/components/ui/TextField';
+import { UpdateDiagnostics } from '@/components/ui/UpdateDiagnostics';
 import { signOut } from '@/features/auth/api';
 import { useSessionStore } from '@/features/auth/session-store';
 import { useFestivals, useMyStatuses } from '@/features/festivals/api';
@@ -83,28 +83,6 @@ export default function ProfileScreen() {
     updateProfile.mutate({ preferred_language: lang });
   };
 
-  const [checkingUpdate, setCheckingUpdate] = useState(false);
-  const checkForUpdate = async () => {
-    setCheckingUpdate(true);
-    try {
-      const result = await Updates.checkForUpdateAsync();
-      if (!result.isAvailable) {
-        Alert.alert(
-          'Mises à jour',
-          `Aucune mise à jour trouvée. Raison : ${result.reason ?? '—'}`,
-        );
-        return;
-      }
-      await Updates.fetchUpdateAsync();
-      Alert.alert('Mises à jour', 'Nouvelle version téléchargée, l’app va redémarrer.', [
-        { text: 'OK', onPress: () => void Updates.reloadAsync() },
-      ]);
-    } catch (error) {
-      Alert.alert('Mises à jour', error instanceof Error ? error.message : String(error));
-    } finally {
-      setCheckingUpdate(false);
-    }
-  };
 
   return (
     <ScrollView
@@ -198,26 +176,7 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      {/* Diagnostics: which build/update is actually running on this device */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Diagnostics</Text>
-        <Text style={styles.email}>Updates activées : {Updates.isEnabled ? 'oui' : 'non'}</Text>
-        <Text style={styles.email}>
-          Lancement : {Updates.isEmbeddedLaunch ? 'bundle embarqué (build)' : 'mise à jour OTA'}
-        </Text>
-        <Text style={styles.email}>Update ID : {Updates.updateId ?? '—'}</Text>
-        <Text style={styles.email}>Channel : {Updates.channel ?? '—'}</Text>
-        <Text style={styles.email}>Runtime version : {Updates.runtimeVersion ?? '—'}</Text>
-        <Text style={styles.email}>
-          Publiée le : {Updates.createdAt ? Updates.createdAt.toLocaleString() : '—'}
-        </Text>
-        <Button
-          label="Vérifier les mises à jour"
-          variant="secondary"
-          onPress={() => void checkForUpdate()}
-          loading={checkingUpdate}
-        />
-      </View>
+      <UpdateDiagnostics />
 
       <Button
         label={t('friends.title')}
