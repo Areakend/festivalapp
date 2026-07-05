@@ -55,6 +55,48 @@ export async function signOut() {
 }
 
 /**
+ * Same Android quirk as the Spotify connect flow (see spotify/api.ts): the
+ * OS can deliver the festiq://auth/callback redirect to the router (the
+ * auth/callback screen) instead of resolving openAuthSessionAsync — which
+ * then hangs forever and the sign-in never completes. Whichever side claims
+ * this flag first exchanges the code; the loser stands down, so the
+ * single-use authorization code is never sent to Supabase twice. The PKCE
+ * code verifier itself lives in supabase-js's storage, so either side can
+ * perform the exchange.
+ */
+let pendingGoogleAuth = false;
+
+function claimPendingGoogleAuth() {
+  const claimed = pendingGoogleAuth;
+  pendingGoogleAuth = false;
+  return claimed;
+}
+
+/**
+ * Always attempts the exchange (the PKCE verifier lives in supabase-js's
+ * storage, so this works even if Android restarted the process to deliver
+ * the deep link and the in-memory flag was lost). The claim only decides
+ * whether a failure is worth surfacing: with no claim, an error usually
+ * just means the browser-session path already consumed the code.
+ */
+export async function completeGoogleAuthFromDeepLink(
+  code: string,
+): Promise<{ error?: string }> {
+  const claimed = claimPendingGoogleAuth();
+  try {
+    const { error } = await withTimeout(
+      supabase.auth.exchangeCodeForSession(code),
+      15_000,
+      'Completing Google sign-in',
+    );
+    if (error) throw error;
+    return {};
+  } catch (error) {
+    return { error: claimed ? (error as Error).message : undefined };
+  }
+}
+
+/**
  * Google sign-in via Supabase OAuth + PKCE:
  * open the provider page in a secure browser session, then exchange the
  * returned `code` for a session. No client secret involved on-device.
@@ -70,10 +112,22 @@ export async function signInWithGoogle() {
   );
   if (error) throw error;
 
+  pendingGoogleAuth = true;
+
   // No timeout here: the user is looking at a browser tab, not a spinner —
   // this one is meant to hang until they act (or cancel) on it.
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-  if (result.type !== 'success') return; // user cancelled — not an error
+  if (result.type !== 'success') {
+    // On the racy devices this promise reports cancel/dismiss while the
+    // redirect actually went to the router, where the callback screen will
+    // claim the flag and finish the exchange — so leave the claim in place.
+    // If the user genuinely cancelled, a stale claim is harmless: it's
+    // simply re-armed on the next attempt.
+    return;
+  }
+
+  // The callback screen may have claimed and exchanged this code already.
+  if (!claimPendingGoogleAuth()) return;
 
   const code = new URL(result.url).searchParams.get('code');
   if (!code) throw new Error('No auth code returned from provider');
