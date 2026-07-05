@@ -1,14 +1,16 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 import { corsHeaders } from '../_shared/cors.ts';
-import {
-  addTracksToDeezerPlaylist,
-  createDeezerPlaylist,
-  getDeezerArtistTopTracks,
-  searchDeezerArtist,
-} from '../_shared/deezer.ts';
+import { getDeezerArtistTopTracks, searchDeezerArtist } from '../_shared/deezer.ts';
 
 const TRACKS_PER_ARTIST = 3;
+
+interface ExportTrack {
+  artistName: string;
+  title: string;
+  deezerUrl: string;
+  spotifySearchUrl: string;
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -30,15 +32,6 @@ Deno.serve(async (req) => {
     const { festivalId, editionId } = await req.json();
     if (!festivalId || !editionId) throw new Error('Missing festivalId or editionId');
 
-    const { data: connection, error: connError } = await supabase
-      .from('deezer_connections')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-    if (connError || !connection) throw new Error('Deezer not connected');
-
-    const accessToken = connection.access_token as string;
-
     const [{ data: festival, error: festivalError }, { data: edition, error: editionError }] =
       await Promise.all([
         supabase.from('festivals').select('name').eq('id', festivalId).single(),
@@ -55,7 +48,7 @@ Deno.serve(async (req) => {
     if (lineupError) throw lineupError;
     if (!lineup || lineup.length === 0) throw new Error('No lineup published for this edition');
 
-    const trackIds: string[] = [];
+    const tracks: ExportTrack[] = [];
     const skippedArtists: string[] = [];
     let matchedArtists = 0;
 
@@ -67,7 +60,7 @@ Deno.serve(async (req) => {
       let deezerArtistId = artist.deezer_artist_id;
 
       if (!deezerArtistId) {
-        const search = await searchDeezerArtist(artist.name, accessToken);
+        const search = await searchDeezerArtist(artist.name);
         deezerArtistId = search.data?.[0]?.id != null ? String(search.data[0].id) : null;
         if (deezerArtistId) {
           await supabase.from('artists').update({ deezer_artist_id: deezerArtistId }).eq('id', artist.id);
@@ -80,43 +73,30 @@ Deno.serve(async (req) => {
       }
 
       matchedArtists += 1;
-      const topTracks = await getDeezerArtistTopTracks(deezerArtistId, accessToken, TRACKS_PER_ARTIST);
+      const topTracks = await getDeezerArtistTopTracks(deezerArtistId, TRACKS_PER_ARTIST);
       for (const track of topTracks.data ?? []) {
-        trackIds.push(String(track.id));
+        tracks.push({
+          artistName: artist.name,
+          title: track.title,
+          deezerUrl: `https://www.deezer.com/track/${track.id}`,
+          // No Spotify catalog access without going through the Web API (currently
+          // blocked — see spotify-auth), so this is a search deep link rather than
+          // a resolved track: it opens Spotify's app/site with the right query,
+          // the user picks the matching result themselves.
+          spotifySearchUrl: `https://open.spotify.com/search/${encodeURIComponent(`${artist.name} ${track.title}`)}`,
+        });
       }
     }
 
-    if (trackIds.length === 0) throw new Error('No tracks matched on Deezer for this lineup');
-
-    const playlistName = `${festival.name} ${edition.year}`;
-    const playlist = await createDeezerPlaylist(connection.deezer_user_id, playlistName, accessToken);
-
-    // Deezer caps "add tracks" at 25 songs per request (undocumented but common failure).
-    for (let i = 0; i < trackIds.length; i += 25) {
-      await addTracksToDeezerPlaylist(String(playlist.id), trackIds.slice(i, i + 25), accessToken);
-    }
-
-    await supabase.from('playlists_generated').insert({
-      user_id: user.id,
-      festival_id: festivalId,
-      edition_id: editionId,
-      provider: 'deezer',
-      deezer_playlist_id: String(playlist.id),
-      playlist_name: playlistName,
-      total_artists: lineup.length,
-      matched_artists: matchedArtists,
-      total_tracks: trackIds.length,
-      status: 'created',
-    });
+    if (tracks.length === 0) throw new Error('No tracks matched for this lineup');
 
     return new Response(
       JSON.stringify({
-        playlistUrl: `https://www.deezer.com/playlist/${playlist.id}`,
-        playlistId: String(playlist.id),
+        playlistName: `${festival.name} ${edition.year}`,
         totalArtists: lineup.length,
         matchedArtists,
-        totalTracks: trackIds.length,
         skippedArtists,
+        tracks,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );

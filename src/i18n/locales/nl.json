@@ -114,11 +114,7 @@
     "spotifyConnected": "Spotify verbonden",
     "spotifyNotConnected": "Spotify niet verbonden",
     "connectSpotify": "Spotify verbinden",
-    "disconnectSpotify": "Spotify loskoppelen",
-    "deezerConnected": "Deezer verbonden",
-    "deezerNotConnected": "Deezer niet verbonden",
-    "connectDeezer": "Deezer verbinden",
-    "disconnectDeezer": "Deezer loskoppelen"
+    "disconnectSpotify": "Spotify loskoppelen"
   },
   "djmag": {
     "title": "DJ Mag Top 100",
@@ -144,8 +140,12 @@
     "previewPlaylist": "Playlist bekijken",
     "connectPrompt": "Verbind Spotify om deze playlist op je account op te slaan"
   },
-  "deezer": {
-    "connectPrompt": "Verbind Deezer om deze playlist op je account op te slaan"
+  "export": {
+    "title": "Universele export",
+    "description": "Geen account nodig: elk nummer opent direct in Deezer of als Spotify-zoekopdracht.",
+    "generate": "Export genereren",
+    "deezer": "Deezer",
+    "spotify": "Spotify"
   },
   "settings": {
     "title": "Instellingen",

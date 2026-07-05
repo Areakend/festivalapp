@@ -7,7 +7,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { useFestivalDetail } from '@/features/festivals/api';
 import { useSpotifyConnection, useConnectSpotify, useGeneratePlaylist } from '@/features/spotify/api';
-import { useDeezerConnection, useConnectDeezer, useGeneratePlaylistDeezer } from '@/features/deezer/api';
+import { useGeneratePlaylistExport } from '@/features/export/api';
 import { colors, radii, spacing, typography } from '@/theme';
 
 export default function PlaylistScreen() {
@@ -20,25 +20,33 @@ export default function PlaylistScreen() {
   const { data: spotifyConnection, isLoading: spotifyConnectionLoading } = useSpotifyConnection();
   const connectSpotify = useConnectSpotify();
   const generateSpotifyPlaylist = useGeneratePlaylist();
-
-  const { data: deezerConnection, isLoading: deezerConnectionLoading } = useDeezerConnection();
-  const connectDeezer = useConnectDeezer();
-  const generateDeezerPlaylist = useGeneratePlaylistDeezer();
-
   const [result, setResult] = useState<Awaited<ReturnType<typeof generateSpotifyPlaylist.mutateAsync>> | null>(
     null,
   );
 
+  const generateExport = useGeneratePlaylistExport();
+  const [exportResult, setExportResult] = useState<Awaited<
+    ReturnType<typeof generateExport.mutateAsync>
+  > | null>(null);
+
   const edition = detail?.editions.find((e) => e.lineup_published) ?? detail?.editions[0];
 
-  const generate = async (provider: 'spotify' | 'deezer') => {
+  const generate = async () => {
     if (!detail || !edition) return;
-    const mutate = provider === 'spotify' ? generateSpotifyPlaylist : generateDeezerPlaylist;
-    const data = await mutate.mutateAsync({
+    const data = await generateSpotifyPlaylist.mutateAsync({
       festivalId: detail.festival.id,
       editionId: edition.id,
     });
     setResult(data);
+  };
+
+  const generateUniversalExport = async () => {
+    if (!detail || !edition) return;
+    const data = await generateExport.mutateAsync({
+      festivalId: detail.festival.id,
+      editionId: edition.id,
+    });
+    setExportResult(data);
   };
 
   return (
@@ -46,72 +54,34 @@ export default function PlaylistScreen() {
       <Text style={styles.title}>{t('festival.generatePlaylist')}</Text>
       <Text style={styles.festivalName}>{detail?.festival.name ?? '…'}</Text>
 
+      {/* Spotify */}
       {!result && (
-        <>
-          {/* Spotify */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Spotify</Text>
-            {!spotifyConnectionLoading && !spotifyConnection && (
-              <>
-                <Text style={styles.body}>{t('spotify.connectPrompt')}</Text>
-                <Button
-                  label={t('profile.connectSpotify')}
-                  onPress={() => connectSpotify.mutate()}
-                  loading={connectSpotify.isPending}
-                />
-              </>
-            )}
-            {spotifyConnection && (
-              <>
-                <Button
-                  label={
-                    generateSpotifyPlaylist.isPending
-                      ? t('spotify.generating')
-                      : t('festival.generatePlaylist')
-                  }
-                  onPress={() => void generate('spotify')}
-                  loading={generateSpotifyPlaylist.isPending}
-                  disabled={!edition}
-                />
-                {generateSpotifyPlaylist.isError && (
-                  <Text style={styles.error}>{(generateSpotifyPlaylist.error as Error).message}</Text>
-                )}
-              </>
-            )}
-          </View>
-
-          {/* Deezer */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Deezer</Text>
-            {!deezerConnectionLoading && !deezerConnection && (
-              <>
-                <Text style={styles.body}>{t('deezer.connectPrompt')}</Text>
-                <Button
-                  label={t('profile.connectDeezer')}
-                  onPress={() => connectDeezer.mutate()}
-                  loading={connectDeezer.isPending}
-                />
-              </>
-            )}
-            {deezerConnection && (
-              <>
-                <Button
-                  label={
-                    generateDeezerPlaylist.isPending
-                      ? t('spotify.generating')
-                      : t('festival.generatePlaylist')
-                  }
-                  onPress={() => void generate('deezer')}
-                  loading={generateDeezerPlaylist.isPending}
-                  disabled={!edition}
-                />
-                {generateDeezerPlaylist.isError && (
-                  <Text style={styles.error}>{(generateDeezerPlaylist.error as Error).message}</Text>
-                )}
-              </>
-            )}
-          </View>
-        </>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Spotify</Text>
+          {!spotifyConnectionLoading && !spotifyConnection && (
+            <>
+              <Text style={styles.body}>{t('spotify.connectPrompt')}</Text>
+              <Button
+                label={t('profile.connectSpotify')}
+                onPress={() => connectSpotify.mutate()}
+                loading={connectSpotify.isPending}
+              />
+            </>
+          )}
+          {spotifyConnection && (
+            <>
+              <Button
+                label={generateSpotifyPlaylist.isPending ? t('spotify.generating') : t('festival.generatePlaylist')}
+                onPress={() => void generate()}
+                loading={generateSpotifyPlaylist.isPending}
+                disabled={!edition}
+              />
+              {generateSpotifyPlaylist.isError && (
+                <Text style={styles.error}>{(generateSpotifyPlaylist.error as Error).message}</Text>
+              )}
+            </>
+          )}
+        </View>
       )}
 
       {result && (
@@ -125,6 +95,61 @@ export default function PlaylistScreen() {
             </Text>
           )}
           <Button label={t('spotify.openInPlaylistApp')} onPress={() => void Linking.openURL(result.playlistUrl)} />
+        </View>
+      )}
+
+      {/* Universal export: no account needed, works even while Spotify/Deezer
+          accounts can't be connected (Spotify's Premium-owner requirement,
+          Deezer's closed app registration). */}
+      {!exportResult && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{t('export.title')}</Text>
+          <Text style={styles.body}>{t('export.description')}</Text>
+          <Button
+            label={generateExport.isPending ? t('spotify.generating') : t('export.generate')}
+            variant="secondary"
+            onPress={() => void generateUniversalExport()}
+            loading={generateExport.isPending}
+            disabled={!edition}
+          />
+          {generateExport.isError && (
+            <Text style={styles.error}>{(generateExport.error as Error).message}</Text>
+          )}
+        </View>
+      )}
+
+      {exportResult && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{exportResult.playlistName}</Text>
+          {exportResult.skippedArtists.length > 0 && (
+            <Text style={styles.skipped}>
+              {t('spotify.skippedArtists')}: {exportResult.skippedArtists.join(', ')}
+            </Text>
+          )}
+          {exportResult.tracks.map((track, index) => (
+            <View key={index} style={styles.trackRow}>
+              <View style={styles.trackInfo}>
+                <Text style={styles.trackTitle} numberOfLines={1}>
+                  {track.title}
+                </Text>
+                <Text style={styles.trackArtist} numberOfLines={1}>
+                  {track.artistName}
+                </Text>
+              </View>
+              <View style={styles.trackLinks}>
+                <Button
+                  label={t('export.deezer')}
+                  variant="ghost"
+                  onPress={() => void Linking.openURL(track.deezerUrl)}
+                />
+                <Button
+                  label={t('export.spotify')}
+                  variant="ghost"
+                  onPress={() => void Linking.openURL(track.spotifySearchUrl)}
+                />
+              </View>
+            </View>
+          ))}
         </View>
       )}
 
@@ -195,4 +220,22 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: colors.textMuted,
   },
+  trackRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  trackInfo: { flexShrink: 1, flexGrow: 1 },
+  trackTitle: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: typography.sizes.sm,
+    color: colors.text,
+  },
+  trackArtist: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+  },
+  trackLinks: { flexDirection: 'row', gap: spacing.xs },
 });
