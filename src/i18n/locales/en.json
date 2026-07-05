@@ -114,7 +114,11 @@
     "spotifyConnected": "Spotify connected",
     "spotifyNotConnected": "Spotify not connected",
     "connectSpotify": "Connect Spotify",
-    "disconnectSpotify": "Disconnect Spotify"
+    "disconnectSpotify": "Disconnect Spotify",
+    "deezerConnected": "Deezer connected",
+    "deezerNotConnected": "Deezer not connected",
+    "connectDeezer": "Connect Deezer",
+    "disconnectDeezer": "Disconnect Deezer"
   },
   "djmag": {
     "title": "DJ Mag Top 100",
@@ -136,9 +140,12 @@
     "artistsMatched": "Matched on Spotify",
     "tracksAdded": "Tracks added",
     "skippedArtists": "Skipped artists",
-    "openInSpotify": "Open in Spotify",
+    "openInPlaylistApp": "Open playlist",
     "previewPlaylist": "Preview playlist",
     "connectPrompt": "Connect Spotify to save this playlist to your account"
+  },
+  "deezer": {
+    "connectPrompt": "Connect Deezer to save this playlist to your account"
   },
   "settings": {
     "title": "Settings",

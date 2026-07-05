@@ -7,6 +7,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { useFestivalDetail } from '@/features/festivals/api';
 import { useSpotifyConnection, useConnectSpotify, useGeneratePlaylist } from '@/features/spotify/api';
+import { useDeezerConnection, useConnectDeezer, useGeneratePlaylistDeezer } from '@/features/deezer/api';
 import { colors, radii, spacing, typography } from '@/theme';
 
 export default function PlaylistScreen() {
@@ -15,18 +16,25 @@ export default function PlaylistScreen() {
   const router = useRouter();
 
   const { data: detail } = useFestivalDetail(slug);
-  const { data: connection, isLoading: connectionLoading } = useSpotifyConnection();
+
+  const { data: spotifyConnection, isLoading: spotifyConnectionLoading } = useSpotifyConnection();
   const connectSpotify = useConnectSpotify();
-  const generatePlaylist = useGeneratePlaylist();
-  const [result, setResult] = useState<Awaited<ReturnType<typeof generatePlaylist.mutateAsync>> | null>(
+  const generateSpotifyPlaylist = useGeneratePlaylist();
+
+  const { data: deezerConnection, isLoading: deezerConnectionLoading } = useDeezerConnection();
+  const connectDeezer = useConnectDeezer();
+  const generateDeezerPlaylist = useGeneratePlaylistDeezer();
+
+  const [result, setResult] = useState<Awaited<ReturnType<typeof generateSpotifyPlaylist.mutateAsync>> | null>(
     null,
   );
 
   const edition = detail?.editions.find((e) => e.lineup_published) ?? detail?.editions[0];
 
-  const generate = async () => {
+  const generate = async (provider: 'spotify' | 'deezer') => {
     if (!detail || !edition) return;
-    const data = await generatePlaylist.mutateAsync({
+    const mutate = provider === 'spotify' ? generateSpotifyPlaylist : generateDeezerPlaylist;
+    const data = await mutate.mutateAsync({
       festivalId: detail.festival.id,
       editionId: edition.id,
     });
@@ -38,29 +46,72 @@ export default function PlaylistScreen() {
       <Text style={styles.title}>{t('festival.generatePlaylist')}</Text>
       <Text style={styles.festivalName}>{detail?.festival.name ?? '…'}</Text>
 
-      {!connectionLoading && !connection && (
-        <View style={styles.card}>
-          <Text style={styles.body}>{t('spotify.connectPrompt')}</Text>
-          <Button
-            label={t('profile.connectSpotify')}
-            onPress={() => connectSpotify.mutate()}
-            loading={connectSpotify.isPending}
-          />
-        </View>
-      )}
+      {!result && (
+        <>
+          {/* Spotify */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Spotify</Text>
+            {!spotifyConnectionLoading && !spotifyConnection && (
+              <>
+                <Text style={styles.body}>{t('spotify.connectPrompt')}</Text>
+                <Button
+                  label={t('profile.connectSpotify')}
+                  onPress={() => connectSpotify.mutate()}
+                  loading={connectSpotify.isPending}
+                />
+              </>
+            )}
+            {spotifyConnection && (
+              <>
+                <Button
+                  label={
+                    generateSpotifyPlaylist.isPending
+                      ? t('spotify.generating')
+                      : t('festival.generatePlaylist')
+                  }
+                  onPress={() => void generate('spotify')}
+                  loading={generateSpotifyPlaylist.isPending}
+                  disabled={!edition}
+                />
+                {generateSpotifyPlaylist.isError && (
+                  <Text style={styles.error}>{(generateSpotifyPlaylist.error as Error).message}</Text>
+                )}
+              </>
+            )}
+          </View>
 
-      {connection && !result && (
-        <View style={styles.card}>
-          <Button
-            label={generatePlaylist.isPending ? t('spotify.generating') : t('festival.generatePlaylist')}
-            onPress={() => void generate()}
-            loading={generatePlaylist.isPending}
-            disabled={!edition}
-          />
-          {generatePlaylist.isError && (
-            <Text style={styles.error}>{(generatePlaylist.error as Error).message}</Text>
-          )}
-        </View>
+          {/* Deezer */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Deezer</Text>
+            {!deezerConnectionLoading && !deezerConnection && (
+              <>
+                <Text style={styles.body}>{t('deezer.connectPrompt')}</Text>
+                <Button
+                  label={t('profile.connectDeezer')}
+                  onPress={() => connectDeezer.mutate()}
+                  loading={connectDeezer.isPending}
+                />
+              </>
+            )}
+            {deezerConnection && (
+              <>
+                <Button
+                  label={
+                    generateDeezerPlaylist.isPending
+                      ? t('spotify.generating')
+                      : t('festival.generatePlaylist')
+                  }
+                  onPress={() => void generate('deezer')}
+                  loading={generateDeezerPlaylist.isPending}
+                  disabled={!edition}
+                />
+                {generateDeezerPlaylist.isError && (
+                  <Text style={styles.error}>{(generateDeezerPlaylist.error as Error).message}</Text>
+                )}
+              </>
+            )}
+          </View>
+        </>
       )}
 
       {result && (
@@ -73,7 +124,7 @@ export default function PlaylistScreen() {
               {t('spotify.skippedArtists')}: {result.skippedArtists.join(', ')}
             </Text>
           )}
-          <Button label={t('spotify.openInSpotify')} onPress={() => void Linking.openURL(result.playlistUrl)} />
+          <Button label={t('spotify.openInPlaylistApp')} onPress={() => void Linking.openURL(result.playlistUrl)} />
         </View>
       )}
 
@@ -112,6 +163,11 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
     marginBottom: spacing.lg,
+  },
+  cardTitle: {
+    fontFamily: typography.fonts.headingMedium,
+    fontSize: typography.sizes.md,
+    color: colors.text,
   },
   body: {
     fontFamily: typography.fonts.body,
