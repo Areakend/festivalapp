@@ -184,6 +184,10 @@
     "days_one": "día",
     "days_other": "días",
     "upNext": "Después",
-    "withFriends": "Con {{names}}"
+    "withFriends": "Con {{names}}",
+    "welcomeTitle": "Bienvenido a Mainstage",
+    "welcomeBody": "Explora el catálogo, califica los festivales a los que fuiste y planifica los próximos: tu cuenta regresiva aparecerá aquí.",
+    "noPlannedTitle": "Ningún festival planeado",
+    "noPlannedHint": "Planea un festival para iniciar la cuenta regresiva."
   }
 }
