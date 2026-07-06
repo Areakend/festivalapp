@@ -43,7 +43,7 @@ export function AttendanceYearSheet({
             />
           ))}
         </ScrollView>
-        <Button label={t('common.cancel')} variant="ghost" onPress={onClose} />
+        <Button label={t('common.done')} onPress={onClose} />
       </View>
     </Modal>
   );
