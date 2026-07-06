@@ -80,7 +80,7 @@
   },
   "review": {
     "yourRating": "Tu valoración",
-    "comment": "Comentario (opcional)",
+    "comment": "Comentario (opcional) — ambiente, escenario, alojamiento, transporte, consejos, organización...",
     "lineupRating": "Lineup",
     "productionRating": "Producción",
     "sideQuestRating": "Misiones secundarias",
@@ -94,7 +94,15 @@
     "breakdown": "Detalle de valoraciones",
     "aiSummary": "Resumen de reseñas",
     "aiDisclaimer": "Generado por IA a partir de reseñas de la comunidad",
-    "year": "¿Qué año?"
+    "year": "¿Qué año?",
+    "category": {
+      "atmosphere": "Ambiente",
+      "stages": "Escenario y sonido",
+      "lodging": "Alojamiento",
+      "transport": "Transporte",
+      "tips": "Consejos prácticos",
+      "organization": "Organización y seguridad"
+    }
   },
   "discover": {
     "sort": "Ordenar",

@@ -96,11 +96,24 @@ export function useUpsertReview() {
   });
 }
 
+export const REVIEW_SUMMARY_CATEGORIES = [
+  'atmosphere',
+  'stages',
+  'lodging',
+  'transport',
+  'tips',
+  'organization',
+] as const;
+export type ReviewSummaryCategory = (typeof REVIEW_SUMMARY_CATEGORIES)[number];
+export type ReviewSummaryCategories = Partial<Record<ReviewSummaryCategory, string>>;
+
 /**
- * AI summary of a festival's community reviews (Google-Maps style).
- * The Edge Function caches per (festival, language) and only regenerates
- * when the review count changes; `enabled` avoids pointless calls when
- * there are too few reviews to summarize.
+ * AI summary of a festival's community reviews, split by topic (Google-Maps
+ * style but per-category). The Edge Function caches per (festival,
+ * language) and only regenerates when the review count changes; `enabled`
+ * avoids pointless calls when there are too few reviews to summarize. A
+ * category is only present in the result if the model found actual
+ * grounded content for it — never padded with generic advice.
  */
 export function useReviewSummary(
   festivalId: string | undefined,
@@ -114,7 +127,7 @@ export function useReviewSummary(
     retry: false,
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke<{
-        summary: string | null;
+        categories: ReviewSummaryCategories;
         reviewCount: number;
       }>('summarize-reviews', { body: { festivalId, language } });
       if (error) throw error;

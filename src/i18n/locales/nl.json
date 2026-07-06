@@ -80,7 +80,7 @@
   },
   "review": {
     "yourRating": "Jouw beoordeling",
-    "comment": "Opmerking (optioneel)",
+    "comment": "Reactie (optioneel) — sfeer, podium, verblijf, vervoer, tips, organisatie...",
     "lineupRating": "Line-up",
     "productionRating": "Productie",
     "sideQuestRating": "Sidequests",
@@ -94,7 +94,15 @@
     "breakdown": "Beoordelingsdetails",
     "aiSummary": "Samenvatting van reviews",
     "aiDisclaimer": "Door AI gegenereerd op basis van community-reviews",
-    "year": "Welk jaar?"
+    "year": "Welk jaar?",
+    "category": {
+      "atmosphere": "Sfeer",
+      "stages": "Podium & geluid",
+      "lodging": "Verblijf",
+      "transport": "Vervoer",
+      "tips": "Praktische tips",
+      "organization": "Organisatie & veiligheid"
+    }
   },
   "discover": {
     "sort": "Sorteren",

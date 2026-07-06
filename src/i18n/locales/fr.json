@@ -80,7 +80,7 @@
   },
   "review": {
     "yourRating": "Ta note",
-    "comment": "Commentaire (optionnel)",
+    "comment": "Commentaire (optionnel) — ambiance, scène, logement, transport, astuces, organisation...",
     "lineupRating": "Lineup",
     "productionRating": "Production",
     "sideQuestRating": "Quêtes annexes",
@@ -94,7 +94,15 @@
     "breakdown": "Détail des notes",
     "aiSummary": "Résumé des avis",
     "aiDisclaimer": "Généré par IA à partir des avis de la communauté",
-    "year": "Quelle année ?"
+    "year": "Quelle année ?",
+    "category": {
+      "atmosphere": "Ambiance",
+      "stages": "Scène & son",
+      "lodging": "Logement",
+      "transport": "Transport",
+      "tips": "Astuces pratiques",
+      "organization": "Organisation & sécurité"
+    }
   },
   "discover": {
     "sort": "Trier",

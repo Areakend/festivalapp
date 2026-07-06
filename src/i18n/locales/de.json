@@ -80,7 +80,7 @@
   },
   "review": {
     "yourRating": "Deine Bewertung",
-    "comment": "Kommentar (optional)",
+    "comment": "Kommentar (optional) — Stimmung, Bühne, Unterkunft, Transport, Tipps, Organisation...",
     "lineupRating": "Line-up",
     "productionRating": "Produktion",
     "sideQuestRating": "Nebenquests",
@@ -94,7 +94,15 @@
     "breakdown": "Bewertungsdetails",
     "aiSummary": "Zusammenfassung der Bewertungen",
     "aiDisclaimer": "KI-generiert aus Community-Bewertungen",
-    "year": "Welches Jahr?"
+    "year": "Welches Jahr?",
+    "category": {
+      "atmosphere": "Stimmung",
+      "stages": "Bühne & Sound",
+      "lodging": "Unterkunft",
+      "transport": "Transport",
+      "tips": "Praktische Tipps",
+      "organization": "Organisation & Sicherheit"
+    }
   },
   "discover": {
     "sort": "Sortieren",

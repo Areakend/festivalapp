@@ -30,10 +30,12 @@ import {
   useToggleStatus,
 } from '@/features/festivals/api';
 import {
+  REVIEW_SUMMARY_CATEGORIES,
   useFestivalReviews,
   useMyReview,
   useReviewSummary,
   type ReviewSort,
+  type ReviewSummaryCategory,
 } from '@/features/reviews/api';
 import { useMyFollowedArtists, useToggleArtistFollow } from '@/features/artists/api';
 import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/friends/api';
@@ -47,6 +49,15 @@ const STATUS_CONFIG: { status: FestivalStatus; icon: string; color: string; labe
   { status: 'wishlist', icon: 'heart', color: colors.statusWishlist, labelKey: 'festival.wishlist' },
   { status: 'favorite', icon: 'star', color: colors.statusFavorite, labelKey: 'festival.favorite' },
 ];
+
+const CATEGORY_ICONS: Record<ReviewSummaryCategory, string> = {
+  atmosphere: 'flame-outline',
+  stages: 'musical-notes-outline',
+  lodging: 'bed-outline',
+  transport: 'bus-outline',
+  tips: 'bulb-outline',
+  organization: 'shield-checkmark-outline',
+};
 
 export default function FestivalDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -333,14 +344,23 @@ export default function FestivalDetailScreen() {
         {/* Reviews */}
         <Text style={styles.sectionTitle}>{t('festival.reviews')}</Text>
 
-        {/* AI summary of community reviews (à la Google Maps) */}
-        {aiSummary?.summary && (
+        {/* AI summary of community reviews, split by topic — a category only
+            shows up if the model found real grounded content for it. */}
+        {aiSummary && Object.keys(aiSummary.categories).length > 0 && (
           <View style={styles.aiCard}>
             <View style={styles.aiHeader}>
               <Ionicons name="sparkles" size={16} color={colors.accent} />
               <Text style={styles.aiTitle}>{t('review.aiSummary')}</Text>
             </View>
-            <Text style={styles.aiText}>{aiSummary.summary}</Text>
+            {REVIEW_SUMMARY_CATEGORIES.filter((key) => aiSummary.categories[key]).map((key) => (
+              <View key={key} style={styles.aiCategory}>
+                <View style={styles.aiCategoryHeader}>
+                  <Ionicons name={CATEGORY_ICONS[key] as never} size={14} color={colors.textSecondary} />
+                  <Text style={styles.aiCategoryLabel}>{t(`review.category.${key}`)}</Text>
+                </View>
+                <Text style={styles.aiText}>{aiSummary.categories[key]}</Text>
+              </View>
+            ))}
             <Text style={styles.aiDisclaimer}>{t('review.aiDisclaimer')}</Text>
           </View>
         )}
@@ -443,6 +463,15 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.bodySemiBold,
     fontSize: typography.sizes.sm,
     color: colors.text,
+  },
+  aiCategory: { gap: 2 },
+  aiCategoryHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  aiCategoryLabel: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   aiText: {
     fontFamily: typography.fonts.body,
