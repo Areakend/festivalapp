@@ -3,7 +3,6 @@ import {
   Linking,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   View,
@@ -339,19 +338,6 @@ export default function FestivalDetailScreen() {
         ) : (
           <Text style={styles.noReviews}>{t('empty.noReviews')}</Text>
         )}
-
-        {/* Actions */}
-        <View style={styles.actions}>
-          <Button
-            label={t('common.share')}
-            variant="ghost"
-            onPress={() =>
-              void Share.share({
-                message: `${festival.name} — Mainstage · https://github.com/Areakend/festivalapp`,
-              })
-            }
-          />
-        </View>
       </View>
     </ScrollView>
   );
@@ -524,7 +510,6 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.md,
     color: colors.rating,
   },
-  actions: { gap: spacing.sm, marginTop: spacing.lg },
   sectionAction: { marginTop: spacing.sm },
   sortRow: { flexDirection: 'row', gap: spacing.sm },
   breakdownCard: {
