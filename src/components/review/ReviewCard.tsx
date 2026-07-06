@@ -20,6 +20,7 @@ export function ReviewCard({ review }: { review: ReviewWithAuthor }) {
       <View style={styles.header}>
         <Text style={styles.author} numberOfLines={1}>
           {review.profiles?.display_name ?? '—'}
+          {review.year ? <Text style={styles.year}> · {review.year}</Text> : null}
         </Text>
         <View style={[styles.badge, { borderColor: color }]}>
           <Text style={[styles.badgeText, { color }]}>
@@ -53,6 +54,10 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.text,
     flexShrink: 1,
+  },
+  year: {
+    fontFamily: typography.fonts.body,
+    color: colors.textMuted,
   },
   badge: {
     borderWidth: 1,

@@ -70,7 +70,8 @@
     "editionYear": "Ausgabe {{year}}",
     "attendedYears": "Jahre, in denen du dabei warst",
     "addYear": "Jahr hinzufügen",
-    "pickAttendedYear": "In welchem Jahr warst du dabei?"
+    "pickAttendedYear": "In welchem Jahr warst du dabei?",
+    "friendsHere": "Freunde, die hingehen"
   },
   "review": {
     "yourRating": "Deine Bewertung",
@@ -87,7 +88,8 @@
     "sortHighest": "Am besten bewertet",
     "breakdown": "Bewertungsdetails",
     "aiSummary": "Zusammenfassung der Bewertungen",
-    "aiDisclaimer": "KI-generiert aus Community-Bewertungen"
+    "aiDisclaimer": "KI-generiert aus Community-Bewertungen",
+    "year": "Welches Jahr?"
   },
   "discover": {
     "sort": "Sortieren",

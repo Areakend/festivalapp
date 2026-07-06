@@ -70,7 +70,8 @@
     "editionYear": "Edición {{year}}",
     "attendedYears": "Años en los que asististe",
     "addYear": "Añadir un año",
-    "pickAttendedYear": "¿En qué año asististe?"
+    "pickAttendedYear": "¿En qué año asististe?",
+    "friendsHere": "Amigos que van"
   },
   "review": {
     "yourRating": "Tu valoración",
@@ -87,7 +88,8 @@
     "sortHighest": "Mejor valoradas",
     "breakdown": "Detalle de valoraciones",
     "aiSummary": "Resumen de reseñas",
-    "aiDisclaimer": "Generado por IA a partir de reseñas de la comunidad"
+    "aiDisclaimer": "Generado por IA a partir de reseñas de la comunidad",
+    "year": "¿Qué año?"
   },
   "discover": {
     "sort": "Ordenar",

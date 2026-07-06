@@ -36,6 +36,7 @@ import {
   type ReviewSort,
 } from '@/features/reviews/api';
 import { useMyFollowedArtists, useToggleArtistFollow } from '@/features/artists/api';
+import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/friends/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag, formatCompact } from '@/utils/format';
 import type { FestivalStatus } from '@/types/domain';
@@ -65,6 +66,7 @@ export default function FestivalDetailScreen() {
   const [yearSheetOpen, setYearSheetOpen] = useState(false);
   const { data: followedArtistIds } = useMyFollowedArtists();
   const toggleArtistFollow = useToggleArtistFollow();
+  const { data: friendsAttendance } = useFriendsFestivalAttendance();
 
   const lineupEdition = data?.editions.find((e) => e.lineup_published);
   const { data: lineup } = useEditionLineup(lineupEdition?.id);
@@ -115,6 +117,20 @@ export default function FestivalDetailScreen() {
   const festivalAttendances = (myAttendances ?? [])
     .filter((a) => a.festival_id === festival.id)
     .sort((a, b) => b.attended_year - a.attended_year);
+
+  // Friends going (planned) or who went (attended) — attended wins if a
+  // friend somehow has both rows for this festival.
+  const friendsHere = (() => {
+    const byProfile = new Map<string, { profile: PublicProfile; status: 'planned' | 'attended' }>();
+    for (const row of friendsAttendance ?? []) {
+      if (row.festival_id !== festival.id) continue;
+      const existing = byProfile.get(row.profile.id);
+      if (!existing || row.status === 'attended') {
+        byProfile.set(row.profile.id, { profile: row.profile, status: row.status });
+      }
+    }
+    return [...byProfile.values()];
+  })();
 
   return (
     <ScrollView
@@ -206,6 +222,31 @@ export default function FestivalDetailScreen() {
           onSelect={(year) => addAttendance.mutate({ festivalId: festival.id, year })}
           onClose={() => setYearSheetOpen(false)}
         />
+
+        {/* Friends going or who went */}
+        {friendsHere.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>{t('festival.friendsHere')}</Text>
+            <View style={styles.friendsList}>
+              {friendsHere.map(({ profile, status }) => (
+                <Pressable
+                  key={profile.id}
+                  style={({ pressed }) => [styles.friendRow, pressed && { opacity: 0.7 }]}
+                  onPress={() => router.push({ pathname: '/user/[id]', params: { id: profile.id } })}
+                >
+                  <Ionicons
+                    name={status === 'attended' ? 'checkmark-circle' : 'calendar'}
+                    size={18}
+                    color={status === 'attended' ? colors.statusAttended : colors.statusPlanned}
+                  />
+                  <Text style={styles.friendName} numberOfLines={1}>
+                    {profile.display_name}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </>
+        )}
 
         {/* Stats */}
         <Text style={styles.sectionTitle}>{t('festival.stats')}</Text>
@@ -441,6 +482,24 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   attendanceChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  friendsList: { gap: spacing.xs },
+  friendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  friendName: {
+    flex: 1,
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.text,
+  },
   sectionTitle: {
     fontFamily: typography.fonts.headingMedium,
     fontSize: typography.sizes.lg,

@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { TextField } from '@/components/ui/TextField';
-import { UpdateDiagnostics } from '@/components/ui/UpdateDiagnostics';
 import { signOut } from '@/features/auth/api';
 import { useSessionStore } from '@/features/auth/session-store';
 import { useFestivals, useMyStatuses } from '@/features/festivals/api';
@@ -194,8 +193,6 @@ export default function ProfileScreen() {
           />
         )}
       </View>
-
-      <UpdateDiagnostics />
 
       <Button
         label={t('friends.title')}

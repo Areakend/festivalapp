@@ -70,7 +70,8 @@
     "editionYear": "Edition {{year}}",
     "attendedYears": "Years you attended",
     "addYear": "Add a year",
-    "pickAttendedYear": "Which year did you go?"
+    "pickAttendedYear": "Which year did you go?",
+    "friendsHere": "Friends going"
   },
   "review": {
     "yourRating": "Your rating",
@@ -87,7 +88,8 @@
     "sortHighest": "Highest rated",
     "breakdown": "Rating details",
     "aiSummary": "Review summary",
-    "aiDisclaimer": "AI-generated from community reviews"
+    "aiDisclaimer": "AI-generated from community reviews",
+    "year": "Which year?"
   },
   "discover": {
     "sort": "Sort",

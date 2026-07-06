@@ -70,7 +70,8 @@
     "editionYear": "Editie {{year}}",
     "attendedYears": "Jaren dat je erbij was",
     "addYear": "Jaar toevoegen",
-    "pickAttendedYear": "In welk jaar was je erbij?"
+    "pickAttendedYear": "In welk jaar was je erbij?",
+    "friendsHere": "Vrienden die gaan"
   },
   "review": {
     "yourRating": "Jouw beoordeling",
@@ -87,7 +88,8 @@
     "sortHighest": "Hoogst beoordeeld",
     "breakdown": "Beoordelingsdetails",
     "aiSummary": "Samenvatting van reviews",
-    "aiDisclaimer": "Door AI gegenereerd op basis van community-reviews"
+    "aiDisclaimer": "Door AI gegenereerd op basis van community-reviews",
+    "year": "Welk jaar?"
   },
   "discover": {
     "sort": "Sorteren",

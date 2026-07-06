@@ -6,8 +6,9 @@ import { useTranslation } from 'react-i18next';
 
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
 import { RatingBar, ratingColor } from '@/components/ui/RatingBar';
-import { useFestivalDetail } from '@/features/festivals/api';
+import { useFestivalDetail, useMyAttendances } from '@/features/festivals/api';
 import { useDeleteReview, useMyReview, useUpsertReview } from '@/features/reviews/api';
 import { colors, radii, spacing, typography } from '@/theme';
 
@@ -38,10 +39,17 @@ export default function ReviewScreen() {
 
   const { data: detail } = useFestivalDetail(slug);
   const { data: myReview, isFetched } = useMyReview(detail?.festival.id);
+  const { data: myAttendances } = useMyAttendances();
   const upsert = useUpsertReview();
   const deleteReview = useDeleteReview();
 
+  const attendedYears = (myAttendances ?? [])
+    .filter((a) => a.festival_id === detail?.festival.id)
+    .map((a) => a.attended_year)
+    .sort((a, b) => b - a);
+
   const [overall, setOverall] = useState(0);
+  const [year, setYear] = useState<number | null>(null);
   const [comment, setComment] = useState('');
   const [subs, setSubs] = useState<Record<SubRatingKey, number>>({
     lineup_rating: 0,
@@ -56,6 +64,7 @@ export default function ReviewScreen() {
   useEffect(() => {
     if (!myReview) return;
     setOverall(Math.round(myReview.overall_rating));
+    setYear(myReview.year);
     setComment(myReview.comment ?? '');
     setSubs((prev) => {
       const next = { ...prev };
@@ -71,6 +80,7 @@ export default function ReviewScreen() {
     try {
       await upsert.mutateAsync({
         festivalId: detail.festival.id,
+        year,
         overall_rating: overall,
         comment: comment.trim() || null,
         lineup_rating: subs.lineup_rating || null,
@@ -112,6 +122,24 @@ export default function ReviewScreen() {
         {myReview ? t('review.editReview') : t('festival.rateReview')}
       </Text>
       <Text style={styles.festivalName}>{detail?.festival.name ?? '…'}</Text>
+
+      {/* Which year this review is about — picked from years already
+          logged as attended; skipped entirely if none are logged yet. */}
+      {attendedYears.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.sectionLabel}>{t('review.year')}</Text>
+          <View style={styles.yearRow}>
+            {attendedYears.map((y) => (
+              <Chip
+                key={y}
+                label={String(y)}
+                active={year === y}
+                onPress={() => setYear((prev) => (prev === y ? null : y))}
+              />
+            ))}
+          </View>
+        </View>
+      )}
 
       {/* Overall /20 — big score + tap bar */}
       <View style={styles.card}>
@@ -191,6 +219,7 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
   },
+  yearRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   bigScore: {
     fontFamily: typography.fonts.heading,
     fontSize: 48,

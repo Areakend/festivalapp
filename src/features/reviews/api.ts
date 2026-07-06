@@ -52,6 +52,7 @@ export function useMyReview(festivalId: string | undefined) {
 
 export interface ReviewInput {
   festivalId: string;
+  year: number | null;
   overall_rating: number;
   comment: string | null;
   lineup_rating: number | null;
