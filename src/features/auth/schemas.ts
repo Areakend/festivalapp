@@ -12,6 +12,11 @@ export const signInSchema = z.object({
 
 export const signUpSchema = signInSchema
   .extend({
+    username: z
+      .string()
+      .min(3, 'auth.usernameTooShort')
+      .max(30, 'auth.usernameTooLong')
+      .regex(/^[a-zA-Z0-9_]+$/, 'auth.usernameInvalid'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {

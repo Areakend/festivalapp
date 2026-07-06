@@ -37,8 +37,32 @@ export async function signInWithEmail(email: string, password: string) {
   if (error) throw error;
 }
 
-export async function signUpWithEmail(email: string, password: string) {
-  const { error } = await supabase.auth.signUp({ email, password });
+/**
+ * Client-side pre-check so a taken username fails fast with a clear message
+ * — the DB unique index is the real guarantee (race conditions), but a
+ * violation there surfaces through Supabase Auth as an opaque "Database
+ * error saving new user" since the profiles row is created by a trigger
+ * inside the same transaction as the auth.users insert.
+ */
+export async function checkUsernameAvailable(username: string): Promise<boolean> {
+  // ilike treats % and _ as wildcards — escape them so the check is a real
+  // case-insensitive equality, not an accidental pattern match.
+  const escaped = username.replace(/[%_\\]/g, (m) => `\\${m}`);
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id')
+    .ilike('display_name', escaped)
+    .maybeSingle();
+  if (error) throw error;
+  return !data;
+}
+
+export async function signUpWithEmail(email: string, password: string, username: string) {
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: username } },
+  });
   if (error) throw error;
 }
 

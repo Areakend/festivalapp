@@ -43,7 +43,12 @@
     "haveAccount": "Already have an account? Sign in",
     "invalidEmail": "Please enter a valid email",
     "passwordTooShort": "Password must be at least 8 characters",
-    "passwordMismatch": "Passwords do not match"
+    "passwordMismatch": "Passwords do not match",
+    "username": "Username",
+    "usernameTooShort": "Must be at least 3 characters",
+    "usernameTooLong": "Must be 30 characters or fewer",
+    "usernameInvalid": "Letters, numbers and underscores only",
+    "usernameTaken": "This username is already taken"
   },
   "festival": {
     "lineup": "Lineup",
