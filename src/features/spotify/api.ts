@@ -6,7 +6,10 @@ import { functionsErrorMessage } from '@/lib/functions';
 import { useSessionStore } from '@/features/auth/session-store';
 
 const SPOTIFY_CLIENT_ID = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID!;
-const SCOPES = ['playlist-modify-public', 'playlist-modify-private'];
+// user-follow-read powers the "festivals ranked by artists I follow" sort —
+// existing connections made before this scope was added won't have it and
+// need to reconnect (Spotify has no way to add a scope to a live token).
+const SCOPES = ['playlist-modify-public', 'playlist-modify-private', 'user-follow-read'];
 
 const discovery = {
   authorizationEndpoint: 'https://accounts.spotify.com/authorize',
@@ -146,6 +149,38 @@ export function useGeneratePlaylist() {
       const { data, error } = await supabase.functions.invoke<GeneratePlaylistResult>('generate-playlist', {
         body: { festivalId, editionId },
       });
+      if (error) throw new Error(await functionsErrorMessage(error));
+      return data!;
+    },
+  });
+}
+
+export interface FollowedArtistsRankingEntry {
+  festivalId: string;
+  festivalName: string;
+  festivalSlug: string;
+  matchedCount: number;
+  matchedArtists: string[];
+}
+
+/**
+ * Ranks festivals by how many artists the user follows on Spotify are in
+ * their lineup (any year). Only meaningful once Spotify is connected —
+ * disabled otherwise. Cached for a while since it re-fetches the user's
+ * whole followed-artists list from Spotify on every call.
+ */
+export function useFollowedArtistsRanking() {
+  const userId = useSessionStore((s) => s.session?.user.id);
+  const { data: connection } = useSpotifyConnection();
+  return useQuery({
+    queryKey: ['spotify-followed-ranking', userId],
+    enabled: !!connection,
+    staleTime: 10 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke<{
+        ranking: FollowedArtistsRankingEntry[];
+        followedCount: number;
+      }>('spotify-followed-artists-ranking');
       if (error) throw new Error(await functionsErrorMessage(error));
       return data!;
     },

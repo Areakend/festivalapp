@@ -105,7 +105,8 @@
     "period6m": "Próximos 6 meses",
     "periodCustom": "Período personalizado",
     "periodFrom": "Desde",
-    "periodTo": "Hasta"
+    "periodTo": "Hasta",
+    "sortSpotifyArtists": "Artistas que sigo"
   },
   "friends": {
     "title": "Amigos",

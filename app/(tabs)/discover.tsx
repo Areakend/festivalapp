@@ -19,10 +19,11 @@ import { FilterSheet } from '@/components/ui/FilterSheet';
 import { DateRangeSheet } from '@/components/ui/DateRangeSheet';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
 import { useMyReviews } from '@/features/reviews/api';
+import { useFollowedArtistsRanking, useSpotifyConnection } from '@/features/spotify/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
 
-type SortKey = 'top100' | 'community' | 'myRating' | 'date' | 'name';
+type SortKey = 'top100' | 'community' | 'myRating' | 'date' | 'name' | 'spotifyArtists';
 type PeriodKey = 'all' | 'upcoming' | '3m' | '6m' | 'custom';
 type SheetKey = 'genre' | 'country' | 'sort' | 'period' | 'customDates' | null;
 
@@ -40,6 +41,8 @@ export default function FestivalsScreen() {
   const { data, isLoading, isRefetching, refetch } = useFestivals();
   const { data: myStatuses } = useMyStatuses();
   const { data: myReviews } = useMyReviews();
+  const { data: spotifyConnection } = useSpotifyConnection();
+  const { data: followedRanking } = useFollowedArtistsRanking();
 
   const [search, setSearch] = useState('');
   const [genre, setGenre] = useState<string | null>(null);
@@ -57,7 +60,11 @@ export default function FestivalsScreen() {
     myRating: t('discover.sortMyRating'),
     date: t('discover.sortDate'),
     name: t('discover.sortName'),
+    spotifyArtists: t('discover.sortSpotifyArtists'),
   };
+  const sortOptions = (Object.keys(SORT_LABELS) as SortKey[]).filter(
+    (key) => key !== 'spotifyArtists' || !!spotifyConnection,
+  );
   const PERIOD_LABELS: Record<PeriodKey, string> = {
     all: t('discover.periodAll'),
     upcoming: t('discover.periodUpcoming'),
@@ -76,6 +83,10 @@ export default function FestivalsScreen() {
   const myRatingByFestival = useMemo(
     () => new Map((myReviews ?? []).map((r) => [r.festival_id, Number(r.overall_rating)])),
     [myReviews],
+  );
+  const spotifyMatchByFestival = useMemo(
+    () => new Map((followedRanking?.ranking ?? []).map((r) => [r.festivalId, r.matchedCount])),
+    [followedRanking],
   );
 
   const { genreOptions, countryOptions } = useMemo(() => {
@@ -139,6 +150,11 @@ export default function FestivalsScreen() {
         }
         case 'name':
           return a.festival.name.localeCompare(b.festival.name);
+        case 'spotifyArtists':
+          return (
+            (spotifyMatchByFestival.get(b.festival.id) ?? 0) -
+            (spotifyMatchByFestival.get(a.festival.id) ?? 0)
+          );
       }
     });
   }, [
@@ -153,6 +169,7 @@ export default function FestivalsScreen() {
     sort,
     attendedIds,
     myRatingByFestival,
+    spotifyMatchByFestival,
   ]);
 
   const top100Attended = useMemo(
@@ -255,6 +272,9 @@ export default function FestivalsScreen() {
               item={item}
               attended={attendedIds.has(item.festival.id)}
               myRating={myRatingByFestival.get(item.festival.id)}
+              spotifyMatchCount={
+                sort === 'spotifyArtists' ? spotifyMatchByFestival.get(item.festival.id) : undefined
+              }
               dateLabel={
                 item.nextEdition
                   ? `${formatDate(item.nextEdition.start_date)}${
@@ -326,7 +346,7 @@ export default function FestivalsScreen() {
       <FilterSheet
         visible={openSheet === 'sort'}
         title={t('discover.sort')}
-        options={(Object.keys(SORT_LABELS) as SortKey[]).map((key) => ({
+        options={sortOptions.map((key) => ({
           value: key,
           label: SORT_LABELS[key],
         }))}
@@ -342,12 +362,14 @@ function FestivalRow({
   item,
   attended,
   myRating,
+  spotifyMatchCount,
   dateLabel,
   onPress,
 }: {
   item: CatalogItem;
   attended: boolean;
   myRating: number | undefined;
+  spotifyMatchCount: number | undefined;
   dateLabel: string | undefined;
   onPress: () => void;
 }) {
@@ -372,11 +394,20 @@ function FestivalRow({
           </Text>
         </View>
         <View style={styles.myRating}>
-          {myRating != null && (
-            <>
-              <Ionicons name="person" size={10} color={colors.textMuted} />
-              <Text style={styles.myRatingText}>{myRating.toFixed(0)}/20</Text>
-            </>
+          {spotifyMatchCount != null ? (
+            spotifyMatchCount > 0 && (
+              <>
+                <Ionicons name="musical-notes" size={10} color={colors.spotify} />
+                <Text style={[styles.myRatingText, { color: colors.spotify }]}>{spotifyMatchCount}</Text>
+              </>
+            )
+          ) : (
+            myRating != null && (
+              <>
+                <Ionicons name="person" size={10} color={colors.textMuted} />
+                <Text style={styles.myRatingText}>{myRating.toFixed(0)}/20</Text>
+              </>
+            )
           )}
         </View>
       </View>
