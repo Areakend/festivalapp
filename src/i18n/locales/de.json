@@ -177,6 +177,10 @@
     "inDays_other": "In {{count}} Tagen",
     "happeningNow": "Läuft gerade!",
     "planning": "Mein Plan",
-    "dateTbc": "Termine folgen"
+    "dateTbc": "Termine folgen",
+    "days_one": "Tag",
+    "days_other": "Tage",
+    "upNext": "Danach",
+    "withFriends": "Mit {{names}}"
   }
 }

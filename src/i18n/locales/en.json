@@ -177,6 +177,10 @@
     "inDays_other": "In {{count}} days",
     "happeningNow": "Happening now!",
     "planning": "My schedule",
-    "dateTbc": "Dates TBC"
+    "dateTbc": "Dates TBC",
+    "days_one": "day",
+    "days_other": "days",
+    "upNext": "Up next",
+    "withFriends": "With {{names}}"
   }
 }

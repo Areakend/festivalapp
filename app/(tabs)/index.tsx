@@ -7,12 +7,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Button } from '@/components/ui/Button';
-import { ScheduleRow } from '@/components/festival/ScheduleRow';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
-import { useDjMagTop100 } from '@/features/profile/api';
+import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/friends/api';
 import { colors, radii, spacing, typography } from '@/theme';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const UP_NEXT_COUNT = 3;
 
 interface AgendaEntry {
   item: CatalogItem;
@@ -21,8 +21,10 @@ interface AgendaEntry {
 }
 
 /**
- * Home: countdown to the next planned festival, chronological agenda of
- * everything planned, quick stats, wishlist & favorites shelves.
+ * Home, countdown-first: one hero (days until the next festival, who of my
+ * friends is going), a short "up next" list, and two quiet pills linking to
+ * wishlist/favorites. Everything else lives on the Festivals tab and the
+ * profile — this screen is deliberately sparse.
  */
 export default function Home() {
   const { t, i18n } = useTranslation();
@@ -32,13 +34,20 @@ export default function Home() {
 
   const { data: catalog, isRefetching } = useFestivals();
   const { data: myStatuses } = useMyStatuses();
-  const { data: djmag } = useDjMagTop100();
+  const { data: friendsAttendance } = useFriendsFestivalAttendance();
 
-  const { agenda, next, wishlist, favorites, attendedCount, wishlistCount, djmagCount } =
+  const { hero, upNext, hasMorePlanned, wishlistCount, favoriteCount, friendsByFestival } =
     useMemo(() => {
       const byId = new Map((catalog ?? []).map((item) => [item.festival.id, item]));
       const idsWith = (status: string) =>
         (myStatuses ?? []).filter((s) => s.status === status).map((s) => s.festival_id);
+
+      const friendsByFestival = new Map<string, PublicProfile[]>();
+      for (const row of friendsAttendance ?? []) {
+        const arr = friendsByFestival.get(row.festival_id) ?? [];
+        if (!arr.some((p) => p.id === row.profile.id)) arr.push(row.profile);
+        friendsByFestival.set(row.festival_id, arr);
+      }
 
       const now = Date.now();
       const agenda: AgendaEntry[] = idsWith('planned')
@@ -63,27 +72,23 @@ export default function Home() {
           return a.daysUntil - b.daysUntil;
         });
 
-      const next = agenda.find((e) => e.daysUntil != null) ?? null;
+      const hero = agenda.find((e) => e.daysUntil != null) ?? null;
+      const rest = agenda.filter((e) => e !== hero);
 
-      const attendedIds = new Set(idsWith('attended'));
       return {
-        agenda,
-        next,
-        wishlist: idsWith('wishlist')
-          .map((id) => byId.get(id))
-          .filter((item): item is CatalogItem => item != null),
-        favorites: idsWith('favorite')
-          .map((id) => byId.get(id))
-          .filter((item): item is CatalogItem => item != null),
-        attendedCount: attendedIds.size,
+        hero,
+        upNext: rest.slice(0, UP_NEXT_COUNT),
+        hasMorePlanned: rest.length > UP_NEXT_COUNT,
         wishlistCount: idsWith('wishlist').length,
-        djmagCount: (djmag?.entries ?? []).filter((e) => attendedIds.has(e.festivals.id)).length,
+        favoriteCount: idsWith('favorite').length,
+        friendsByFestival,
       };
-    }, [catalog, myStatuses, djmag]);
+    }, [catalog, myStatuses, friendsAttendance]);
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ['festivals'] });
     void queryClient.invalidateQueries({ queryKey: ['my-statuses'] });
+    void queryClient.invalidateQueries({ queryKey: ['friends-festival-attendance'] });
   };
 
   const formatDate = (iso: string) =>
@@ -92,7 +97,14 @@ export default function Home() {
   const openFestival = (item: CatalogItem) =>
     router.push({ pathname: '/festival/[slug]', params: { slug: item.festival.slug } });
 
-  const hasAnything = agenda.length > 0 || wishlist.length > 0 || favorites.length > 0;
+  const friendNames = (festivalId: string) => {
+    const friends = friendsByFestival.get(festivalId) ?? [];
+    if (friends.length === 0) return null;
+    const names = friends.slice(0, 3).map((p) => p.display_name);
+    return friends.length > 3 ? `${names.join(', ')} +${friends.length - 3}` : names.join(', ');
+  };
+
+  const heroFriends = hero ? friendNames(hero.item.festival.id) : null;
 
   return (
     <ScrollView
@@ -114,120 +126,115 @@ export default function Home() {
       </View>
 
       {/* Countdown hero — the single thing you open the app for */}
-      {next && next.item.nextEdition && (
+      {hero && hero.item.nextEdition ? (
         <Pressable
-          style={({ pressed }) => [styles.heroWrap, pressed && { opacity: 0.9 }]}
-          onPress={() => openFestival(next.item)}
+          style={({ pressed }) => [styles.hero, pressed && { opacity: 0.85 }]}
+          onPress={() => openFestival(hero.item)}
         >
-          <View style={styles.hero}>
-            <Text style={styles.heroLabel}>{t('home.nextFestival')}</Text>
-            <Text style={styles.heroCountdown}>
-              {next.happeningNow
-                ? t('home.happeningNow')
-                : t('home.inDays', { count: next.daysUntil ?? 0 })}
-            </Text>
-            <Text style={styles.heroName} numberOfLines={1}>
-              {next.item.festival.name}
-            </Text>
-            <Text style={styles.heroDate}>
-              {formatDate(next.item.nextEdition.start_date)}
-              {next.item.nextEdition.end_date
-                ? ` – ${formatDate(next.item.nextEdition.end_date)}`
-                : ''}
-              {next.item.festival.city ? ` · ${next.item.festival.city}` : ''}
-            </Text>
-          </View>
-        </Pressable>
-      )}
-
-      {/* Quick stats */}
-      <View style={styles.statsRow}>
-        <QuickStat value={String(attendedCount)} label={t('festival.attended')} color={colors.statusAttended} />
-        <QuickStat value={String(wishlistCount)} label={t('festival.wishlist')} color={colors.statusWishlist} />
-        <QuickStat value={`${djmagCount}/100`} label="DJ Mag" color={colors.rating} />
-      </View>
-
-      {/* Chronological agenda of planned festivals */}
-      {agenda.length > 0 && (
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="calendar" size={18} color={colors.statusPlanned} />
-            <Text style={[styles.sectionTitle, { color: colors.statusPlanned }]}>
-              {t('home.planning')}
-            </Text>
-            <Text style={styles.sectionCount}>{agenda.length}</Text>
-          </View>
-          <View style={styles.agendaList}>
-            {agenda.map(({ item, daysUntil, happeningNow }) => (
-              <ScheduleRow
-                key={item.festival.id}
-                item={item}
-                meta={
-                  happeningNow
-                    ? t('home.happeningNow')
-                    : daysUntil != null
-                      ? t('home.inDays', { count: daysUntil })
-                      : t('home.dateTbc')
-                }
-                locale={i18n.language}
-                onPress={() => openFestival(item)}
-              />
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Wishlist & favorites, same row format as the schedule above */}
-      {[
-        { key: 'wishlist', items: wishlist, labelKey: 'festival.wishlist', icon: 'heart', color: colors.statusWishlist },
-        { key: 'favorite', items: favorites, labelKey: 'festival.favorite', icon: 'star', color: colors.statusFavorite },
-      ]
-        .filter((s) => s.items.length > 0)
-        .map((section) => (
-          <View key={section.key} style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name={section.icon as never} size={18} color={section.color} />
-              <Text style={[styles.sectionTitle, { color: section.color }]}>
-                {t(section.labelKey)}
+          <Text style={styles.heroLabel}>{t('home.nextFestival')}</Text>
+          {hero.happeningNow ? (
+            <Text style={styles.heroNow}>{t('home.happeningNow')}</Text>
+          ) : (
+            <>
+              <Text style={styles.heroCount}>{hero.daysUntil}</Text>
+              <Text style={styles.heroDaysWord}>{t('home.days', { count: hero.daysUntil ?? 0 })}</Text>
+            </>
+          )}
+          <Text style={styles.heroName} numberOfLines={1}>
+            {hero.item.festival.name}
+          </Text>
+          <Text style={styles.heroMeta}>
+            {formatDate(hero.item.nextEdition.start_date)}
+            {hero.item.nextEdition.end_date
+              ? ` – ${formatDate(hero.item.nextEdition.end_date)}`
+              : ''}
+            {hero.item.festival.city ? ` · ${hero.item.festival.city}` : ''}
+          </Text>
+          {heroFriends && (
+            <View style={styles.heroFriends}>
+              <Ionicons name="people" size={14} color={colors.textSecondary} />
+              <Text style={styles.heroFriendsText}>
+                {t('home.withFriends', { names: heroFriends })}
               </Text>
-              <Text style={styles.sectionCount}>{section.items.length}</Text>
             </View>
-            <View style={styles.agendaList}>
-              {section.items.map((item) => (
-                <ScheduleRow
-                  key={item.festival.id}
-                  item={item}
-                  meta={
-                    item.nextEdition
-                      ? `${formatDate(item.nextEdition.start_date)}${
-                          item.nextEdition.end_date ? ` – ${formatDate(item.nextEdition.end_date)}` : ''
-                        }`
-                      : t('home.dateTbc')
-                  }
-                  locale={i18n.language}
-                  onPress={() => openFestival(item)}
-                />
-              ))}
-            </View>
-          </View>
-        ))}
-
-      {!hasAnything && (
+          )}
+        </Pressable>
+      ) : (
         <View style={styles.empty}>
           <Text style={styles.emptyText}>{t('empty.noFestivals')}</Text>
           <Button label={t('tabs.festivals')} onPress={() => router.push('/discover')} />
+        </View>
+      )}
+
+      {/* Up next — the two or three after the hero, one quiet line each */}
+      {upNext.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>{t('home.upNext')}</Text>
+          {upNext.map(({ item }) => {
+            const friends = friendsByFestival.get(item.festival.id) ?? [];
+            return (
+              <Pressable
+                key={item.festival.id}
+                style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
+                onPress={() => openFestival(item)}
+              >
+                <Text style={styles.rowDate}>
+                  {item.nextEdition
+                    ? formatDate(item.nextEdition.start_date)
+                    : t('home.dateTbc')}
+                </Text>
+                <Text style={styles.rowName} numberOfLines={1}>
+                  {item.festival.name}
+                </Text>
+                {friends.length > 0 && (
+                  <View style={styles.rowFriends}>
+                    <Ionicons name="people" size={12} color={colors.textMuted} />
+                    <Text style={styles.rowFriendsCount}>{friends.length}</Text>
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
+          {hasMorePlanned && (
+            <Pressable onPress={() => router.push('/list/planned')} hitSlop={8}>
+              <Text style={styles.seeAll}>{t('common.seeAll')}</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+
+      {/* Wishlist & favorites, one tap away instead of two long sections */}
+      {(wishlistCount > 0 || favoriteCount > 0) && (
+        <View style={styles.pillRow}>
+          {wishlistCount > 0 && (
+            <Pill
+              icon="heart"
+              label={`${t('festival.wishlist')} · ${wishlistCount}`}
+              onPress={() => router.push('/list/wishlist')}
+            />
+          )}
+          {favoriteCount > 0 && (
+            <Pill
+              icon="star"
+              label={`${t('festival.favorite')} · ${favoriteCount}`}
+              onPress={() => router.push('/list/favorite')}
+            />
+          )}
         </View>
       )}
     </ScrollView>
   );
 }
 
-function QuickStat({ value, label, color }: { value: string; label: string; color: string }) {
+function Pill({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
   return (
-    <View style={styles.statBox}>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    <Pressable
+      style={({ pressed }) => [styles.pill, pressed && { opacity: 0.7 }]}
+      onPress={onPress}
+    >
+      <Ionicons name={icon as never} size={14} color={colors.textSecondary} />
+      <Text style={styles.pillText}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -242,7 +249,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: typography.fonts.heading,
-    fontSize: typography.sizes.xxl,
+    fontSize: typography.sizes.xl,
     color: colors.text,
   },
   friendsButton: {
@@ -252,75 +259,125 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
     padding: spacing.md,
   },
-  heroWrap: { paddingHorizontal: spacing.xl },
   hero: {
-    backgroundColor: colors.primary,
-    borderRadius: radii.lg,
-    padding: spacing.xl,
+    alignItems: 'center',
+    paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.xl,
     gap: spacing.xs,
   },
   heroLabel: {
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.sm,
-    color: 'rgba(255,255,255,0.75)',
+    color: colors.textMuted,
   },
-  heroCountdown: {
+  heroCount: {
     fontFamily: typography.fonts.heading,
-    fontSize: 40,
-    color: colors.textOnPrimary,
+    fontSize: 72,
+    lineHeight: 78,
+    color: colors.text,
+  },
+  heroDaysWord: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.sm,
+    color: colors.textMuted,
+    marginTop: -spacing.sm,
+  },
+  heroNow: {
+    fontFamily: typography.fonts.heading,
+    fontSize: 34,
+    color: colors.text,
+    paddingVertical: spacing.md,
   },
   heroName: {
     fontFamily: typography.fonts.headingMedium,
     fontSize: typography.sizes.lg,
-    color: colors.textOnPrimary,
+    color: colors.primary,
+    marginTop: spacing.md,
   },
-  heroDate: {
+  heroMeta: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.sm,
-    color: 'rgba(255,255,255,0.75)',
+    color: colors.textMuted,
   },
-  statsRow: {
+  heroFriends: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.md,
+  },
+  heroFriendsText: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+  },
+  section: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    gap: spacing.xs,
+  },
+  sectionLabel: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: spacing.sm,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  rowDate: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.sm,
+    color: colors.textMuted,
+    width: 64,
+  },
+  rowName: {
+    flex: 1,
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.md,
+    color: colors.text,
+  },
+  rowFriends: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  rowFriendsCount: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+  },
+  seeAll: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.primary,
+    paddingVertical: spacing.sm,
+  },
+  pillRow: {
     flexDirection: 'row',
     gap: spacing.md,
     paddingHorizontal: spacing.xl,
   },
-  statBox: {
+  pill: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.md,
+    borderRadius: radii.full,
     paddingVertical: spacing.md,
-    alignItems: 'center',
-    gap: 2,
   },
-  statValue: {
-    fontFamily: typography.fonts.heading,
-    fontSize: typography.sizes.lg,
-  },
-  statLabel: {
-    fontFamily: typography.fonts.body,
-    fontSize: typography.sizes.xs,
+  pillText: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
     color: colors.textSecondary,
   },
-  section: { gap: spacing.md },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xl,
-  },
-  sectionTitle: {
-    fontFamily: typography.fonts.headingMedium,
-    fontSize: typography.sizes.lg,
-  },
-  sectionCount: {
-    fontFamily: typography.fonts.bodySemiBold,
-    fontSize: typography.sizes.sm,
-    color: colors.textMuted,
-  },
-  agendaList: { gap: spacing.sm, paddingHorizontal: spacing.xl },
-  empty: { alignItems: 'center', marginTop: spacing.xxxl, gap: spacing.xl },
+  empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.xl },
   emptyText: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.md,

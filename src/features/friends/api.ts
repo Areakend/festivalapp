@@ -116,6 +116,53 @@ export function useRemoveFriendship() {
   });
 }
 
+export interface FriendAttendance {
+  festival_id: string;
+  status: 'planned' | 'attended';
+  profile: PublicProfile;
+}
+
+/**
+ * Which festivals my friends are going to (or went to) — one flat list the
+ * Home screen groups by festival to show "with Max, Léa" under the hero.
+ * Friends' statuses are readable thanks to the friends RLS policy.
+ */
+export function useFriendsFestivalAttendance() {
+  const userId = useSessionStore((s) => s.session?.user.id);
+  return useQuery({
+    queryKey: ['friends-festival-attendance', userId],
+    enabled: !!userId,
+    queryFn: async (): Promise<FriendAttendance[]> => {
+      const { data, error } = await supabase
+        .from('friendships')
+        .select(FRIEND_SELECT)
+        .eq('status', 'accepted');
+      if (error) throw error;
+      const rows = data as unknown as FriendshipRow[];
+      const profiles = new Map(
+        rows.map((r) => {
+          const p = r.requester_id === userId ? r.addressee : r.requester;
+          return [p.id, p] as const;
+        }),
+      );
+      if (profiles.size === 0) return [];
+
+      const { data: statuses, error: statusError } = await supabase
+        .from('user_festival_statuses')
+        .select('user_id, festival_id, status')
+        .in('user_id', [...profiles.keys()])
+        .in('status', ['planned', 'attended']);
+      if (statusError) throw statusError;
+
+      return (statuses ?? []).map((s) => ({
+        festival_id: s.festival_id as string,
+        status: s.status as 'planned' | 'attended',
+        profile: profiles.get(s.user_id as string)!,
+      }));
+    },
+  });
+}
+
 export interface FriendProfileData {
   profile: Profile;
   statuses: UserFestivalStatus[]; // readable thanks to the friends RLS policy
