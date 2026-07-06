@@ -17,7 +17,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Chip } from '@/components/ui/Chip';
 import { FilterSheet } from '@/components/ui/FilterSheet';
 import { DateRangeSheet } from '@/components/ui/DateRangeSheet';
-import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
+import { useFestivals, useMyStatuses, useToggleStatus, type CatalogItem } from '@/features/festivals/api';
 import { useMyReviews } from '@/features/reviews/api';
 import { useFollowedArtistsRanking } from '@/features/artists/api';
 import { colors, radii, spacing, typography } from '@/theme';
@@ -40,6 +40,7 @@ export default function FestivalsScreen() {
   const router = useRouter();
   const { data, isLoading, isRefetching, refetch } = useFestivals();
   const { data: myStatuses } = useMyStatuses();
+  const toggleStatus = useToggleStatus();
   const { data: myReviews } = useMyReviews();
   const { data: followedRanking } = useFollowedArtistsRanking();
 
@@ -268,6 +269,13 @@ export default function FestivalsScreen() {
             <FestivalRow
               item={item}
               attended={attendedIds.has(item.festival.id)}
+              onToggleAttended={() =>
+                toggleStatus.mutate({
+                  festivalId: item.festival.id,
+                  status: 'attended',
+                  active: attendedIds.has(item.festival.id),
+                })
+              }
               myRating={myRatingByFestival.get(item.festival.id)}
               followedMatchCount={
                 sort === 'followedArtists' ? followedMatchByFestival.get(item.festival.id) : undefined
@@ -358,6 +366,7 @@ export default function FestivalsScreen() {
 function FestivalRow({
   item,
   attended,
+  onToggleAttended,
   myRating,
   followedMatchCount,
   dateLabel,
@@ -365,6 +374,7 @@ function FestivalRow({
 }: {
   item: CatalogItem;
   attended: boolean;
+  onToggleAttended: () => void;
   myRating: number | undefined;
   followedMatchCount: number | undefined;
   dateLabel: string | undefined;
@@ -408,11 +418,17 @@ function FestivalRow({
           )}
         </View>
       </View>
-      <Ionicons
-        name={attended ? 'checkmark-circle' : 'ellipse-outline'}
-        size={22}
-        color={attended ? colors.statusAttended : colors.textMuted}
-      />
+      <Pressable
+        onPress={onToggleAttended}
+        hitSlop={12}
+        style={({ pressed }) => pressed && { opacity: 0.6 }}
+      >
+        <Ionicons
+          name={attended ? 'checkmark-circle' : 'ellipse-outline'}
+          size={22}
+          color={attended ? colors.statusAttended : colors.textMuted}
+        />
+      </Pressable>
     </Pressable>
   );
 }
