@@ -189,14 +189,21 @@ export default function FestivalsScreen() {
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
       <Text style={styles.title}>{t('tabs.festivals')}</Text>
 
-      <TextInput
-        style={styles.search}
-        placeholder={t('common.search')}
-        placeholderTextColor={colors.textMuted}
-        value={search}
-        onChangeText={setSearch}
-        autoCapitalize="none"
-      />
+      <View style={styles.searchWrap}>
+        <TextInput
+          style={styles.search}
+          placeholder={t('common.search')}
+          placeholderTextColor={colors.textMuted}
+          value={search}
+          onChangeText={setSearch}
+          autoCapitalize="none"
+        />
+        {search.length > 0 && (
+          <Pressable style={styles.searchClear} onPress={() => setSearch('')} hitSlop={10}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          </Pressable>
+        )}
+      </View>
 
       <View style={styles.filterRow}>
         <Chip
@@ -445,6 +452,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: spacing.lg,
   },
+  searchWrap: { marginBottom: spacing.md },
   search: {
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -452,10 +460,17 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+    paddingRight: spacing.xxl,
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.md,
     color: colors.text,
-    marginBottom: spacing.md,
+  },
+  searchClear: {
+    position: 'absolute',
+    right: spacing.md,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
   },
   filterRow: {
     flexDirection: 'row',

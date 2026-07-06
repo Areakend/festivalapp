@@ -43,7 +43,12 @@
     "haveAccount": "Already have an account? Sign in",
     "invalidEmail": "Please enter a valid email",
     "passwordTooShort": "Password must be at least 8 characters",
-    "passwordMismatch": "Passwords do not match"
+    "passwordMismatch": "Passwords do not match",
+    "username": "Username",
+    "usernameTooShort": "Must be at least 3 characters",
+    "usernameTooLong": "Must be 30 characters or fewer",
+    "usernameInvalid": "Letters, numbers and underscores only",
+    "usernameTaken": "This username is already taken"
   },
   "festival": {
     "lineup": "Lineup",
@@ -70,11 +75,12 @@
     "editionYear": "Edition {{year}}",
     "attendedYears": "Years you attended",
     "addYear": "Add a year",
-    "pickAttendedYear": "Which year did you go?"
+    "pickAttendedYear": "Which year did you go?",
+    "friendsHere": "Friends going"
   },
   "review": {
     "yourRating": "Your rating",
-    "comment": "Comment (optional)",
+    "comment": "Comment (optional) — ambiance, stages, lodging, transport, tips, organization...",
     "lineupRating": "Lineup",
     "productionRating": "Production",
     "sideQuestRating": "Side quests",
@@ -87,7 +93,16 @@
     "sortHighest": "Highest rated",
     "breakdown": "Rating details",
     "aiSummary": "Review summary",
-    "aiDisclaimer": "AI-generated from community reviews"
+    "aiDisclaimer": "AI-generated from community reviews",
+    "year": "Which year?",
+    "category": {
+      "atmosphere": "Atmosphere",
+      "stages": "Stages & sound",
+      "lodging": "Lodging",
+      "transport": "Transport",
+      "tips": "Tips & tricks",
+      "organization": "Organization & safety"
+    }
   },
   "discover": {
     "sort": "Sort",

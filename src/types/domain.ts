@@ -82,6 +82,7 @@ export interface Review {
   user_id: string;
   festival_id: string;
   edition_id: string | null;
+  year: number | null;
   overall_rating: number;
   comment: string | null;
   lineup_rating: number | null;

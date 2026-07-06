@@ -43,7 +43,12 @@
     "haveAccount": "Schon ein Konto? Melde dich an",
     "invalidEmail": "Bitte gib eine gültige E-Mail-Adresse ein",
     "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen lang sein",
-    "passwordMismatch": "Die Passwörter stimmen nicht überein"
+    "passwordMismatch": "Die Passwörter stimmen nicht überein",
+    "username": "Benutzername",
+    "usernameTooShort": "Muss mindestens 3 Zeichen haben",
+    "usernameTooLong": "Darf höchstens 30 Zeichen haben",
+    "usernameInvalid": "Nur Buchstaben, Zahlen und Unterstriche",
+    "usernameTaken": "Dieser Benutzername ist bereits vergeben"
   },
   "festival": {
     "lineup": "Line-up",
@@ -70,11 +75,12 @@
     "editionYear": "Ausgabe {{year}}",
     "attendedYears": "Jahre, in denen du dabei warst",
     "addYear": "Jahr hinzufügen",
-    "pickAttendedYear": "In welchem Jahr warst du dabei?"
+    "pickAttendedYear": "In welchem Jahr warst du dabei?",
+    "friendsHere": "Freunde, die hingehen"
   },
   "review": {
     "yourRating": "Deine Bewertung",
-    "comment": "Kommentar (optional)",
+    "comment": "Kommentar (optional) — Stimmung, Bühne, Unterkunft, Transport, Tipps, Organisation...",
     "lineupRating": "Line-up",
     "productionRating": "Produktion",
     "sideQuestRating": "Nebenquests",
@@ -87,7 +93,16 @@
     "sortHighest": "Am besten bewertet",
     "breakdown": "Bewertungsdetails",
     "aiSummary": "Zusammenfassung der Bewertungen",
-    "aiDisclaimer": "KI-generiert aus Community-Bewertungen"
+    "aiDisclaimer": "KI-generiert aus Community-Bewertungen",
+    "year": "Welches Jahr?",
+    "category": {
+      "atmosphere": "Stimmung",
+      "stages": "Bühne & Sound",
+      "lodging": "Unterkunft",
+      "transport": "Transport",
+      "tips": "Praktische Tipps",
+      "organization": "Organisation & Sicherheit"
+    }
   },
   "discover": {
     "sort": "Sortieren",

@@ -7,12 +7,23 @@ import { useQueryClient } from '@tanstack/react-query';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
 import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/friends/api';
+import { useUpdateProfile } from '@/features/profile/api';
+import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { colors, radii, spacing, typography } from '@/theme';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UP_NEXT_COUNT = 3;
+
+const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
+  en: 'English',
+  fr: 'Français',
+  nl: 'Nederlands',
+  de: 'Deutsch',
+  es: 'Español',
+};
 
 interface AgendaEntry {
   item: CatalogItem;
@@ -35,6 +46,12 @@ export default function Home() {
   const { data: catalog, isRefetching } = useFestivals();
   const { data: myStatuses } = useMyStatuses();
   const { data: friendsAttendance } = useFriendsFestivalAttendance();
+  const updateProfile = useUpdateProfile();
+
+  const changeLanguage = (lang: SupportedLanguage) => {
+    void i18n.changeLanguage(lang);
+    updateProfile.mutate({ preferred_language: lang });
+  };
 
   const { hero, upNext, hasMorePlanned, wishlistCount, favoriteCount, friendsByFestival } =
     useMemo(() => {
@@ -169,6 +186,18 @@ export default function Home() {
           <Text style={styles.welcomeBody}>
             {t(hasAnything ? 'home.noPlannedHint' : 'home.welcomeBody')}
           </Text>
+          {!hasAnything && (
+            <View style={styles.languageRow}>
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <Chip
+                  key={lang}
+                  label={LANGUAGE_LABELS[lang]}
+                  active={i18n.language === lang}
+                  onPress={() => changeLanguage(lang)}
+                />
+              ))}
+            </View>
+          )}
           <Button label={t('tabs.festivals')} onPress={() => router.push('/discover')} />
         </View>
       )}
@@ -413,5 +442,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  languageRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: spacing.sm,
   },
 });

@@ -9,7 +9,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
 import { signUpSchema, type SignUpInput } from '@/features/auth/schemas';
-import { signUpWithEmail, signInWithGoogle } from '@/features/auth/api';
+import { checkUsernameAvailable, signUpWithEmail, signInWithGoogle } from '@/features/auth/api';
 import { colors, spacing, typography } from '@/theme';
 
 export default function SignUp() {
@@ -21,13 +21,19 @@ export default function SignUp() {
   const {
     control,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<SignUpInput>({ resolver: zodResolver(signUpSchema) });
 
   const onSubmit = async (values: SignUpInput) => {
     setSubmitError(null);
     try {
-      await signUpWithEmail(values.email, values.password);
+      const available = await checkUsernameAvailable(values.username);
+      if (!available) {
+        setError('username', { message: 'auth.usernameTaken' });
+        return;
+      }
+      await signUpWithEmail(values.email, values.password, values.username);
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : t('common.error'));
     }
@@ -50,6 +56,20 @@ export default function SignUp() {
       <Text style={styles.title}>{t('auth.signUp')}</Text>
 
       <View style={styles.form}>
+        <Controller
+          control={control}
+          name="username"
+          render={({ field: { onChange, value } }) => (
+            <TextField
+              label={t('auth.username')}
+              value={value ?? ''}
+              onChangeText={onChange}
+              autoCapitalize="none"
+              autoComplete="username-new"
+              error={errors.username && t(errors.username.message as string)}
+            />
+          )}
+        />
         <Controller
           control={control}
           name="email"
