@@ -23,6 +23,11 @@ async function spotifyFetch(path: string, accessToken: string, init?: RequestIni
  * Extended Quota Mode approval (a Development Mode restriction, not
  * something wrong with any specific artist) — fall back to a plain track
  * search for that artist, which stays on the unrestricted /search endpoint.
+ *
+ * The two attempts are independent try/catches (not one try with a catch
+ * that itself calls the fallback) so that a failure of the fallback search
+ * can never surface as — or be confused with — the original top-tracks
+ * error: this always resolves, never throws.
  */
 async function getArtistTracks(
   spotifyArtistId: string,
@@ -31,13 +36,20 @@ async function getArtistTracks(
 ): Promise<string[]> {
   try {
     const topTracks = await spotifyFetch(`/artists/${spotifyArtistId}/top-tracks?market=US`, accessToken);
-    return (topTracks.tracks ?? []).slice(0, TRACKS_PER_ARTIST).map((t: { uri: string }) => t.uri);
+    const uris = (topTracks.tracks ?? []).slice(0, TRACKS_PER_ARTIST).map((t: { uri: string }) => t.uri);
+    if (uris.length > 0) return uris;
   } catch {
+    // Development Mode restriction (or any other failure) — try search instead.
+  }
+
+  try {
     const search = await spotifyFetch(
       `/search?type=track&limit=${TRACKS_PER_ARTIST}&q=${encodeURIComponent(`artist:"${artistName}"`)}`,
       accessToken,
     );
     return (search.tracks?.items ?? []).map((t: { uri: string }) => t.uri);
+  } catch {
+    return [];
   }
 }
 
