@@ -37,7 +37,11 @@ export function DateRangeSheet({ visible, from, to, onApply, onClose }: DateRang
           <DateTimePicker
             value={draftFrom}
             mode="date"
-            display={Platform.OS === 'ios' ? 'compact' : 'default'}
+            // 'default' on Android opens its own system dialog, which steals
+            // window focus from this sheet's Modal and closes it after a
+            // single pick. 'spinner' renders inline instead, so both fields
+            // stay open until "Terminé" is tapped.
+            display={Platform.OS === 'ios' ? 'compact' : 'spinner'}
             onChange={(_, date) => date && setDraftFrom(date)}
             themeVariant="dark"
           />
@@ -47,7 +51,7 @@ export function DateRangeSheet({ visible, from, to, onApply, onClose }: DateRang
           <DateTimePicker
             value={draftTo}
             mode="date"
-            display={Platform.OS === 'ios' ? 'compact' : 'default'}
+            display={Platform.OS === 'ios' ? 'compact' : 'spinner'}
             onChange={(_, date) => date && setDraftTo(date)}
             themeVariant="dark"
           />
