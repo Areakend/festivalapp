@@ -36,6 +36,11 @@ import {
   useReviewSummary,
   type ReviewSort,
 } from '@/features/reviews/api';
+import {
+  useFollowArtist,
+  useFollowedArtistsRanking,
+  useSpotifyConnection,
+} from '@/features/spotify/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag, formatCompact } from '@/utils/format';
 import type { FestivalStatus } from '@/types/domain';
@@ -63,6 +68,9 @@ export default function FestivalDetailScreen() {
   const addAttendance = useAddAttendance();
   const removeAttendance = useRemoveAttendance();
   const [yearSheetOpen, setYearSheetOpen] = useState(false);
+  const { data: spotifyConnection } = useSpotifyConnection();
+  const { data: followedRanking } = useFollowedArtistsRanking();
+  const followArtist = useFollowArtist();
 
   const lineupEdition = data?.editions.find((e) => e.lineup_published);
   const { data: lineup } = useEditionLineup(lineupEdition?.id);
@@ -105,7 +113,11 @@ export default function FestivalDetailScreen() {
   }
 
   const { festival, editions, rankings, stats } = data;
-  const hasLineup = editions.some((e) => e.lineup_published);
+  const followedArtistNames = new Set(
+    (followedRanking?.ranking.find((r) => r.festivalId === festival.id)?.matchedArtists ?? []).map(
+      (n) => n.toLowerCase(),
+    ),
+  );
   const activeStatuses = new Set(
     (myStatuses ?? [])
       .filter((s) => s.festival_id === festival.id)
@@ -125,6 +137,15 @@ export default function FestivalDetailScreen() {
         <Pressable style={styles.back} onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
+        {festival.official_website && (
+          <Pressable
+            style={[styles.back, styles.websiteButton]}
+            onPress={() => Linking.openURL(festival.official_website!)}
+            hitSlop={12}
+          >
+            <Ionicons name="globe-outline" size={22} color={colors.text} />
+          </Pressable>
+        )}
         {festival.cover_image_url ? (
           <Image
             source={{ uri: festival.cover_image_url }}
@@ -231,7 +252,9 @@ export default function FestivalDetailScreen() {
         {/* Description */}
         {festival.description && <Text style={styles.description}>{festival.description}</Text>}
 
-        {/* Lineup of the most recent published edition */}
+        {/* Lineup of the most recent published edition — artists the user
+            follows on Spotify are highlighted; tapping any artist follows
+            them (if Spotify is connected). */}
         {lineupEdition && lineup && lineup.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>
@@ -239,9 +262,23 @@ export default function FestivalDetailScreen() {
             </Text>
             <View style={styles.lineupWrap}>
               {lineup.map((entry) => (
-                <Chip key={entry.artists.id} label={entry.artists.name} />
+                <Chip
+                  key={entry.artists.id}
+                  label={entry.artists.name}
+                  active={followedArtistNames.has(entry.artists.name.toLowerCase())}
+                  activeColor={colors.primary}
+                  onPress={
+                    spotifyConnection ? () => followArtist.mutate(entry.artists.id) : undefined
+                  }
+                />
               ))}
             </View>
+            <Button
+              label={t('festival.generatePlaylist')}
+              variant="secondary"
+              onPress={() => router.push({ pathname: '/playlist/[slug]', params: { slug } })}
+              style={styles.sectionAction}
+            />
           </>
         )}
 
@@ -275,6 +312,12 @@ export default function FestivalDetailScreen() {
           </View>
         )}
 
+        <Button
+          label={myReview ? t('review.editReview') : t('festival.rateReview')}
+          onPress={() => router.push({ pathname: '/review/[slug]', params: { slug } })}
+          style={styles.sectionAction}
+        />
+
         <View style={styles.sortRow}>
           <Chip
             label={t('review.sortNewest')}
@@ -300,16 +343,6 @@ export default function FestivalDetailScreen() {
         {/* Actions */}
         <View style={styles.actions}>
           <Button
-            label={myReview ? t('review.editReview') : t('festival.rateReview')}
-            onPress={() => router.push({ pathname: '/review/[slug]', params: { slug } })}
-          />
-          <Button
-            label={t('festival.generatePlaylist')}
-            variant="secondary"
-            onPress={() => router.push({ pathname: '/playlist/[slug]', params: { slug } })}
-            disabled={!hasLineup}
-          />
-          <Button
             label={t('common.share')}
             variant="ghost"
             onPress={() =>
@@ -318,13 +351,6 @@ export default function FestivalDetailScreen() {
               })
             }
           />
-          {festival.official_website && (
-            <Button
-              label={t('festival.website')}
-              variant="ghost"
-              onPress={() => Linking.openURL(festival.official_website!)}
-            />
-          )}
         </View>
       </View>
     </ScrollView>
@@ -365,6 +391,7 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     zIndex: 1,
   },
+  websiteButton: { left: undefined, right: spacing.lg },
   coverLetter: {
     fontFamily: typography.fonts.heading,
     fontSize: 72,
@@ -498,6 +525,7 @@ const styles = StyleSheet.create({
     color: colors.rating,
   },
   actions: { gap: spacing.sm, marginTop: spacing.lg },
+  sectionAction: { marginTop: spacing.sm },
   sortRow: { flexDirection: 'row', gap: spacing.sm },
   breakdownCard: {
     backgroundColor: colors.surface,

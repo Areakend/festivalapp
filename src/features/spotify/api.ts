@@ -6,10 +6,16 @@ import { functionsErrorMessage } from '@/lib/functions';
 import { useSessionStore } from '@/features/auth/session-store';
 
 const SPOTIFY_CLIENT_ID = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID!;
-// user-follow-read powers the "festivals ranked by artists I follow" sort —
-// existing connections made before this scope was added won't have it and
-// need to reconnect (Spotify has no way to add a scope to a live token).
-const SCOPES = ['playlist-modify-public', 'playlist-modify-private', 'user-follow-read'];
+// user-follow-read powers the "festivals ranked by artists I follow" sort,
+// user-follow-modify lets tapping a lineup artist follow them directly —
+// existing connections made before these scopes were added won't have them
+// and need to reconnect (Spotify has no way to add a scope to a live token).
+const SCOPES = [
+  'playlist-modify-public',
+  'playlist-modify-private',
+  'user-follow-read',
+  'user-follow-modify',
+];
 
 const discovery = {
   authorizationEndpoint: 'https://accounts.spotify.com/authorize',
@@ -151,6 +157,22 @@ export function useGeneratePlaylist() {
       });
       if (error) throw new Error(await functionsErrorMessage(error));
       return data!;
+    },
+  });
+}
+
+/** Follows an artist on the user's Spotify account (called from a lineup chip tap). */
+export function useFollowArtist() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (artistId: string) => {
+      const { error } = await supabase.functions.invoke('spotify-follow-artist', {
+        body: { artistId },
+      });
+      if (error) throw new Error(await functionsErrorMessage(error));
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['spotify-followed-ranking'] });
     },
   });
 }
