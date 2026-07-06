@@ -8,6 +8,7 @@ import type {
   FestivalCommunityStats,
   FestivalEdition,
   FestivalStatus,
+  UserAttendance,
   UserFestivalStatus,
 } from '@/types/domain';
 
@@ -199,5 +200,54 @@ export function useToggleStatus() {
       }
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['my-statuses'] }),
+  });
+}
+
+/**
+ * Detailed per-year attendance log, supplementing the quick "attended"
+ * status above for people who want to record exactly which edition(s)
+ * of a festival they went to (small table, cached once like statuses).
+ */
+export function useMyAttendances() {
+  const userId = useSessionStore((s) => s.session?.user.id);
+  return useQuery({
+    queryKey: ['my-attendances', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_attendances')
+        .select('*')
+        .order('attended_year', { ascending: false });
+      if (error) throw error;
+      return data as UserAttendance[];
+    },
+  });
+}
+
+export function useAddAttendance() {
+  const queryClient = useQueryClient();
+  const userId = useSessionStore((s) => s.session?.user.id);
+
+  return useMutation({
+    mutationFn: async (input: { festivalId: string; year: number }) => {
+      if (!userId) throw new Error('Not signed in');
+      const { error } = await supabase
+        .from('user_attendances')
+        .insert({ user_id: userId, festival_id: input.festivalId, attended_year: input.year });
+      if (error) throw error;
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['my-attendances'] }),
+  });
+}
+
+export function useRemoveAttendance() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (attendanceId: string) => {
+      const { error } = await supabase.from('user_attendances').delete().eq('id', attendanceId);
+      if (error) throw error;
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['my-attendances'] }),
   });
 }

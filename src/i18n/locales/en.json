@@ -67,7 +67,10 @@
     "djmagRank": "DJ Mag rank",
     "bestRank": "Best rank ever",
     "rankingHistory": "Ranking history",
-    "editionYear": "Edition {{year}}"
+    "editionYear": "Edition {{year}}",
+    "attendedYears": "Years you attended",
+    "addYear": "Add a year",
+    "pickAttendedYear": "Which year did you go?"
   },
   "review": {
     "yourRating": "Your rating",
