@@ -19,11 +19,11 @@ import { FilterSheet } from '@/components/ui/FilterSheet';
 import { DateRangeSheet } from '@/components/ui/DateRangeSheet';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
 import { useMyReviews } from '@/features/reviews/api';
-import { useFollowedArtistsRanking, useSpotifyConnection } from '@/features/spotify/api';
+import { useFollowedArtistsRanking } from '@/features/artists/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
 
-type SortKey = 'top100' | 'community' | 'myRating' | 'date' | 'name' | 'spotifyArtists';
+type SortKey = 'top100' | 'community' | 'myRating' | 'date' | 'name' | 'followedArtists';
 type PeriodKey = 'all' | 'upcoming' | '3m' | '6m' | 'custom';
 type SheetKey = 'genre' | 'country' | 'sort' | 'period' | 'customDates' | null;
 
@@ -41,7 +41,6 @@ export default function FestivalsScreen() {
   const { data, isLoading, isRefetching, refetch } = useFestivals();
   const { data: myStatuses } = useMyStatuses();
   const { data: myReviews } = useMyReviews();
-  const { data: spotifyConnection } = useSpotifyConnection();
   const { data: followedRanking } = useFollowedArtistsRanking();
 
   const [search, setSearch] = useState('');
@@ -60,11 +59,9 @@ export default function FestivalsScreen() {
     myRating: t('discover.sortMyRating'),
     date: t('discover.sortDate'),
     name: t('discover.sortName'),
-    spotifyArtists: t('discover.sortSpotifyArtists'),
+    followedArtists: t('discover.sortFollowedArtists'),
   };
-  const sortOptions = (Object.keys(SORT_LABELS) as SortKey[]).filter(
-    (key) => key !== 'spotifyArtists' || !!spotifyConnection,
-  );
+  const sortOptions = Object.keys(SORT_LABELS) as SortKey[];
   const PERIOD_LABELS: Record<PeriodKey, string> = {
     all: t('discover.periodAll'),
     upcoming: t('discover.periodUpcoming'),
@@ -84,8 +81,8 @@ export default function FestivalsScreen() {
     () => new Map((myReviews ?? []).map((r) => [r.festival_id, Number(r.overall_rating)])),
     [myReviews],
   );
-  const spotifyMatchByFestival = useMemo(
-    () => new Map((followedRanking?.ranking ?? []).map((r) => [r.festivalId, r.matchedCount])),
+  const followedMatchByFestival = useMemo(
+    () => new Map((followedRanking ?? []).map((r) => [r.festivalId, r.matchedCount])),
     [followedRanking],
   );
 
@@ -150,10 +147,10 @@ export default function FestivalsScreen() {
         }
         case 'name':
           return a.festival.name.localeCompare(b.festival.name);
-        case 'spotifyArtists':
+        case 'followedArtists':
           return (
-            (spotifyMatchByFestival.get(b.festival.id) ?? 0) -
-            (spotifyMatchByFestival.get(a.festival.id) ?? 0)
+            (followedMatchByFestival.get(b.festival.id) ?? 0) -
+            (followedMatchByFestival.get(a.festival.id) ?? 0)
           );
       }
     });
@@ -169,7 +166,7 @@ export default function FestivalsScreen() {
     sort,
     attendedIds,
     myRatingByFestival,
-    spotifyMatchByFestival,
+    followedMatchByFestival,
   ]);
 
   const top100Attended = useMemo(
@@ -272,8 +269,8 @@ export default function FestivalsScreen() {
               item={item}
               attended={attendedIds.has(item.festival.id)}
               myRating={myRatingByFestival.get(item.festival.id)}
-              spotifyMatchCount={
-                sort === 'spotifyArtists' ? spotifyMatchByFestival.get(item.festival.id) : undefined
+              followedMatchCount={
+                sort === 'followedArtists' ? followedMatchByFestival.get(item.festival.id) : undefined
               }
               dateLabel={
                 item.nextEdition
@@ -362,14 +359,14 @@ function FestivalRow({
   item,
   attended,
   myRating,
-  spotifyMatchCount,
+  followedMatchCount,
   dateLabel,
   onPress,
 }: {
   item: CatalogItem;
   attended: boolean;
   myRating: number | undefined;
-  spotifyMatchCount: number | undefined;
+  followedMatchCount: number | undefined;
   dateLabel: string | undefined;
   onPress: () => void;
 }) {
@@ -394,11 +391,11 @@ function FestivalRow({
           </Text>
         </View>
         <View style={styles.myRating}>
-          {spotifyMatchCount != null ? (
-            spotifyMatchCount > 0 && (
+          {followedMatchCount != null ? (
+            followedMatchCount > 0 && (
               <>
-                <Ionicons name="musical-notes" size={10} color={colors.spotify} />
-                <Text style={[styles.myRatingText, { color: colors.spotify }]}>{spotifyMatchCount}</Text>
+                <Ionicons name="heart" size={10} color={colors.primary} />
+                <Text style={[styles.myRatingText, { color: colors.primary }]}>{followedMatchCount}</Text>
               </>
             )
           ) : (

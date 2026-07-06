@@ -106,7 +106,7 @@
     "periodCustom": "Période personnalisée",
     "periodFrom": "Du",
     "periodTo": "Au",
-    "sortSpotifyArtists": "Artistes que je suis"
+    "sortFollowedArtists": "Artistes que je suis"
   },
   "friends": {
     "title": "Amis",
@@ -131,7 +131,10 @@
     "spotifyConnected": "Spotify connecté",
     "spotifyNotConnected": "Spotify non connecté",
     "connectSpotify": "Connecter Spotify",
-    "disconnectSpotify": "Déconnecter Spotify"
+    "disconnectSpotify": "Déconnecter Spotify",
+    "importSpotifyFollows": "Importer mes artistes suivis",
+    "importSpotifyFollowsResult_one": "{{count}} artiste ajouté à tes artistes suivis.",
+    "importSpotifyFollowsResult_other": "{{count}} artistes ajoutés à tes artistes suivis."
   },
   "djmag": {
     "title": "DJ Mag Top 100",

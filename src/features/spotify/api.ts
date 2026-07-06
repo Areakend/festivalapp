@@ -6,16 +6,12 @@ import { functionsErrorMessage } from '@/lib/functions';
 import { useSessionStore } from '@/features/auth/session-store';
 
 const SPOTIFY_CLIENT_ID = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID!;
-// user-follow-read powers the "festivals ranked by artists I follow" sort,
-// user-follow-modify lets tapping a lineup artist follow them directly —
-// existing connections made before these scopes were added won't have them
-// and need to reconnect (Spotify has no way to add a scope to a live token).
-const SCOPES = [
-  'playlist-modify-public',
-  'playlist-modify-private',
-  'user-follow-read',
-  'user-follow-modify',
-];
+// user-follow-read powers the one-time "import my Spotify follows" action —
+// following itself is now in-app only (see features/artists/api.ts), so
+// this is the only Spotify-side follow scope still needed. Existing
+// connections made before it was added won't have it and need to
+// reconnect (Spotify has no way to add a scope to a live token).
+const SCOPES = ['playlist-modify-public', 'playlist-modify-private', 'user-follow-read'];
 
 const discovery = {
   authorizationEndpoint: 'https://accounts.spotify.com/authorize',
@@ -161,50 +157,30 @@ export function useGeneratePlaylist() {
   });
 }
 
-/** Follows an artist on the user's Spotify account (called from a lineup chip tap). */
-export function useFollowArtist() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (artistId: string) => {
-      const { error } = await supabase.functions.invoke('spotify-follow-artist', {
-        body: { artistId },
-      });
-      if (error) throw new Error(await functionsErrorMessage(error));
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['spotify-followed-ranking'] });
-    },
-  });
-}
-
-export interface FollowedArtistsRankingEntry {
-  festivalId: string;
-  festivalName: string;
-  festivalSlug: string;
-  matchedCount: number;
-  matchedArtists: string[];
+export interface ImportSpotifyFollowsResult {
+  importedCount: number;
+  followedCount: number;
 }
 
 /**
- * Ranks festivals by how many artists the user follows on Spotify are in
- * their lineup (any year). Only meaningful once Spotify is connected —
- * disabled otherwise. Cached for a while since it re-fetches the user's
- * whole followed-artists list from Spotify on every call.
+ * One-time seed: pulls the user's followed artists from Spotify and adds
+ * any that match an artist already in our catalog to their in-app follow
+ * list (features/artists/api.ts). Following itself no longer touches
+ * Spotify at all — this is purely a convenience so returning users don't
+ * have to rebuild their list by hand.
  */
-export function useFollowedArtistsRanking() {
-  const userId = useSessionStore((s) => s.session?.user.id);
-  const { data: connection } = useSpotifyConnection();
-  return useQuery({
-    queryKey: ['spotify-followed-ranking', userId],
-    enabled: !!connection,
-    staleTime: 10 * 60 * 1000,
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke<{
-        ranking: FollowedArtistsRankingEntry[];
-        followedCount: number;
-      }>('spotify-followed-artists-ranking');
+export function useImportSpotifyFollows() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke<ImportSpotifyFollowsResult>(
+        'spotify-import-followed-artists',
+      );
       if (error) throw new Error(await functionsErrorMessage(error));
       return data!;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['my-followed-artists'] });
     },
   });
 }
