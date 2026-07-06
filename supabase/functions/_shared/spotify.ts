@@ -7,6 +7,8 @@ export interface SpotifyTokens {
   access_token: string;
   refresh_token: string;
   expires_in: number;
+  /** Space-separated scopes actually granted — the only way to introspect them. */
+  scope?: string;
 }
 
 export async function exchangeCodeForTokens(
