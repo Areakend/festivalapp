@@ -76,14 +76,22 @@ export default function RootLayout() {
             <Stack.Screen name="playlist/[slug]" />
             <Stack.Screen name="friends" />
             <Stack.Screen name="user/[id]" />
+            {/* Reachable once signed in: lands the Spotify OAuth redirect. */}
+            <Stack.Screen name="spotify/callback" />
           </Stack.Protected>
           <Stack.Protected guard={!session}>
             <Stack.Screen name="(auth)" />
+            {/*
+              Lands the Google OAuth redirect when Android delivers it to the
+              router instead of resolving openAuthSessionAsync. Grouped under
+              the same guard as (auth) so it benefits from the exact
+              same auto-navigation the normal sign-in screen gets: once the
+              code exchange sets the session, this guard flips, the group
+              becomes invalid, and the stack falls back to (tabs) on its own
+              — no manual router.replace() needed here.
+            */}
+            <Stack.Screen name="auth/callback" />
           </Stack.Protected>
-
-          {/* Always mounted: lands OAuth redirects while the code exchange resolves. */}
-          <Stack.Screen name="auth/callback" />
-          <Stack.Screen name="spotify/callback" />
         </Stack>
       </QueryClientProvider>
     </SafeAreaProvider>
