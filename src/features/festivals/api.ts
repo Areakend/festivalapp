@@ -169,7 +169,13 @@ export function useMyStatuses() {
     queryKey: ['my-statuses', userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase.from('user_festival_statuses').select('*');
+      // Explicit user_id filter: RLS also lets friends' rows through (see
+      // "statuses friends read"), which this query must not pick up —
+      // friends' statuses aren't toggleable/owned by the current user.
+      const { data, error } = await supabase
+        .from('user_festival_statuses')
+        .select('*')
+        .eq('user_id', userId!);
       if (error) throw error;
       return data as UserFestivalStatus[];
     },
