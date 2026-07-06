@@ -18,6 +18,9 @@ on:
         default: true
         type: boolean
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -55,6 +58,21 @@ jobs:
         with:
           name: app-${{ inputs.profile }}
           path: app.apk
+
+      # Publish as a GitHub Release so anyone (no GitHub account needed) can
+      # download the APK. The stable link always serves the newest build:
+      # https://github.com/Areakend/festivalapp/releases/latest/download/mainstage.apk
+      - name: Publish release
+        if: ${{ inputs.local && inputs.profile == 'preview' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app.apk mainstage.apk
+          TAG="build-${{ github.run_number }}"
+          gh release create "$TAG" mainstage.apk \
+            --title "Mainstage build ${{ github.run_number }}" \
+            --notes "Android APK built from ${{ github.sha }}" \
+            --latest
 
       - name: Build on EAS cloud
         if: ${{ !inputs.local }}
