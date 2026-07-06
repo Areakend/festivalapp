@@ -180,6 +180,10 @@
     "inDays_other": "Over {{count}} dagen",
     "happeningNow": "Nu bezig!",
     "planning": "Mijn agenda",
-    "dateTbc": "Data volgen nog"
+    "dateTbc": "Data volgen nog",
+    "days_one": "dag",
+    "days_other": "dagen",
+    "upNext": "Hierna",
+    "withFriends": "Met {{names}}"
   }
 }

@@ -76,6 +76,7 @@ export default function RootLayout() {
             <Stack.Screen name="playlist/[slug]" />
             <Stack.Screen name="friends" />
             <Stack.Screen name="user/[id]" />
+            <Stack.Screen name="list/[status]" />
             {/* Reachable once signed in: lands the Spotify OAuth redirect. */}
             <Stack.Screen name="spotify/callback" />
           </Stack.Protected>
