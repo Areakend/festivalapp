@@ -1,7 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 import { corsHeaders } from '../_shared/cors.ts';
-import { refreshAccessToken } from '../_shared/spotify.ts';
+import { getSpotifyProfile, refreshAccessToken } from '../_shared/spotify.ts';
 
 const TRACKS_PER_ARTIST = 3;
 
@@ -80,18 +80,26 @@ Deno.serve(async (req) => {
       .single();
     if (connError || !connection) throw new Error('Spotify not connected');
 
-    let accessToken = connection.access_token as string;
-    if (new Date(connection.expires_at) <= new Date()) {
-      const refreshed = await refreshAccessToken(connection.refresh_token);
-      accessToken = refreshed.access_token;
-      await supabase
-        .from('spotify_connections')
-        .update({
-          access_token: refreshed.access_token,
-          refresh_token: refreshed.refresh_token,
-          expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
-        })
-        .eq('user_id', user.id);
+    // Always refresh, not just when expired: the refresh response carries the
+    // scopes actually granted to this connection — Spotify has no other
+    // introspection endpoint. Without this, a connection authorized before
+    // the playlist scopes were requested fails playlist creation with a bare
+    // 403 Forbidden and no way to tell the user what to do about it.
+    const refreshed = await refreshAccessToken(connection.refresh_token);
+    const accessToken = refreshed.access_token;
+    await supabase
+      .from('spotify_connections')
+      .update({
+        access_token: refreshed.access_token,
+        refresh_token: refreshed.refresh_token,
+        expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
+      })
+      .eq('user_id', user.id);
+
+    if (refreshed.scope && !refreshed.scope.includes('playlist-modify-private')) {
+      throw new Error(
+        'Your Spotify connection is missing the playlist permission. Disconnect Spotify in your profile, connect it again, and retry.',
+      );
     }
 
     const [{ data: festival, error: festivalError }, { data: edition, error: editionError }] =
@@ -156,8 +164,19 @@ Deno.serve(async (req) => {
 
     if (trackUris.length === 0) throw new Error('No tracks matched on Spotify for this lineup');
 
+    // Resolve the user id from the live token instead of trusting the stored
+    // one — if they ever diverge (account switch, stale row), creating under
+    // the stored id is a guaranteed 403.
+    const me = await getSpotifyProfile(accessToken);
+    if (me.id !== connection.spotify_user_id) {
+      await supabase
+        .from('spotify_connections')
+        .update({ spotify_user_id: me.id })
+        .eq('user_id', user.id);
+    }
+
     const playlistName = `${festival.name} ${edition.year}`;
-    const playlist = await spotifyFetch(`/users/${connection.spotify_user_id}/playlists`, accessToken, {
+    const playlist = await spotifyFetch(`/users/${encodeURIComponent(me.id)}/playlists`, accessToken, {
       method: 'POST',
       body: JSON.stringify({
         name: playlistName,
