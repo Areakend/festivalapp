@@ -16,6 +16,7 @@ import { useDjMagTop100, useMyProfile, useUpdateProfile } from '@/features/profi
 import {
   useConnectSpotify,
   useDisconnectSpotify,
+  useImportSpotifyFollows,
   useSpotifyConnection,
 } from '@/features/spotify/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
@@ -44,6 +45,7 @@ export default function ProfileScreen() {
   const { data: spotifyConnection } = useSpotifyConnection();
   const connectSpotify = useConnectSpotify();
   const disconnectSpotify = useDisconnectSpotify();
+  const importSpotifyFollows = useImportSpotifyFollows();
 
   const [name, setName] = useState('');
   useEffect(() => {
@@ -156,12 +158,29 @@ export default function ProfileScreen() {
           {spotifyConnection ? t('profile.spotifyConnected') : t('profile.spotifyNotConnected')}
         </Text>
         {spotifyConnection ? (
-          <Button
-            label={t('profile.disconnectSpotify')}
-            variant="ghost"
-            onPress={() => disconnectSpotify.mutate()}
-            loading={disconnectSpotify.isPending}
-          />
+          <>
+            <Button
+              label={t('profile.importSpotifyFollows')}
+              variant="secondary"
+              onPress={() =>
+                importSpotifyFollows.mutate(undefined, {
+                  onSuccess: (result) =>
+                    Alert.alert(
+                      t('profile.importSpotifyFollows'),
+                      t('profile.importSpotifyFollowsResult', { count: result.importedCount }),
+                    ),
+                  onError: (error) => Alert.alert(t('common.error'), error.message),
+                })
+              }
+              loading={importSpotifyFollows.isPending}
+            />
+            <Button
+              label={t('profile.disconnectSpotify')}
+              variant="ghost"
+              onPress={() => disconnectSpotify.mutate()}
+              loading={disconnectSpotify.isPending}
+            />
+          </>
         ) : (
           <Button
             label={t('profile.connectSpotify')}

@@ -35,11 +35,7 @@ import {
   useReviewSummary,
   type ReviewSort,
 } from '@/features/reviews/api';
-import {
-  useFollowArtist,
-  useFollowedArtistsRanking,
-  useSpotifyConnection,
-} from '@/features/spotify/api';
+import { useMyFollowedArtists, useToggleArtistFollow } from '@/features/artists/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag, formatCompact } from '@/utils/format';
 import type { FestivalStatus } from '@/types/domain';
@@ -67,9 +63,8 @@ export default function FestivalDetailScreen() {
   const addAttendance = useAddAttendance();
   const removeAttendance = useRemoveAttendance();
   const [yearSheetOpen, setYearSheetOpen] = useState(false);
-  const { data: spotifyConnection } = useSpotifyConnection();
-  const { data: followedRanking } = useFollowedArtistsRanking();
-  const followArtist = useFollowArtist();
+  const { data: followedArtistIds } = useMyFollowedArtists();
+  const toggleArtistFollow = useToggleArtistFollow();
 
   const lineupEdition = data?.editions.find((e) => e.lineup_published);
   const { data: lineup } = useEditionLineup(lineupEdition?.id);
@@ -112,11 +107,6 @@ export default function FestivalDetailScreen() {
   }
 
   const { festival, editions, rankings, stats } = data;
-  const followedArtistNames = new Set(
-    (followedRanking?.ranking.find((r) => r.festivalId === festival.id)?.matchedArtists ?? []).map(
-      (n) => n.toLowerCase(),
-    ),
-  );
   const activeStatuses = new Set(
     (myStatuses ?? [])
       .filter((s) => s.festival_id === festival.id)
@@ -251,26 +241,29 @@ export default function FestivalDetailScreen() {
         {/* Description */}
         {festival.description && <Text style={styles.description}>{festival.description}</Text>}
 
-        {/* Lineup of the most recent published edition — artists the user
-            follows on Spotify are highlighted; tapping any artist follows
-            them (if Spotify is connected). */}
+        {/* Lineup of the most recent published edition — followed artists
+            are highlighted; tapping any artist toggles following them
+            in-app (no external account needed). */}
         {lineupEdition && lineup && lineup.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>
               {t('festival.lineup')} · {lineupEdition.year}
             </Text>
             <View style={styles.lineupWrap}>
-              {lineup.map((entry) => (
-                <Chip
-                  key={entry.artists.id}
-                  label={entry.artists.name}
-                  active={followedArtistNames.has(entry.artists.name.toLowerCase())}
-                  activeColor={colors.primary}
-                  onPress={
-                    spotifyConnection ? () => followArtist.mutate(entry.artists.id) : undefined
-                  }
-                />
-              ))}
+              {lineup.map((entry) => {
+                const following = followedArtistIds?.has(entry.artists.id) ?? false;
+                return (
+                  <Chip
+                    key={entry.artists.id}
+                    label={entry.artists.name}
+                    active={following}
+                    activeColor={colors.primary}
+                    onPress={() =>
+                      toggleArtistFollow.mutate({ artistId: entry.artists.id, following })
+                    }
+                  />
+                );
+              })}
             </View>
             <Button
               label={t('festival.generatePlaylist')}

@@ -106,7 +106,7 @@
     "periodCustom": "Eigen periode",
     "periodFrom": "Van",
     "periodTo": "Tot",
-    "sortSpotifyArtists": "Artiesten die ik volg"
+    "sortFollowedArtists": "Artiesten die ik volg"
   },
   "friends": {
     "title": "Vrienden",
@@ -131,7 +131,10 @@
     "spotifyConnected": "Spotify verbonden",
     "spotifyNotConnected": "Spotify niet verbonden",
     "connectSpotify": "Spotify verbinden",
-    "disconnectSpotify": "Spotify loskoppelen"
+    "disconnectSpotify": "Spotify loskoppelen",
+    "importSpotifyFollows": "Mijn Spotify-volgend importeren",
+    "importSpotifyFollowsResult_one": "{{count}} artiest toegevoegd aan je gevolgde artiesten.",
+    "importSpotifyFollowsResult_other": "{{count}} artiesten toegevoegd aan je gevolgde artiesten."
   },
   "djmag": {
     "title": "DJ Mag Top 100",
