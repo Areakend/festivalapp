@@ -22,7 +22,7 @@ export function Screen({ children, scroll = true }: ScreenProps) {
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       {scroll ? (
         <ScrollView

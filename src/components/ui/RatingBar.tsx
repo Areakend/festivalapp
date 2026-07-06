@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { PanResponder, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radii, spacing, typography } from '@/theme';
@@ -26,8 +26,18 @@ interface RatingBarProps {
  * Display mode: thin progress bar. Both show the "x/20" value.
  */
 export function RatingBar({ value, onChange, label }: RatingBarProps) {
-  const [width, setWidth] = useState(0);
   const widthRef = useRef(0);
+
+  // Callers often pass an inline arrow (e.g. sub-ratings' onChange updates a
+  // record by key), which is a new function identity every render. Reading
+  // it through a ref — instead of putting it in the PanResponder's dep array
+  // — keeps the responder itself stable across the whole drag; recreating
+  // it mid-gesture on every value change was dropping/restarting touches,
+  // which read as the bar "flickering" and losing the selection.
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   const valueFromX = (x: number) => {
     const w = widthRef.current;
@@ -41,11 +51,14 @@ export function RatingBar({ value, onChange, label }: RatingBarProps) {
     return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (e) => onChange(valueFromX(e.nativeEvent.locationX)),
-      onPanResponderMove: (e) => onChange(valueFromX(e.nativeEvent.locationX)),
+      onPanResponderGrant: (e) => onChangeRef.current?.(valueFromX(e.nativeEvent.locationX)),
+      onPanResponderMove: (e) => onChangeRef.current?.(valueFromX(e.nativeEvent.locationX)),
     });
+    // Deliberately excludes `onChange` (see onChangeRef above) and `value`
+    // (read via widthRef/valueFromX at gesture time, not needed here) —
+    // only whether a handler exists at all should ever recreate this.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onChange]);
+  }, [!!onChange]);
 
   return (
     <View style={styles.container}>
@@ -56,18 +69,16 @@ export function RatingBar({ value, onChange, label }: RatingBarProps) {
             style={styles.segments}
             onLayout={(e) => {
               widthRef.current = e.nativeEvent.layout.width;
-              setWidth(e.nativeEvent.layout.width);
             }}
             hitSlop={{ top: 12, bottom: 12 }}
             {...panResponder!.panHandlers}
           >
-            {width > 0 &&
-              Array.from({ length: MAX }, (_, i) => i + 1).map((step) => (
-                <View
-                  key={step}
-                  style={[styles.segment, step <= value && { backgroundColor: ratingColor(value) }]}
-                />
-              ))}
+            {Array.from({ length: MAX }, (_, i) => i + 1).map((step) => (
+              <View
+                key={step}
+                style={[styles.segment, step <= value && { backgroundColor: ratingColor(value) }]}
+              />
+            ))}
           </View>
         ) : (
           <View style={styles.track}>
