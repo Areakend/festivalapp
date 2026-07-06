@@ -105,7 +105,8 @@
     "period6m": "6 prochains mois",
     "periodCustom": "Période personnalisée",
     "periodFrom": "Du",
-    "periodTo": "Au"
+    "periodTo": "Au",
+    "sortSpotifyArtists": "Artistes que je suis"
   },
   "friends": {
     "title": "Amis",

@@ -105,7 +105,8 @@
     "period6m": "Komende 6 maanden",
     "periodCustom": "Eigen periode",
     "periodFrom": "Van",
-    "periodTo": "Tot"
+    "periodTo": "Tot",
+    "sortSpotifyArtists": "Artiesten die ik volg"
   },
   "friends": {
     "title": "Vrienden",

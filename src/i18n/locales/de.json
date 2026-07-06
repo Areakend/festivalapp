@@ -105,7 +105,8 @@
     "period6m": "Nächste 6 Monate",
     "periodCustom": "Eigener Zeitraum",
     "periodFrom": "Von",
-    "periodTo": "Bis"
+    "periodTo": "Bis",
+    "sortSpotifyArtists": "Artists, denen ich folge"
   },
   "friends": {
     "title": "Freunde",
