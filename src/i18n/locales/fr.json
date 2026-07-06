@@ -184,6 +184,10 @@
     "days_one": "jour",
     "days_other": "jours",
     "upNext": "Ensuite",
-    "withFriends": "Avec {{names}}"
+    "withFriends": "Avec {{names}}",
+    "welcomeTitle": "Bienvenue sur Mainstage",
+    "welcomeBody": "Parcours le catalogue, note les festivals que tu as faits et planifie les prochains — ton compte à rebours s'affichera ici.",
+    "noPlannedTitle": "Aucun festival planifié",
+    "noPlannedHint": "Planifie un festival pour lancer le compte à rebours."
   }
 }

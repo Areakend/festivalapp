@@ -105,6 +105,7 @@ export default function Home() {
   };
 
   const heroFriends = hero ? friendNames(hero.item.festival.id) : null;
+  const hasAnything = upNext.length > 0 || wishlistCount > 0 || favoriteCount > 0;
 
   return (
     <ScrollView
@@ -160,8 +161,14 @@ export default function Home() {
           )}
         </Pressable>
       ) : (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>{t('empty.noFestivals')}</Text>
+        <View style={styles.welcomeCard}>
+          <Ionicons name="sparkles" size={26} color={colors.primary} />
+          <Text style={styles.welcomeTitle}>
+            {t(hasAnything ? 'home.noPlannedTitle' : 'home.welcomeTitle')}
+          </Text>
+          <Text style={styles.welcomeBody}>
+            {t(hasAnything ? 'home.noPlannedHint' : 'home.welcomeBody')}
+          </Text>
           <Button label={t('tabs.festivals')} onPress={() => router.push('/discover')} />
         </View>
       )}
@@ -261,9 +268,15 @@ const styles = StyleSheet.create({
   },
   hero: {
     alignItems: 'center',
+    marginHorizontal: spacing.xl,
     paddingVertical: spacing.xxl,
     paddingHorizontal: spacing.xl,
     gap: spacing.xs,
+    // faint violet halo so the countdown reads as one object, not loose text
+    backgroundColor: 'rgba(139, 92, 246, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.30)',
+    borderRadius: radii.lg,
   },
   heroLabel: {
     fontFamily: typography.fonts.bodyMedium,
@@ -377,10 +390,28 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
   },
-  empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.xl },
-  emptyText: {
+  welcomeCard: {
+    alignItems: 'center',
+    marginHorizontal: spacing.xl,
+    paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.xl,
+    gap: spacing.md,
+    backgroundColor: 'rgba(139, 92, 246, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.30)',
+    borderRadius: radii.lg,
+  },
+  welcomeTitle: {
+    fontFamily: typography.fonts.headingMedium,
+    fontSize: typography.sizes.lg,
+    color: colors.text,
+    textAlign: 'center',
+  },
+  welcomeBody: {
     fontFamily: typography.fonts.body,
-    fontSize: typography.sizes.md,
-    color: colors.textMuted,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

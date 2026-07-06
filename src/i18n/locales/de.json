@@ -184,6 +184,10 @@
     "days_one": "Tag",
     "days_other": "Tage",
     "upNext": "Danach",
-    "withFriends": "Mit {{names}}"
+    "withFriends": "Mit {{names}}",
+    "welcomeTitle": "Willkommen bei Mainstage",
+    "welcomeBody": "Stöbere im Katalog, bewerte deine besuchten Festivals und plane die nächsten — dein Countdown erscheint hier.",
+    "noPlannedTitle": "Kein geplantes Festival",
+    "noPlannedHint": "Plane ein Festival, um den Countdown zu starten."
   }
 }

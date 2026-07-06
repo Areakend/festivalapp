@@ -184,6 +184,10 @@
     "days_one": "day",
     "days_other": "days",
     "upNext": "Up next",
-    "withFriends": "With {{names}}"
+    "withFriends": "With {{names}}",
+    "welcomeTitle": "Welcome to Mainstage",
+    "welcomeBody": "Browse the catalog, rate the festivals you've been to and plan your next ones — your countdown will show up here.",
+    "noPlannedTitle": "No upcoming festival",
+    "noPlannedHint": "Plan a festival to start the countdown."
   }
 }

@@ -184,6 +184,10 @@
     "days_one": "dag",
     "days_other": "dagen",
     "upNext": "Hierna",
-    "withFriends": "Met {{names}}"
+    "withFriends": "Met {{names}}",
+    "welcomeTitle": "Welkom bij Mainstage",
+    "welcomeBody": "Blader door de catalogus, beoordeel de festivals die je hebt bezocht en plan de volgende — je aftelling verschijnt hier.",
+    "noPlannedTitle": "Geen gepland festival",
+    "noPlannedHint": "Plan een festival om de aftelling te starten."
   }
 }
