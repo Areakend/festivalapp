@@ -67,7 +67,10 @@
     "djmagRank": "DJ Mag-positie",
     "bestRank": "Beste positie ooit",
     "rankingHistory": "Ranggeschiedenis",
-    "editionYear": "Editie {{year}}"
+    "editionYear": "Editie {{year}}",
+    "attendedYears": "Jaren dat je erbij was",
+    "addYear": "Jaar toevoegen",
+    "pickAttendedYear": "In welk jaar was je erbij?"
   },
   "review": {
     "yourRating": "Jouw beoordeling",

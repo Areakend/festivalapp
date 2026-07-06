@@ -19,11 +19,15 @@ import { useMemo, useState } from 'react';
 import { Chip } from '@/components/ui/Chip';
 import { Button } from '@/components/ui/Button';
 import { RatingBar } from '@/components/ui/RatingBar';
+import { AttendanceYearSheet } from '@/components/ui/AttendanceYearSheet';
 import { ReviewCard } from '@/components/review/ReviewCard';
 import {
+  useAddAttendance,
   useEditionLineup,
   useFestivalDetail,
+  useMyAttendances,
   useMyStatuses,
+  useRemoveAttendance,
   useToggleStatus,
 } from '@/features/festivals/api';
 import {
@@ -55,6 +59,10 @@ export default function FestivalDetailScreen() {
   const { data: reviews } = useFestivalReviews(data?.festival.id, reviewSort);
   const { data: myReview } = useMyReview(data?.festival.id);
   const toggleStatus = useToggleStatus();
+  const { data: myAttendances } = useMyAttendances();
+  const addAttendance = useAddAttendance();
+  const removeAttendance = useRemoveAttendance();
+  const [yearSheetOpen, setYearSheetOpen] = useState(false);
 
   const lineupEdition = data?.editions.find((e) => e.lineup_published);
   const { data: lineup } = useEditionLineup(lineupEdition?.id);
@@ -103,6 +111,9 @@ export default function FestivalDetailScreen() {
       .filter((s) => s.festival_id === festival.id)
       .map((s) => s.status),
   );
+  const festivalAttendances = (myAttendances ?? [])
+    .filter((a) => a.festival_id === festival.id)
+    .sort((a, b) => b.attended_year - a.attended_year);
 
   return (
     <ScrollView
@@ -160,6 +171,34 @@ export default function FestivalDetailScreen() {
             );
           })}
         </View>
+
+        {/* Detailed per-year attendance log (supplements the quick "attended" status above) */}
+        <View style={styles.attendanceRow}>
+          <Text style={styles.attendanceLabel}>{t('festival.attendedYears')}</Text>
+          <View style={styles.attendanceChips}>
+            {festivalAttendances.map((a) => (
+              <Chip
+                key={a.id}
+                label={String(a.attended_year)}
+                active
+                activeColor={colors.statusAttended}
+                onPress={() => removeAttendance.mutate(a.id)}
+              />
+            ))}
+            <Chip label={`+ ${t('festival.addYear')}`} onPress={() => setYearSheetOpen(true)} />
+          </View>
+        </View>
+
+        <AttendanceYearSheet
+          visible={yearSheetOpen}
+          recordedYears={festivalAttendances.map((a) => a.attended_year)}
+          fromYear={festival.first_year ?? new Date().getFullYear() - 30}
+          onSelect={(year) => {
+            addAttendance.mutate({ festivalId: festival.id, year });
+            setYearSheetOpen(false);
+          }}
+          onClose={() => setYearSheetOpen(false)}
+        />
 
         {/* Stats */}
         <Text style={styles.sectionTitle}>{t('festival.stats')}</Text>
@@ -392,6 +431,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textSecondary,
   },
+  attendanceRow: { gap: spacing.sm, marginTop: spacing.md },
+  attendanceLabel: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+  },
+  attendanceChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   sectionTitle: {
     fontFamily: typography.fonts.headingMedium,
     fontSize: typography.sizes.lg,
