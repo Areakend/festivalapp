@@ -195,6 +195,11 @@ export default function ProfileScreen() {
       </View>
 
       <Button
+        label={t('share.lastTitle')}
+        variant="secondary"
+        onPress={() => router.push({ pathname: '/share/[kind]', params: { kind: 'last' } })}
+      />
+      <Button
         label={t('friends.title')}
         variant="secondary"
         onPress={() => router.push('/friends')}

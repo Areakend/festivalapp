@@ -211,5 +211,14 @@
     "welcomeBody": "Blader door de catalogus, beoordeel de festivals die je hebt bezocht en plan de volgende — je aftelling verschijnt hier.",
     "noPlannedTitle": "Geen gepland festival",
     "noPlannedHint": "Plan een festival om de aftelling te starten."
+  },
+  "share": {
+    "nextTitle": "Deel mijn volgende festival",
+    "lastTitle": "Deel mijn laatste festival",
+    "noNext": "Plan eerst een festival om het te delen.",
+    "noLast": "Markeer eerst een festival als bijgewoond om het te delen.",
+    "share": "Delen",
+    "unavailable": "Delen is niet beschikbaar op dit apparaat.",
+    "title": "Deel je festival"
   }
 }

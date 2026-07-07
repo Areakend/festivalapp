@@ -211,5 +211,14 @@
     "welcomeBody": "Explora el catálogo, califica los festivales a los que fuiste y planifica los próximos: tu cuenta regresiva aparecerá aquí.",
     "noPlannedTitle": "Ningún festival planeado",
     "noPlannedHint": "Planea un festival para iniciar la cuenta regresiva."
+  },
+  "share": {
+    "nextTitle": "Compartir mi próximo festival",
+    "lastTitle": "Compartir mi último festival",
+    "noNext": "Planifica un festival primero para compartirlo.",
+    "noLast": "Marca un festival como asistido primero para compartirlo.",
+    "share": "Compartir",
+    "unavailable": "Compartir no está disponible en este dispositivo.",
+    "title": "Comparte tu festival"
   }
 }

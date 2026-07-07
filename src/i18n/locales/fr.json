@@ -211,5 +211,14 @@
     "welcomeBody": "Parcours le catalogue, note les festivals que tu as faits et planifie les prochains — ton compte à rebours s'affichera ici.",
     "noPlannedTitle": "Aucun festival planifié",
     "noPlannedHint": "Planifie un festival pour lancer le compte à rebours."
+  },
+  "share": {
+    "nextTitle": "Partager mon prochain festival",
+    "lastTitle": "Partager mon dernier festival",
+    "noNext": "Planifie un festival pour pouvoir le partager.",
+    "noLast": "Marque un festival comme visité pour pouvoir le partager.",
+    "share": "Partager",
+    "unavailable": "Le partage n'est pas disponible sur cet appareil.",
+    "title": "Partage ton festival"
   }
 }
