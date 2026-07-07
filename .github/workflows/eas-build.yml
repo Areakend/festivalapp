@@ -63,12 +63,16 @@ jobs:
           sudo swapon /swapfile
           sudo sysctl vm.swappiness=10
 
+      - name: Show EAS CLI version
+        if: ${{ inputs.local }}
+        run: eas --version
+
       # Runs the actual native build on this runner (credentials/keystore are
       # still fetched from EAS) instead of on EAS's build servers, so it
       # doesn't count against the EAS free-plan monthly build quota.
       - name: Build locally
         if: ${{ inputs.local }}
-        run: eas build --platform android --profile ${{ inputs.profile }} --local --non-interactive --output "${{ github.workspace }}/app.apk" --verbose
+        run: eas build --platform android --profile ${{ inputs.profile }} --local --non-interactive --output "${{ github.workspace }}/app.apk"
 
       - name: Upload APK
         if: ${{ inputs.local }}
