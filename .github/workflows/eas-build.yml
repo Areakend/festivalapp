@@ -45,12 +45,30 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      - name: Configure Gradle memory limits
+        if: ${{ inputs.local }}
+        run: |
+          mkdir -p ~/.gradle
+          echo "org.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=512m" >> ~/.gradle/gradle.properties
+          echo "org.gradle.parallel=false" >> ~/.gradle/gradle.properties
+          echo "org.gradle.workers.max=2" >> ~/.gradle/gradle.properties
+
+      - name: Setup swap space
+        if: ${{ inputs.local }}
+        run: |
+          sudo swapoff -a
+          sudo fallocate -l 8G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          sudo sysctl vm.swappiness=10
+
       # Runs the actual native build on this runner (credentials/keystore are
       # still fetched from EAS) instead of on EAS's build servers, so it
       # doesn't count against the EAS free-plan monthly build quota.
       - name: Build locally
         if: ${{ inputs.local }}
-        run: eas build --platform android --profile ${{ inputs.profile }} --local --non-interactive --output "${{ github.workspace }}/app.apk"
+        run: eas build --platform android --profile ${{ inputs.profile }} --local --non-interactive --output "${{ github.workspace }}/app.apk" --verbose
 
       - name: Upload APK
         if: ${{ inputs.local }}
