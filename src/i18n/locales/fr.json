@@ -13,7 +13,8 @@
     "share": "Partager",
     "search": "Rechercher",
     "seeAll": "Tout voir",
-    "comingSoon": "Bientôt disponible"
+    "comingSoon": "Bientôt disponible",
+    "seeLess": "Voir moins"
   },
   "tabs": {
     "home": "Accueil",
@@ -76,7 +77,9 @@
     "attendedYears": "Années où tu y étais",
     "addYear": "Ajouter une année",
     "pickAttendedYear": "En quelle année y étais-tu ?",
-    "friendsHere": "Amis qui y vont"
+    "friendsHere": "Amis qui y vont",
+    "seeMoreArtists_one": "+{{count}} autre artiste",
+    "seeMoreArtists_other": "+{{count}} autres artistes"
   },
   "review": {
     "yourRating": "Ta note",
