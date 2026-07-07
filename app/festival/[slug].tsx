@@ -59,6 +59,8 @@ const CATEGORY_ICONS: Record<ReviewSummaryCategory, string> = {
   organization: 'shield-checkmark-outline',
 };
 
+const LINEUP_PREVIEW_COUNT = 10;
+
 export default function FestivalDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const { t, i18n } = useTranslation();
@@ -75,6 +77,7 @@ export default function FestivalDetailScreen() {
   const addAttendance = useAddAttendance();
   const removeAttendance = useRemoveAttendance();
   const [yearSheetOpen, setYearSheetOpen] = useState(false);
+  const [lineupExpanded, setLineupExpanded] = useState(false);
   const { data: followedArtistIds } = useMyFollowedArtists();
   const toggleArtistFollow = useToggleArtistFollow();
   const { data: friendsAttendance } = useFriendsFestivalAttendance();
@@ -302,7 +305,7 @@ export default function FestivalDetailScreen() {
               {t('festival.lineup')} · {lineupEdition.year}
             </Text>
             <View style={styles.lineupWrap}>
-              {lineup.map((entry) => {
+              {(lineupExpanded ? lineup : lineup.slice(0, LINEUP_PREVIEW_COUNT)).map((entry) => {
                 const following = followedArtistIds?.has(entry.artists.id) ?? false;
                 return (
                   <Chip
@@ -317,6 +320,17 @@ export default function FestivalDetailScreen() {
                 );
               })}
             </View>
+            {lineup.length > LINEUP_PREVIEW_COUNT && (
+              <Button
+                label={
+                  lineupExpanded
+                    ? t('common.seeLess')
+                    : t('festival.seeMoreArtists', { count: lineup.length - LINEUP_PREVIEW_COUNT })
+                }
+                variant="ghost"
+                onPress={() => setLineupExpanded((v) => !v)}
+              />
+            )}
             <Button
               label={t('festival.generatePlaylist')}
               variant="secondary"

@@ -13,7 +13,8 @@
     "share": "Delen",
     "search": "Zoeken",
     "seeAll": "Alles bekijken",
-    "comingSoon": "Binnenkort beschikbaar"
+    "comingSoon": "Binnenkort beschikbaar",
+    "seeLess": "Minder tonen"
   },
   "tabs": {
     "home": "Home",
@@ -76,7 +77,9 @@
     "attendedYears": "Jaren dat je erbij was",
     "addYear": "Jaar toevoegen",
     "pickAttendedYear": "In welk jaar was je erbij?",
-    "friendsHere": "Vrienden die gaan"
+    "friendsHere": "Vrienden die gaan",
+    "seeMoreArtists_one": "+{{count}} artiest meer",
+    "seeMoreArtists_other": "+{{count}} artiesten meer"
   },
   "review": {
     "yourRating": "Jouw beoordeling",

@@ -13,7 +13,8 @@
     "share": "Share",
     "search": "Search",
     "seeAll": "See all",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "seeLess": "Show less"
   },
   "tabs": {
     "home": "Home",
@@ -76,7 +77,9 @@
     "attendedYears": "Years you attended",
     "addYear": "Add a year",
     "pickAttendedYear": "Which year did you go?",
-    "friendsHere": "Friends going"
+    "friendsHere": "Friends going",
+    "seeMoreArtists_one": "+{{count}} more artist",
+    "seeMoreArtists_other": "+{{count}} more artists"
   },
   "review": {
     "yourRating": "Your rating",
