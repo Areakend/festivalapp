@@ -211,5 +211,14 @@
     "welcomeBody": "Browse the catalog, rate the festivals you've been to and plan your next ones — your countdown will show up here.",
     "noPlannedTitle": "No upcoming festival",
     "noPlannedHint": "Plan a festival to start the countdown."
+  },
+  "share": {
+    "nextTitle": "Share my next festival",
+    "lastTitle": "Share my last festival",
+    "noNext": "Plan a festival first to share it.",
+    "noLast": "Mark a festival attended first to share it.",
+    "share": "Share",
+    "unavailable": "Sharing is not available on this device.",
+    "title": "Share your festival"
   }
 }

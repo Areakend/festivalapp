@@ -149,6 +149,13 @@ export default function Home() {
           style={({ pressed }) => [styles.hero, pressed && { opacity: 0.85 }]}
           onPress={() => openFestival(hero.item)}
         >
+          <Pressable
+            style={({ pressed }) => [styles.heroShare, pressed && { opacity: 0.7 }]}
+            onPress={() => router.push({ pathname: '/share/[kind]', params: { kind: 'next' } })}
+            hitSlop={10}
+          >
+            <Ionicons name="share-social-outline" size={18} color={colors.textSecondary} />
+          </Pressable>
           <Text style={styles.heroLabel}>{t('home.nextFestival')}</Text>
           {hero.happeningNow ? (
             <Text style={styles.heroNow}>{t('home.happeningNow')}</Text>
@@ -306,6 +313,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(139, 92, 246, 0.30)',
     borderRadius: radii.lg,
+    position: 'relative',
+  },
+  heroShare: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    padding: spacing.xs,
   },
   heroLabel: {
     fontFamily: typography.fonts.bodyMedium,

@@ -211,5 +211,14 @@
     "welcomeBody": "Stöbere im Katalog, bewerte deine besuchten Festivals und plane die nächsten — dein Countdown erscheint hier.",
     "noPlannedTitle": "Kein geplantes Festival",
     "noPlannedHint": "Plane ein Festival, um den Countdown zu starten."
+  },
+  "share": {
+    "nextTitle": "Mein nächstes Festival teilen",
+    "lastTitle": "Mein letztes Festival teilen",
+    "noNext": "Plane zuerst ein Festival, um es zu teilen.",
+    "noLast": "Markiere zuerst ein Festival als besucht, um es zu teilen.",
+    "share": "Teilen",
+    "unavailable": "Teilen ist auf diesem Gerät nicht verfügbar.",
+    "title": "Teile dein Festival"
   }
 }
