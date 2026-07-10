@@ -66,7 +66,7 @@ Mainstage n'est pas destinée aux enfants de moins de 16 ans. Nous ne collectons
 ## 8. Contact
 
 Pour toute question concernant cette politique ou vos données personnelles :
-**raphael.ohanian@telecomnancy.net**
+**mainstage.app.contact@gmail.com**
 
 ## 9. Modifications
 
