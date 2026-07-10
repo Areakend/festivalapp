@@ -38,7 +38,6 @@ export default function ReviewScreen() {
   const router = useRouter();
 
   const { data: detail } = useFestivalDetail(slug);
-  const { data: myReview, isFetched } = useMyReview(detail?.festival.id);
   const { data: myAttendances } = useMyAttendances();
   const upsert = useUpsertReview();
   const deleteReview = useDeleteReview();
@@ -60,19 +59,41 @@ export default function ReviewScreen() {
     value_rating: 0,
   });
 
-  // Prefill when editing an existing review.
+  // Default to the most recently attended year — silently, with no picker
+  // shown, when it's the only one. With several attended years, the picker
+  // below still defaults to the latest but lets you switch to write (or
+  // edit) another year's review instead.
   useEffect(() => {
-    if (!myReview) return;
-    setOverall(Math.round(myReview.overall_rating));
-    setYear(myReview.year);
-    setComment(myReview.comment ?? '');
-    setSubs((prev) => {
-      const next = { ...prev };
-      SUB_RATINGS.forEach((key) => {
-        next[key] = myReview[key] ?? 0;
+    if (year == null && attendedYears[0] != null) setYear(attendedYears[0]);
+  }, [attendedYears, year]);
+
+  const { data: myReview, isFetched } = useMyReview(detail?.festival.id, year);
+
+  // One review per (user, festival, year) — switching the year reloads
+  // whichever review exists for it, or clears the form for a brand new one.
+  useEffect(() => {
+    if (myReview) {
+      setOverall(Math.round(myReview.overall_rating));
+      setComment(myReview.comment ?? '');
+      setSubs((prev) => {
+        const next = { ...prev };
+        SUB_RATINGS.forEach((key) => {
+          next[key] = myReview[key] ?? 0;
+        });
+        return next;
       });
-      return next;
-    });
+    } else {
+      setOverall(0);
+      setComment('');
+      setSubs({
+        lineup_rating: 0,
+        production_rating: 0,
+        side_quest_rating: 0,
+        organization_rating: 0,
+        atmosphere_rating: 0,
+        value_rating: 0,
+      });
+    }
   }, [myReview]);
 
   const submit = async () => {
@@ -123,19 +144,16 @@ export default function ReviewScreen() {
       </Text>
       <Text style={styles.festivalName}>{detail?.festival.name ?? '…'}</Text>
 
-      {/* Which year this review is about — picked from years already
-          logged as attended; skipped entirely if none are logged yet. */}
-      {attendedYears.length > 0 && (
+      {/* Which year this review is about — skipped entirely when there's
+          only one attended year (used directly, no picker needed).
+          With several, switching years loads that year's review (or
+          starts a blank one) instead of overwriting another year's. */}
+      {attendedYears.length > 1 && (
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>{t('review.year')}</Text>
           <View style={styles.yearRow}>
             {attendedYears.map((y) => (
-              <Chip
-                key={y}
-                label={String(y)}
-                active={year === y}
-                onPress={() => setYear((prev) => (prev === y ? null : y))}
-              />
+              <Chip key={y} label={String(y)} active={year === y} onPress={() => setYear(y)} />
             ))}
           </View>
         </View>

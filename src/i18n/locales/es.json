@@ -145,7 +145,11 @@
     "displayName": "Nombre visible",
     "country": "País",
     "language": "Idioma",
-    "favoriteGenres": "Géneros favoritos"
+    "favoriteGenres": "Géneros favoritos",
+    "records": "Récords",
+    "mostAttendedFestival": "Más asistido",
+    "mostSeenArtist": "Artista más visto",
+    "mostAttendedCountry": "País más visitado"
   },
   "djmag": {
     "title": "DJ Mag Top 100",
@@ -202,6 +206,7 @@
     "withFriends": "Con {{names}}",
     "welcomeTitle": "Bienvenido a Mainstage",
     "welcomeBody": "Explora el catálogo, califica los festivales a los que fuiste y planifica los próximos: tu cuenta regresiva aparecerá aquí.",
+    "addFriendsHint": "Añade amigos para ver quién va a los mismos festivales que tú.",
     "noPlannedTitle": "Ningún festival planeado",
     "noPlannedHint": "Planea un festival para iniciar la cuenta regresiva."
   },

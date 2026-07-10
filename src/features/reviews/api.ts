@@ -31,19 +31,25 @@ export function useFestivalReviews(festivalId: string | undefined, sort: ReviewS
   });
 }
 
-/** The signed-in user's review for a festival (one per festival in the MVP). */
-export function useMyReview(festivalId: string | undefined) {
+/**
+ * The signed-in user's review for a festival, scoped to a specific year —
+ * one review per (user, festival, year) now, not one per festival overall
+ * (see useUpsertReview). `year: null` matches the legacy "yearless" review
+ * some accounts still have from before per-year reviews existed.
+ */
+export function useMyReview(festivalId: string | undefined, year: number | null) {
   const userId = useSessionStore((s) => s.session?.user.id);
   return useQuery({
-    queryKey: ['my-review', festivalId, userId],
+    queryKey: ['my-review', festivalId, userId, year],
     enabled: !!festivalId && !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('reviews')
         .select('*')
         .eq('festival_id', festivalId!)
-        .eq('user_id', userId!)
-        .maybeSingle();
+        .eq('user_id', userId!);
+      query = year == null ? query.is('year', null) : query.eq('year', year);
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
       return (data ?? null) as Review | null;
     },
@@ -63,27 +69,33 @@ export interface ReviewInput {
   value_rating: number | null;
 }
 
-/** Create or update the user's review (checked against the existing one). */
+/**
+ * Create or update the user's review for a given year (one row per
+ * user/festival/year — see the reviews_one_per_year_idx migration).
+ * Picking a year with no existing review creates a brand new one instead
+ * of overwriting another year's review.
+ */
 export function useUpsertReview() {
   const queryClient = useQueryClient();
   const userId = useSessionStore((s) => s.session?.user.id);
 
   return useMutation({
-    mutationFn: async ({ festivalId, ...ratings }: ReviewInput) => {
+    mutationFn: async ({ festivalId, year, ...ratings }: ReviewInput) => {
       if (!userId) throw new Error('Not signed in');
-      const { data: existing, error: findError } = await supabase
+      let findQuery = supabase
         .from('reviews')
         .select('id')
         .eq('festival_id', festivalId)
-        .eq('user_id', userId)
-        .maybeSingle();
+        .eq('user_id', userId);
+      findQuery = year == null ? findQuery.is('year', null) : findQuery.eq('year', year);
+      const { data: existing, error: findError } = await findQuery.maybeSingle();
       if (findError) throw findError;
 
       const { error } = existing
-        ? await supabase.from('reviews').update(ratings).eq('id', existing.id)
+        ? await supabase.from('reviews').update({ year, ...ratings }).eq('id', existing.id)
         : await supabase
             .from('reviews')
-            .insert({ user_id: userId, festival_id: festivalId, ...ratings });
+            .insert({ user_id: userId, festival_id: festivalId, year, ...ratings });
       if (error) throw error;
     },
     onSettled: (_data, _err, { festivalId }) => {

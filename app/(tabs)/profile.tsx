@@ -9,11 +9,12 @@ import { Chip } from '@/components/ui/Chip';
 import { TextField } from '@/components/ui/TextField';
 import { signOut } from '@/features/auth/api';
 import { useSessionStore } from '@/features/auth/session-store';
-import { useFestivals, useMyStatuses } from '@/features/festivals/api';
+import { useFestivals, useMyAttendances, useMyMostSeenArtist, useMyStatuses } from '@/features/festivals/api';
 import { useMyReviews } from '@/features/reviews/api';
 import { useDjMagTop100, useMyProfile, useUpdateProfile } from '@/features/profile/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { colors, radii, spacing, typography } from '@/theme';
+import { countryFlag } from '@/utils/format';
 
 const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
   en: 'English',
@@ -32,8 +33,10 @@ export default function ProfileScreen() {
   const { data: profile } = useMyProfile();
   const { data: catalog } = useFestivals();
   const { data: myStatuses } = useMyStatuses();
+  const { data: myAttendances } = useMyAttendances();
   const { data: myReviews } = useMyReviews();
   const { data: djmag } = useDjMagTop100();
+  const { data: mostSeenArtist } = useMyMostSeenArtist();
   const updateProfile = useUpdateProfile();
 
   const [name, setName] = useState('');
@@ -66,8 +69,41 @@ export default function ProfileScreen() {
       .sort((a, b) => b.overall_rating - a.overall_rating)
       .slice(0, 3)
       .map((r) => ({ rating: r.overall_rating, name: byId.get(r.festival_id)?.name ?? '—' }));
-    return { attended: attended.length, countries: countries.size, avgRating, djmagCount, topRated };
-  }, [catalog, myStatuses, myReviews, djmag]);
+
+    // Most-attended festival: count edition-years logged per festival.
+    const festivalCounts = new Map<string, number>();
+    for (const a of myAttendances ?? []) {
+      festivalCounts.set(a.festival_id, (festivalCounts.get(a.festival_id) ?? 0) + 1);
+    }
+    let topFestival: { name: string; count: number } | null = null;
+    for (const [festivalId, count] of festivalCounts) {
+      if (!topFestival || count > topFestival.count) {
+        topFestival = { name: byId.get(festivalId)?.name ?? '—', count };
+      }
+    }
+
+    // Most-attended country: same, resolved through each attendance's festival.
+    const countryCounts = new Map<string, number>();
+    for (const a of myAttendances ?? []) {
+      const country = byId.get(a.festival_id)?.country;
+      if (!country) continue;
+      countryCounts.set(country, (countryCounts.get(country) ?? 0) + 1);
+    }
+    let topCountry: { country: string; count: number } | null = null;
+    for (const [country, count] of countryCounts) {
+      if (!topCountry || count > topCountry.count) topCountry = { country, count };
+    }
+
+    return {
+      attended: attended.length,
+      countries: countries.size,
+      avgRating,
+      djmagCount,
+      topRated,
+      topFestival,
+      topCountry,
+    };
+  }, [catalog, myStatuses, myAttendances, myReviews, djmag]);
 
   const changeLanguage = (lang: SupportedLanguage) => {
     void i18n.changeLanguage(lang);
@@ -109,6 +145,37 @@ export default function ProfileScreen() {
               <Text style={styles.topRating}>★ {entry.rating.toFixed(1)}</Text>
             </View>
           ))}
+        </View>
+      )}
+
+      {/* Records: most-attended festival/country, most-seen artist */}
+      {(stats.topFestival || stats.topCountry || mostSeenArtist) && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{t('profile.records')}</Text>
+          {stats.topFestival && (
+            <View style={styles.topRow}>
+              <Text style={styles.topName} numberOfLines={1}>
+                {t('profile.mostAttendedFestival')} · {stats.topFestival.name}
+              </Text>
+              <Text style={styles.topRating}>{stats.topFestival.count}</Text>
+            </View>
+          )}
+          {mostSeenArtist && (
+            <View style={styles.topRow}>
+              <Text style={styles.topName} numberOfLines={1}>
+                {t('profile.mostSeenArtist')} · {mostSeenArtist.name}
+              </Text>
+              <Text style={styles.topRating}>{mostSeenArtist.count}</Text>
+            </View>
+          )}
+          {stats.topCountry && (
+            <View style={styles.topRow}>
+              <Text style={styles.topName} numberOfLines={1}>
+                {t('profile.mostAttendedCountry')} · {countryFlag(stats.topCountry.country)}
+              </Text>
+              <Text style={styles.topRating}>{stats.topCountry.count}</Text>
+            </View>
+          )}
         </View>
       )}
 
