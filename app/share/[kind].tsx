@@ -4,12 +4,21 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
+import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
-import { CARD_THEMES, StoryCard, type CardTheme } from '@/components/share/StoryCard';
+import {
+  CARD_THEMES,
+  StoryCard,
+  type CardAlign,
+  type CardBackground,
+  type CardTheme,
+} from '@/components/share/StoryCard';
 import {
   useEditionLineup,
   useFestivalDetail,
@@ -22,9 +31,29 @@ import { useMyFollowedArtists } from '@/features/artists/api';
 import { useFriendsFestivalAttendance } from '@/features/friends/api';
 import { useMyReviews } from '@/features/reviews/api';
 import { colors, radii, spacing, typography } from '@/theme';
+import { countryFlag } from '@/utils/format';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_CARD_ARTISTS = 5;
+
+/** Every hideable block on the card. */
+type ToggleKey = 'location' | 'date' | 'rating' | 'counter' | 'year' | 'artists' | 'friends' | 'footer';
+
+const TOGGLES_BY_KIND: Record<'next' | 'last', ToggleKey[]> = {
+  next: ['date', 'location', 'artists', 'friends', 'footer'],
+  last: ['rating', 'counter', 'year', 'location', 'artists', 'friends', 'footer'],
+};
+
+const TOGGLE_LABEL_KEYS: Record<ToggleKey, string> = {
+  location: 'share.toggle.location',
+  date: 'share.toggle.date',
+  rating: 'share.toggle.rating',
+  counter: 'share.toggle.counter',
+  year: 'share.toggle.year',
+  artists: 'share.toggle.artists',
+  friends: 'share.toggle.friends',
+  footer: 'share.toggle.footer',
+};
 
 /** Which festival to build a story card for, and its lineup/social context. */
 function useNextFestival() {
@@ -98,8 +127,13 @@ export default function ShareScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const cardRef = useRef<View>(null);
-  const [sharing, setSharing] = useState(false);
+  const [busy, setBusy] = useState<'share' | 'save' | null>(null);
+
   const [theme, setTheme] = useState<CardTheme>('violet');
+  const [bgMode, setBgMode] = useState<'gradient' | 'photo' | 'transparent'>('gradient');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [align, setAlign] = useState<CardAlign>('left');
+  const [hidden, setHidden] = useState<Set<ToggleKey>>(new Set());
   // null = user hasn't customized: the followed-first top 5 stays live.
   const [customArtistIds, setCustomArtistIds] = useState<string[] | null>(null);
 
@@ -156,14 +190,35 @@ export default function ShareScreen() {
     [sortedLineup, selectedSet],
   );
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
+  const toggle = (key: ToggleKey) => {
+    setHidden((prev) => {
+      const nextSet = new Set(prev);
+      if (nextSet.has(key)) nextSet.delete(key);
+      else nextSet.add(key);
+      return nextSet;
+    });
+  };
+  const show = (key: ToggleKey) => !hidden.has(key);
+
+  const pickPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [9, 16],
+      quality: 0.9,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    setPhotoUri(result.assets[0].uri);
+    setBgMode('photo');
+  };
+
+  const capture = () => captureRef(cardRef, { format: 'png', quality: 1 });
 
   const share = async () => {
     if (!cardRef.current) return;
-    setSharing(true);
+    setBusy('share');
     try {
-      const uri = await captureRef(cardRef, { format: 'png', quality: 1 });
+      const uri = await capture();
       const available = await Sharing.isAvailableAsync();
       if (!available) {
         Alert.alert(t('common.error'), t('share.unavailable'));
@@ -173,11 +228,55 @@ export default function ShareScreen() {
     } catch (error) {
       Alert.alert(t('common.error'), (error as Error).message);
     } finally {
-      setSharing(false);
+      setBusy(null);
     }
   };
 
-  const festivalCount = (myAttendances ?? []).length;
+  // Strava-style: save the PNG (transparent background included) straight
+  // to the gallery so the user can layer it over their own story.
+  const download = async () => {
+    if (!cardRef.current) return;
+    setBusy('save');
+    try {
+      const { granted } = await MediaLibrary.requestPermissionsAsync(true);
+      if (!granted) {
+        Alert.alert(t('common.error'), t('share.saveDenied'));
+        return;
+      }
+      const uri = await capture();
+      await MediaLibrary.saveToLibraryAsync(uri);
+      Alert.alert(t('share.title'), t('share.saved'));
+    } catch (error) {
+      Alert.alert(t('common.error'), (error as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
+
+  const background: CardBackground =
+    bgMode === 'photo' && photoUri
+      ? { mode: 'photo', uri: photoUri }
+      : bgMode === 'transparent'
+        ? { mode: 'transparent' }
+        : { mode: 'gradient', theme };
+
+  const item = kind === 'next' ? next?.item : last?.item;
+  const metaLine =
+    item && show('location')
+      ? `${countryFlag(item.festival.country)} ${[item.festival.city, item.festival.country]
+          .filter(Boolean)
+          .join(', ')}`
+      : null;
+
+  const yearCount =
+    kind === 'last' && last
+      ? (myAttendances ?? []).filter((a) => a.attended_year === last.year).length
+      : 0;
+
+  const toggles = TOGGLES_BY_KIND[kind === 'next' ? 'next' : 'last'];
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
@@ -206,61 +305,121 @@ export default function ShareScreen() {
                 <StoryCard
                   ref={cardRef}
                   kind="next"
-                  theme={theme}
+                  background={background}
+                  align={align}
                   festivalName={next.item.festival.name}
-                  city={next.item.festival.city}
-                  country={next.item.festival.country}
+                  metaLine={metaLine}
                   daysUntil={next.daysUntil}
                   happeningNow={next.happeningNow}
                   dateLabel={
-                    next.item.nextEdition
+                    show('date') && next.item.nextEdition
                       ? `${formatDate(next.item.nextEdition.start_date)}${
                           next.item.nextEdition.end_date
                             ? ` – ${formatDate(next.item.nextEdition.end_date)}`
                             : ''
                         }`
-                      : ''
+                      : null
                   }
-                  friendNames={next.friendNames}
-                  topArtists={topArtists}
+                  friendNames={show('friends') ? next.friendNames : []}
+                  topArtists={show('artists') ? topArtists : []}
+                  showFooter={show('footer')}
                 />
               ) : kind === 'last' && last ? (
                 <StoryCard
                   ref={cardRef}
                   kind="last"
-                  theme={theme}
+                  background={background}
+                  align={align}
                   festivalName={last.item.festival.name}
-                  city={last.item.festival.city}
-                  country={last.item.festival.country}
+                  metaLine={metaLine}
                   year={last.year}
-                  rating={last.rating}
-                  festivalCount={festivalCount >= 2 ? festivalCount : null}
-                  crewNames={last.crewNames}
-                  topArtists={topArtists}
+                  showYear={show('year')}
+                  rating={show('rating') ? last.rating : null}
+                  yearCount={show('counter') && yearCount > 0 ? yearCount : null}
+                  friendNames={show('friends') ? last.crewNames : []}
+                  topArtists={show('artists') ? topArtists : []}
+                  showFooter={show('footer')}
                 />
               ) : null}
             </View>
 
-            {/* Card color */}
+            {/* Background: gradients, own photo, or transparent (sticker) */}
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>{t('share.pickTheme')}</Text>
+              <Text style={styles.sectionLabel}>{t('share.background')}</Text>
               <View style={styles.themeRow}>
                 {(Object.keys(CARD_THEMES) as CardTheme[]).map((key) => (
                   <Pressable
                     key={key}
-                    onPress={() => setTheme(key)}
+                    onPress={() => {
+                      setTheme(key);
+                      setBgMode('gradient');
+                    }}
                     style={[
                       styles.themeDot,
                       { backgroundColor: CARD_THEMES[key][0] },
-                      theme === key && styles.themeDotActive,
+                      bgMode === 'gradient' && theme === key && styles.themeDotActive,
                     ]}
+                  />
+                ))}
+                <Pressable
+                  onPress={() => void pickPhoto()}
+                  style={[styles.themeDot, styles.themeDotIcon, bgMode === 'photo' && styles.themeDotActive]}
+                >
+                  <Ionicons name="image-outline" size={16} color={colors.text} />
+                </Pressable>
+                <Pressable
+                  onPress={() => setBgMode('transparent')}
+                  style={[
+                    styles.themeDot,
+                    styles.themeDotIcon,
+                    bgMode === 'transparent' && styles.themeDotActive,
+                  ]}
+                >
+                  <MaterialIcons name="blur-off" size={16} color={colors.text} />
+                </Pressable>
+              </View>
+              {bgMode === 'transparent' && (
+                <Text style={styles.hint}>{t('share.transparentHint')}</Text>
+              )}
+            </View>
+
+            {/* Text alignment */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>{t('share.align')}</Text>
+              <View style={styles.themeRow}>
+                {(['left', 'center', 'right'] as CardAlign[]).map((a) => (
+                  <Pressable
+                    key={a}
+                    onPress={() => setAlign(a)}
+                    style={[styles.themeDot, styles.themeDotIcon, align === a && styles.themeDotActive]}
+                  >
+                    <MaterialIcons
+                      name={`format-align-${a}` as never}
+                      size={16}
+                      color={colors.text}
+                    />
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            {/* Which info blocks show on the card */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>{t('share.infoShown')}</Text>
+              <View style={styles.toggleRow}>
+                {toggles.map((key) => (
+                  <Chip
+                    key={key}
+                    label={t(TOGGLE_LABEL_KEYS[key])}
+                    active={show(key)}
+                    onPress={() => toggle(key)}
                   />
                 ))}
               </View>
             </View>
 
             {/* Which artists show on the card (max 5) */}
-            {sortedLineup.length > 0 && (
+            {show('artists') && sortedLineup.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>
                   {t('share.pickArtists')} · {selectedArtistIds.length}/{MAX_CARD_ARTISTS}
@@ -283,12 +442,21 @@ export default function ShareScreen() {
             )}
           </ScrollView>
 
-          <Button
-            label={t('share.share')}
-            onPress={() => void share()}
-            loading={sharing}
-            style={styles.shareButton}
-          />
+          <View style={styles.actions}>
+            <Button
+              label={t('share.download')}
+              variant="secondary"
+              onPress={() => void download()}
+              loading={busy === 'save'}
+              style={styles.actionButton}
+            />
+            <Button
+              label={t('share.share')}
+              onPress={() => void share()}
+              loading={busy === 'share'}
+              style={styles.actionButton}
+            />
+          </View>
         </>
       )}
     </View>
@@ -313,15 +481,27 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
   },
-  themeRow: { flexDirection: 'row', gap: spacing.md },
+  hint: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+  },
+  themeRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
   themeDot: {
     width: 32,
     height: 32,
     borderRadius: radii.full,
     borderWidth: 2,
     borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  themeDotIcon: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   themeDotActive: { borderColor: colors.text },
+  toggleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chipRow: { gap: spacing.sm, paddingRight: spacing.xl },
   empty: { alignItems: 'center', flex: 1, justifyContent: 'center' },
   emptyText: {
@@ -330,5 +510,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
   },
-  shareButton: { marginBottom: spacing.xl },
+  actions: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.xl },
+  actionButton: { flex: 1 },
 });

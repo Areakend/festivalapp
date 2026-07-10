@@ -1,11 +1,11 @@
 import { forwardRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 
 import { colors, radii, spacing, typography } from '@/theme';
-import { countryFlag } from '@/utils/format';
 
 /**
  * Gradient presets the user can pick from on the share screen — every
@@ -20,90 +20,134 @@ export const CARD_THEMES = {
 } as const;
 export type CardTheme = keyof typeof CARD_THEMES;
 
+/**
+ * transparent = Strava-style sticker: no background at all, meant to be
+ * downloaded as a PNG and layered over the user's own story/photo.
+ * photo = the user's own picture as background, with a dark scrim so the
+ * text stays readable.
+ */
+export type CardBackground =
+  | { mode: 'gradient'; theme: CardTheme }
+  | { mode: 'photo'; uri: string }
+  | { mode: 'transparent' };
+
+export type CardAlign = 'left' | 'center' | 'right';
+
 export type StoryCardProps = {
-  theme?: CardTheme;
+  background: CardBackground;
+  align: CardAlign;
+  festivalName: string;
+  /** Pre-formatted "flag city, country" line — null when the user hid it. */
+  metaLine: string | null;
+  /** [] when hidden or none selected. */
   topArtists: string[];
+  /** [] when hidden or none. */
+  friendNames: string[];
+  /** Whether the "made with Mainstage" pill shows (the only branding left). */
+  showFooter: boolean;
 } & (
   | {
       kind: 'next';
-      festivalName: string;
-      city: string | null;
-      country: string;
       daysUntil: number;
       happeningNow: boolean;
-      dateLabel: string;
-      friendNames: string[];
+      /** null when hidden. */
+      dateLabel: string | null;
     }
   | {
       kind: 'last';
-      festivalName: string;
-      city: string | null;
-      country: string;
       year: number;
+      /** Big watermark year behind the layout — toggleable like the rest. */
+      showYear: boolean;
+      /** null when hidden or no review. */
       rating: number | null;
-      /** Total festivals the user has logged — the flex badge (hidden when null). */
-      festivalCount: number | null;
-      crewNames: string[];
+      /** Festivals attended in `year` — null when hidden or zero. */
+      yearCount: number | null;
     }
 );
 
+const ALIGN_ITEMS: Record<CardAlign, 'flex-start' | 'center' | 'flex-end'> = {
+  left: 'flex-start',
+  center: 'center',
+  right: 'flex-end',
+};
+
 /**
- * Instagram-story-shaped (9:16) share card — captured to an image by the
- * screen that renders it (see app/share/[kind].tsx) and handed to the OS
- * share sheet. Deliberately punchy/branded (Strava-post style): the goal is
- * for it to look good enough that someone who isn't a user yet gets curious
- * about the app it came from. Rendered in the app language via i18n.
+ * Instagram-story-shaped (9:16) share card, captured to a PNG by the share
+ * screen. Poster-style: no header branding, the festival name is the hero
+ * (with a giant watermark year behind it for "last" cards) and the only
+ * brand mark is the footer pill. Every block is optional — the screen
+ * passes null/[] for anything the user toggled off.
  */
 export const StoryCard = forwardRef<View, StoryCardProps>((props, ref) => {
   const { t } = useTranslation();
+  const overPhoto = props.background.mode !== 'gradient';
+  // Over an arbitrary photo (or once the PNG is layered on one), text needs
+  // its own contrast: soft shadow + darker pills instead of white-glass ones.
+  const shadow = overPhoto ? styles.textShadow : null;
+  const pillTone = overPhoto ? styles.pillDark : null;
+  const alignItems = ALIGN_ITEMS[props.align];
+  const textAlign = props.align;
 
   return (
     <View ref={ref} style={styles.card} collapsable={false}>
-      <LinearGradient colors={CARD_THEMES[props.theme ?? 'violet']} style={StyleSheet.absoluteFill} />
+      {props.background.mode === 'gradient' && (
+        <LinearGradient
+          colors={CARD_THEMES[props.background.theme]}
+          style={StyleSheet.absoluteFill}
+        />
+      )}
+      {props.background.mode === 'photo' && (
+        <>
+          <Image
+            source={{ uri: props.background.uri }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+          />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.15)', 'rgba(0,0,0,0.65)']}
+            style={StyleSheet.absoluteFill}
+          />
+        </>
+      )}
 
-      <View style={styles.brand}>
-        <Ionicons name="sparkles" size={16} color={colors.textOnPrimary} />
-        <Text style={styles.brandText}>MAINSTAGE</Text>
-      </View>
+      {props.kind === 'last' && props.showYear && (
+        <Text style={styles.watermarkYear} numberOfLines={1}>
+          {props.year}
+        </Text>
+      )}
 
-      <View style={styles.body}>
-        {props.kind === 'next' ? (
-          <>
-            <Text style={styles.eyebrow}>{t('share.card.next')}</Text>
-            {props.happeningNow ? (
-              <Text style={styles.hero}>{t('share.card.happeningNow')}</Text>
-            ) : (
-              <Text style={styles.hero}>J-{props.daysUntil}</Text>
-            )}
-          </>
-        ) : (
-          <>
-            <Text style={styles.eyebrow}>{t('share.card.wasThere', { year: props.year })}</Text>
-            <Text style={styles.hero}>🎉</Text>
-          </>
+      <View style={[styles.body, { alignItems }]}>
+        {props.kind === 'next' && (
+          <Text style={[styles.hero, shadow, { textAlign }]}>
+            {props.happeningNow ? t('share.card.happeningNow') : `J-${props.daysUntil}`}
+          </Text>
         )}
 
-        <Text style={styles.festivalName} numberOfLines={2}>
+        <Text style={[styles.festivalName, shadow, { textAlign }]} numberOfLines={3}>
           {props.festivalName}
         </Text>
-        <Text style={styles.meta}>
-          {countryFlag(props.country)} {[props.city, props.country].filter(Boolean).join(', ')}
-        </Text>
-        {props.kind === 'next' && <Text style={styles.meta}>{props.dateLabel}</Text>}
+        {props.metaLine != null && (
+          <Text style={[styles.meta, shadow, { textAlign }]}>{props.metaLine}</Text>
+        )}
+        {props.kind === 'next' && props.dateLabel != null && (
+          <Text style={[styles.meta, shadow, { textAlign }]}>{props.dateLabel}</Text>
+        )}
 
-        {props.kind === 'last' && (props.rating != null || props.festivalCount != null) && (
-          <View style={styles.badgeRow}>
+        {props.kind === 'last' && (props.rating != null || props.yearCount != null) && (
+          <View style={[styles.badgeRow, { justifyContent: alignItems }]}>
             {props.rating != null && (
-              <View style={styles.badge}>
-                <Ionicons name="star" size={16} color={colors.rating} />
-                <Text style={styles.badgeText}>{props.rating.toFixed(0)}/20</Text>
+              <View style={[styles.badge, pillTone]}>
+                <Ionicons name="star" size={14} color={colors.rating} />
+                <Text style={styles.badgeText}>
+                  {t('share.card.myRating')} {props.rating.toFixed(0)}/20
+                </Text>
               </View>
             )}
-            {props.festivalCount != null && (
-              <View style={styles.badge}>
-                <Ionicons name="trophy" size={14} color={colors.textOnPrimary} />
+            {props.yearCount != null && (
+              <View style={[styles.badge, pillTone]}>
+                <Ionicons name="trophy" size={13} color={colors.textOnPrimary} />
                 <Text style={styles.badgeText}>
-                  {t('share.card.festivalCount', { count: props.festivalCount })}
+                  {t('share.card.festivalsThisYear', { count: props.yearCount, year: props.year })}
                 </Text>
               </View>
             )}
@@ -111,30 +155,34 @@ export const StoryCard = forwardRef<View, StoryCardProps>((props, ref) => {
         )}
 
         {props.topArtists.length > 0 && (
-          <View style={styles.artistsBlock}>
-            <Text style={styles.blockLabel}>{t('share.card.topArtists')}</Text>
-            <Text style={styles.artistsText}>{props.topArtists.slice(0, 5).join(' · ')}</Text>
+          <View style={[styles.block, { alignItems }]}>
+            <Text style={[styles.blockLabel, shadow]}>{t('share.card.topArtists')}</Text>
+            <Text style={[styles.blockText, shadow, { textAlign }]}>
+              {props.topArtists.slice(0, 5).join(' · ')}
+            </Text>
           </View>
         )}
 
-        {(props.kind === 'next' ? props.friendNames : props.crewNames).length > 0 && (
-          <View style={styles.artistsBlock}>
-            <Text style={styles.blockLabel}>
+        {props.friendNames.length > 0 && (
+          <View style={[styles.block, { alignItems }]}>
+            <Text style={[styles.blockLabel, shadow]}>
               {props.kind === 'next' ? t('share.card.with') : t('share.card.crew')}
             </Text>
-            <Text style={styles.artistsText}>
-              {(props.kind === 'next' ? props.friendNames : props.crewNames).slice(0, 5).join(', ')}
+            <Text style={[styles.blockText, shadow, { textAlign }]}>
+              {props.friendNames.slice(0, 5).join(', ')}
             </Text>
           </View>
         )}
       </View>
 
-      <View style={styles.footer}>
-        <View style={styles.footerPill}>
-          <Ionicons name="sparkles" size={13} color={colors.textOnPrimary} />
-          <Text style={styles.footerText}>{t('share.card.footer')}</Text>
+      {props.showFooter && (
+        <View style={[styles.footer, { alignItems }]}>
+          <View style={[styles.footerPill, pillTone]}>
+            <Ionicons name="sparkles" size={13} color={colors.textOnPrimary} />
+            <Text style={styles.footerText}>{t('share.card.footer')}</Text>
+          </View>
         </View>
-      </View>
+      )}
     </View>
   );
 });
@@ -147,27 +195,18 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     overflow: 'hidden',
     padding: spacing.xl,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
-  brand: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  brandText: {
+  watermarkYear: {
+    position: 'absolute',
+    top: spacing.lg,
+    right: -spacing.md,
     fontFamily: typography.fonts.heading,
-    fontSize: typography.sizes.sm,
-    color: colors.textOnPrimary,
-    letterSpacing: 2,
+    fontSize: 124,
+    lineHeight: 132,
+    color: 'rgba(255,255,255,0.10)',
   },
   body: { gap: spacing.sm },
-  eyebrow: {
-    fontFamily: typography.fonts.bodyMedium,
-    fontSize: typography.sizes.sm,
-    color: 'rgba(255,255,255,0.75)',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
   hero: {
     fontFamily: typography.fonts.heading,
     fontSize: 56,
@@ -177,14 +216,15 @@ const styles = StyleSheet.create({
   },
   festivalName: {
     fontFamily: typography.fonts.heading,
-    fontSize: typography.sizes.xxl,
+    fontSize: 34,
+    lineHeight: 38,
     color: colors.textOnPrimary,
-    marginTop: spacing.sm,
+    textTransform: 'uppercase',
   },
   meta: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.md,
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255,255,255,0.9)',
   },
   badgeRow: {
     flexDirection: 'row',
@@ -196,35 +236,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.14)',
     borderRadius: radii.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
   },
   badgeText: {
     fontFamily: typography.fonts.bodySemiBold,
-    fontSize: typography.sizes.md,
+    fontSize: typography.sizes.sm,
     color: colors.textOnPrimary,
   },
-  artistsBlock: { marginTop: spacing.md, gap: 2 },
+  block: { marginTop: spacing.md, gap: 2 },
   blockLabel: {
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.xs,
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.65)',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
-  artistsText: {
+  blockText: {
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.md,
     color: colors.textOnPrimary,
   },
-  footer: { alignItems: 'center' },
+  footer: { marginTop: spacing.lg },
   footerPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.14)',
     borderRadius: radii.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -233,5 +273,11 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.sm,
     color: colors.textOnPrimary,
+  },
+  pillDark: { backgroundColor: 'rgba(0,0,0,0.45)' },
+  textShadow: {
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
   },
 });

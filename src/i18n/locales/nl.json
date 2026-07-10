@@ -219,17 +219,32 @@
     "unavailable": "Delen is niet beschikbaar op dit apparaat.",
     "title": "Deel je festival",
     "pickArtists": "Artiesten op de kaart",
-    "pickTheme": "Kleur",
+    "background": "Achtergrond",
+    "align": "Uitlijning",
+    "infoShown": "Zichtbare info",
+    "download": "Downloaden",
+    "saved": "Kaart opgeslagen in je galerij.",
+    "saveDenied": "Sta fototoegang toe om de kaart op te slaan.",
+    "transparentHint": "Transparante achtergrond: download de PNG en plaats hem op je eigen story.",
+    "toggle": {
+      "rating": "Mijn score",
+      "counter": "Teller",
+      "year": "Jaar",
+      "location": "Locatie",
+      "date": "Data",
+      "artists": "Artiesten",
+      "friends": "Vrienden",
+      "footer": "Mainstage-badge"
+    },
     "card": {
-      "next": "Mijn volgende festival",
       "happeningNow": "Nu bezig",
-      "wasThere": "Ik was erbij in {{year}}",
       "topArtists": "Headliners",
       "with": "Met",
       "crew": "De crew",
       "footer": "Volg je festivals op Mainstage",
-      "festivalCount_one": "{{count}} festival gelogd",
-      "festivalCount_other": "{{count}} festivals gelogd"
+      "myRating": "Mijn score",
+      "festivalsThisYear_one": "{{count}} festival in {{year}}",
+      "festivalsThisYear_other": "{{count}} festivals in {{year}}"
     }
   }
 }
