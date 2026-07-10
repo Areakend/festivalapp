@@ -3,6 +3,12 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { exchangeCodeForTokens, getSpotifyProfile } from '../_shared/spotify.ts';
 
+// Per-user Spotify connections are gone (shared curator playlists replaced
+// them) — the only account that still needs to store Spotify tokens is the
+// curator's. Locking this endpoint to that account means no other user can
+// leave OAuth tokens sitting in spotify_connections.
+const CURATOR_USER_ID = Deno.env.get('CURATOR_SPOTIFY_USER_ID');
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -19,6 +25,9 @@ Deno.serve(async (req) => {
       error: userError,
     } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (userError || !user) throw new Error('Not authenticated');
+    if (!CURATOR_USER_ID || user.id !== CURATOR_USER_ID) {
+      throw new Error('Spotify connect is reserved for the curator account.');
+    }
 
     const { code, codeVerifier, redirectUri } = await req.json();
     if (!code || !codeVerifier || !redirectUri) throw new Error('Missing code, codeVerifier or redirectUri');
