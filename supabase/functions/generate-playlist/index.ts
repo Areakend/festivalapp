@@ -249,12 +249,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Spotify caps "add items" at 100 URIs per request.
-    for (let i = 0; i < trackUris.length; i += 100) {
-      await spotifyFetch(`/playlists/${playlist.id}/tracks`, accessToken, {
-        method: 'POST',
-        body: JSON.stringify({ uris: trackUris.slice(i, i + 100) }),
-      });
+    // Spotify's Feb 2026 migration deprecated POST /playlists/{id}/tracks in
+    // favor of /playlists/{id}/items (same request/response shape, still
+    // capped at 100 URIs per request) — the old path now 403s outright.
+    try {
+      for (let i = 0; i < trackUris.length; i += 100) {
+        await spotifyFetch(`/playlists/${playlist.id}/items`, accessToken, {
+          method: 'POST',
+          body: JSON.stringify({ uris: trackUris.slice(i, i + 100) }),
+        });
+      }
+    } catch (addTracksError) {
+      throw new Error(
+        `Spotify refused to add tracks. Curator account: ${me.id}, playlist actually public: ${
+          playlist.public
+        }, granted scopes: ${refreshed.scope ?? 'unknown'}. Underlying error: ${
+          (addTracksError as Error).message
+        }`,
+      );
     }
 
     const row: CachedPlaylistRow = {
