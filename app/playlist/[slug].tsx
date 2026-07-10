@@ -6,38 +6,38 @@ import { useTranslation } from 'react-i18next';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { useFestivalDetail } from '@/features/festivals/api';
-import { useSpotifyConnection, useConnectSpotify, useGeneratePlaylist } from '@/features/spotify/api';
+import { useFestivalPlaylistCache, useGeneratePlaylist } from '@/features/spotify/api';
 import { useGeneratePlaylistExport } from '@/features/export/api';
 import { colors, radii, spacing, typography } from '@/theme';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function PlaylistScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const { t } = useTranslation();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { data: detail } = useFestivalDetail(slug);
 
-  const { data: spotifyConnection, isLoading: spotifyConnectionLoading } = useSpotifyConnection();
-  const connectSpotify = useConnectSpotify();
+  const edition = detail?.editions.find((e) => e.lineup_published) ?? detail?.editions[0];
+
+  // Shared public playlist per edition — no Spotify connection needed on
+  // the user's side, see useFestivalPlaylistCache.
+  const { data: playlistCache, isLoading: playlistCacheLoading } = useFestivalPlaylistCache(edition?.id);
   const generateSpotifyPlaylist = useGeneratePlaylist();
-  const [result, setResult] = useState<Awaited<ReturnType<typeof generateSpotifyPlaylist.mutateAsync>> | null>(
-    null,
-  );
 
   const generateExport = useGeneratePlaylistExport();
   const [exportResult, setExportResult] = useState<Awaited<
     ReturnType<typeof generateExport.mutateAsync>
   > | null>(null);
 
-  const edition = detail?.editions.find((e) => e.lineup_published) ?? detail?.editions[0];
-
   const generate = async () => {
     if (!detail || !edition) return;
-    const data = await generateSpotifyPlaylist.mutateAsync({
+    await generateSpotifyPlaylist.mutateAsync({
       festivalId: detail.festival.id,
       editionId: edition.id,
     });
-    setResult(data);
+    void queryClient.invalidateQueries({ queryKey: ['festival-playlist-cache', edition.id] });
   };
 
   const generateUniversalExport = async () => {
@@ -54,49 +54,39 @@ export default function PlaylistScreen() {
       <Text style={styles.title}>{t('festival.generatePlaylist')}</Text>
       <Text style={styles.festivalName}>{detail?.festival.name ?? '…'}</Text>
 
-      {/* Spotify */}
-      {!result && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Spotify</Text>
-          {!spotifyConnectionLoading && !spotifyConnection && (
-            <>
-              <Text style={styles.body}>{t('spotify.connectPrompt')}</Text>
-              <Button
-                label={t('profile.connectSpotify')}
-                onPress={() => connectSpotify.mutate()}
-                loading={connectSpotify.isPending}
-              />
-            </>
-          )}
-          {spotifyConnection && (
-            <>
-              <Button
-                label={generateSpotifyPlaylist.isPending ? t('spotify.generating') : t('festival.generatePlaylist')}
-                onPress={() => void generate()}
-                loading={generateSpotifyPlaylist.isPending}
-                disabled={!edition}
-              />
-              {generateSpotifyPlaylist.isError && (
-                <Text style={styles.error}>{(generateSpotifyPlaylist.error as Error).message}</Text>
-              )}
-            </>
-          )}
-        </View>
-      )}
-
-      {result && (
-        <View style={styles.card}>
-          <StatRow label={t('spotify.artistsFound')} value={String(result.totalArtists)} />
-          <StatRow label={t('spotify.artistsMatched')} value={String(result.matchedArtists)} />
-          <StatRow label={t('spotify.tracksAdded')} value={String(result.totalTracks)} />
-          {result.skippedArtists.length > 0 && (
-            <Text style={styles.skipped}>
-              {t('spotify.skippedArtists')}: {result.skippedArtists.join(', ')}
-            </Text>
-          )}
-          <Button label={t('spotify.openInPlaylistApp')} onPress={() => void Linking.openURL(result.playlistUrl)} />
-        </View>
-      )}
+      {/* Spotify — one shared public playlist per edition, no account needed */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Spotify</Text>
+        {playlistCache ? (
+          <>
+            <StatRow label={t('spotify.artistsFound')} value={String(playlistCache.total_artists)} />
+            <StatRow label={t('spotify.artistsMatched')} value={String(playlistCache.matched_artists)} />
+            <StatRow label={t('spotify.tracksAdded')} value={String(playlistCache.total_tracks)} />
+            {playlistCache.skipped_artists.length > 0 && (
+              <Text style={styles.skipped}>
+                {t('spotify.skippedArtists')}: {playlistCache.skipped_artists.join(', ')}
+              </Text>
+            )}
+            <Button
+              label={t('spotify.openInPlaylistApp')}
+              onPress={() => void Linking.openURL(playlistCache.spotify_playlist_url)}
+            />
+          </>
+        ) : (
+          <>
+            <Text style={styles.body}>{t('spotify.connectPrompt')}</Text>
+            <Button
+              label={generateSpotifyPlaylist.isPending ? t('spotify.generating') : t('festival.generatePlaylist')}
+              onPress={() => void generate()}
+              loading={generateSpotifyPlaylist.isPending || playlistCacheLoading}
+              disabled={!edition}
+            />
+            {generateSpotifyPlaylist.isError && (
+              <Text style={styles.error}>{(generateSpotifyPlaylist.error as Error).message}</Text>
+            )}
+          </>
+        )}
+      </View>
 
       {/* Universal export: no account needed, works even while Spotify/Deezer
           accounts can't be connected (Spotify's Premium-owner requirement,

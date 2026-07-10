@@ -176,7 +176,7 @@
     "skippedArtists": "Artistes ignorés",
     "openInPlaylistApp": "Ouvrir la playlist",
     "previewPlaylist": "Aperçu de la playlist",
-    "connectPrompt": "Connecte Spotify pour enregistrer cette playlist sur ton compte"
+    "connectPrompt": "Récupère la playlist partagée de ce lineup — aucun compte requis"
   },
   "export": {
     "title": "Export universel",
