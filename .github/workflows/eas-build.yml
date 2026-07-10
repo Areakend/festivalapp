@@ -45,12 +45,24 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      # User-home gradle.properties take precedence over the (prebuild-
+      # generated) project ones — the right hook to tune a managed project's
+      # native build without committing an android/ directory. The Metaspace
+      # bump fixes the OOM that appeared once react-native-view-shot /
+      # expo-sharing / expo-linear-gradient joined the dependency tree;
+      # arm64-v8a-only halves the compile work (every real phone this APK
+      # targets is arm64).
       - name: Configure Gradle settings
         if: ${{ inputs.local }}
         run: |
           mkdir -p ~/.gradle
-          echo "org.gradle.workers.max=2" >> ~/.gradle/gradle.properties
-          echo "org.gradle.daemon=false" >> ~/.gradle/gradle.properties
+          {
+            echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g"
+            echo "org.gradle.workers.max=2"
+            echo "org.gradle.parallel=false"
+            echo "org.gradle.daemon=false"
+            echo "reactNativeArchitectures=arm64-v8a"
+          } >> ~/.gradle/gradle.properties
 
       - name: Setup swap space
         if: ${{ inputs.local }}
@@ -61,10 +73,6 @@ jobs:
           sudo mkswap /swapfile
           sudo swapon /swapfile
           sudo sysctl vm.swappiness=10
-
-      - name: Show EAS CLI version
-        if: ${{ inputs.local }}
-        run: eas --version
 
       # Runs the actual native build on this runner (credentials/keystore are
       # still fetched from EAS) instead of on EAS's build servers, so it
