@@ -26,7 +26,7 @@
   },
   "onboarding": {
     "tagline": "Track every beat.",
-    "subtitle": "Log your festivals, climb the DJ Mag Top 100, and turn any lineup into a playlist.",
+    "subtitle": "Log your festivals, climb the press Top 100, and turn any lineup into a playlist.",
     "getStarted": "Get started"
   },
   "auth": {
@@ -70,7 +70,7 @@
     "generatePlaylist": "Generate playlist",
     "communityRating": "Community rating",
     "ratingsCount": "{{count}} ratings",
-    "djmagRank": "DJ Mag rank",
+    "djmagRank": "Press ranking",
     "bestRank": "Best rank ever",
     "rankingHistory": "Ranking history",
     "editionYear": "Edition {{year}}",
@@ -111,8 +111,8 @@
     "sort": "Sort",
     "sortPopular": "Most popular",
     "sortName": "A–Z",
-    "sortRank": "DJ Mag rank",
-    "sortTop100": "DJ Mag rank",
+    "sortRank": "Press Top 100",
+    "sortTop100": "Press Top 100",
     "sortCommunity": "Community rating",
     "sortMyRating": "My ratings",
     "sortDate": "Date",
@@ -149,11 +149,22 @@
     "records": "Records",
     "mostAttendedFestival": "Most attended",
     "mostSeenArtist": "Most-seen artist",
-    "mostAttendedCountry": "Most-visited country"
+    "mostAttendedCountry": "Most-visited country",
+    "deleteAccount": "Delete my account",
+    "deleteAccountWarning": "This is permanent: your account and all your data (reviews, festivals, friends) will be deleted.",
+    "deleteAccountFinal": "Last confirmation — everything will be erased immediately."
+  },
+  "report": {
+    "title": "Report",
+    "review": "Report this review",
+    "reviewDone": "Thanks, the review was reported. It will be examined shortly.",
+    "block": "Block {{name}}",
+    "unblock": "Unblock {{name}}",
+    "blockDone": "User blocked. You will no longer see their reviews."
   },
   "djmag": {
-    "title": "DJ Mag Top 100",
-    "progress": "You have attended {{count}}/100 DJ Mag festivals",
+    "title": "Press Top 100",
+    "progress": "You have attended {{count}}/100 press Top 100 festivals",
     "attendedOnly": "Attended",
     "notAttended": "Not attended",
     "filterCountry": "Country"

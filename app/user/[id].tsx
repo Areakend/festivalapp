@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,7 @@ import { ScheduleRow } from '@/components/festival/ScheduleRow';
 import { ratingColor } from '@/components/ui/RatingBar';
 import { useFestivals, type CatalogItem } from '@/features/festivals/api';
 import { useFriendProfile } from '@/features/friends/api';
+import { useBlockUser, useMyBlockedIds } from '@/features/moderation/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
 import type { FestivalStatus } from '@/types/domain';
@@ -31,6 +32,35 @@ export default function FriendProfileScreen() {
 
   const { data } = useFriendProfile(id);
   const { data: catalog } = useFestivals();
+  const { data: blockedIds } = useMyBlockedIds();
+  const blockUser = useBlockUser();
+  const isBlocked = !!id && (blockedIds?.has(id) ?? false);
+
+  const confirmBlockToggle = () => {
+    if (!id) return;
+    const name = data?.profile.display_name ?? '';
+    Alert.alert(
+      t('report.title'),
+      isBlocked ? t('report.unblock', { name }) : t('report.block', { name }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: isBlocked ? t('report.unblock', { name }) : t('report.block', { name }),
+          style: isBlocked ? 'default' : 'destructive',
+          onPress: () =>
+            blockUser.mutate(
+              { blockedId: id, blocked: isBlocked },
+              {
+                onSuccess: () => {
+                  if (!isBlocked) Alert.alert(t('report.title'), t('report.blockDone'));
+                },
+                onError: (error) => Alert.alert(t('common.error'), error.message),
+              },
+            ),
+        },
+      ],
+    );
+  };
 
   const computed = useMemo(() => {
     if (!data || !catalog) return null;
@@ -78,6 +108,13 @@ export default function FriendProfileScreen() {
           {data?.profile.display_name ?? '…'}{' '}
           {data?.profile.country ? countryFlag(data.profile.country) : ''}
         </Text>
+        <Pressable onPress={confirmBlockToggle} hitSlop={12}>
+          <Ionicons
+            name={isBlocked ? 'ban' : 'ban-outline'}
+            size={20}
+            color={isBlocked ? colors.danger : colors.textMuted}
+          />
+        </Pressable>
       </View>
 
       {computed && (

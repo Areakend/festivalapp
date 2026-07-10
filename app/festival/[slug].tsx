@@ -38,6 +38,7 @@ import {
 } from '@/features/reviews/api';
 import { useMyFollowedArtists, useToggleArtistFollow } from '@/features/artists/api';
 import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/friends/api';
+import { useMyBlockedIds } from '@/features/moderation/api';
 import { useSessionStore } from '@/features/auth/session-store';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag, formatCompact } from '@/utils/format';
@@ -70,7 +71,17 @@ export default function FestivalDetailScreen() {
   const [reviewSort, setReviewSort] = useState<ReviewSort>('newest');
   const { data, isLoading } = useFestivalDetail(slug);
   const { data: myStatuses } = useMyStatuses();
-  const { data: reviews } = useFestivalReviews(data?.festival.id, reviewSort);
+  const { data: allReviews } = useFestivalReviews(data?.festival.id, reviewSort);
+  const { data: blockedIds } = useMyBlockedIds();
+  // Blocked users' reviews disappear everywhere on this screen (list,
+  // averages, AI-summary trigger) — the point of blocking someone.
+  const reviews = useMemo(
+    () =>
+      blockedIds && blockedIds.size > 0
+        ? (allReviews ?? []).filter((r) => !blockedIds.has(r.user_id))
+        : allReviews,
+    [allReviews, blockedIds],
+  );
   const userId = useSessionStore((s) => s.session?.user.id);
   const hasMyReview = (reviews ?? []).some((r) => r.user_id === userId);
   const toggleStatus = useToggleStatus();
