@@ -26,7 +26,7 @@
   },
   "onboarding": {
     "tagline": "Track every beat.",
-    "subtitle": "Logge deine Festivals, erklimme die DJ Mag Top 100 und mach aus jedem Line-up eine Playlist.",
+    "subtitle": "Logge deine Festivals, erklimme die Presse-Top-100 und mach aus jedem Line-up eine Playlist.",
     "getStarted": "Los geht's"
   },
   "auth": {
@@ -70,7 +70,7 @@
     "generatePlaylist": "Playlist erstellen",
     "communityRating": "Community-Bewertung",
     "ratingsCount": "{{count}} Bewertungen",
-    "djmagRank": "DJ-Mag-Platzierung",
+    "djmagRank": "Presse-Ranking",
     "bestRank": "Beste Platzierung",
     "rankingHistory": "Platzierungsverlauf",
     "editionYear": "Ausgabe {{year}}",
@@ -111,8 +111,8 @@
     "sort": "Sortieren",
     "sortPopular": "Am beliebtesten",
     "sortName": "A–Z",
-    "sortRank": "DJ-Mag-Platzierung",
-    "sortTop100": "DJ-Mag-Platzierung",
+    "sortRank": "Presse-Top-100",
+    "sortTop100": "Presse-Top-100",
     "sortCommunity": "Community-Bewertung",
     "sortMyRating": "Meine Bewertungen",
     "sortDate": "Datum",
@@ -149,11 +149,22 @@
     "records": "Rekorde",
     "mostAttendedFestival": "Am häufigsten besucht",
     "mostSeenArtist": "Meistgesehener Künstler",
-    "mostAttendedCountry": "Meistbesuchtes Land"
+    "mostAttendedCountry": "Meistbesuchtes Land",
+    "deleteAccount": "Mein Konto löschen",
+    "deleteAccountWarning": "Das ist endgültig: dein Konto und alle deine Daten (Bewertungen, Festivals, Freunde) werden gelöscht.",
+    "deleteAccountFinal": "Letzte Bestätigung — alles wird sofort gelöscht."
+  },
+  "report": {
+    "title": "Melden",
+    "review": "Diese Bewertung melden",
+    "reviewDone": "Danke, die Bewertung wurde gemeldet. Sie wird zeitnah geprüft.",
+    "block": "{{name}} blockieren",
+    "unblock": "{{name}} entsperren",
+    "blockDone": "Nutzer blockiert. Du siehst seine Bewertungen nicht mehr."
   },
   "djmag": {
-    "title": "DJ Mag Top 100",
-    "progress": "Du hast {{count}}/100 DJ-Mag-Festivals besucht",
+    "title": "Presse-Top-100",
+    "progress": "Du hast {{count}}/100 Festivals der Presse-Top-100 besucht",
     "attendedOnly": "Besucht",
     "notAttended": "Nicht besucht",
     "filterCountry": "Land"

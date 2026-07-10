@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ import { useSessionStore } from '@/features/auth/session-store';
 import { useFestivals, useMyAttendances, useMyMostSeenArtist, useMyStatuses } from '@/features/festivals/api';
 import { useMyReviews } from '@/features/reviews/api';
 import { useDjMagTop100, useMyProfile, useUpdateProfile } from '@/features/profile/api';
+import { useDeleteAccount } from '@/features/moderation/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
@@ -108,6 +109,32 @@ export default function ProfileScreen() {
   const changeLanguage = (lang: SupportedLanguage) => {
     void i18n.changeLanguage(lang);
     updateProfile.mutate({ preferred_language: lang });
+  };
+
+  const deleteAccount = useDeleteAccount();
+
+  // Double confirmation: destructive and irreversible (Play requires the
+  // in-app path; the server function wipes auth user + all cascaded data).
+  const confirmDeleteAccount = () => {
+    Alert.alert(t('profile.deleteAccount'), t('profile.deleteAccountWarning'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.delete'),
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert(t('profile.deleteAccount'), t('profile.deleteAccountFinal'), [
+            { text: t('common.cancel'), style: 'cancel' },
+            {
+              text: t('common.delete'),
+              style: 'destructive',
+              onPress: () =>
+                deleteAccount.mutate(undefined, {
+                  onError: (error) => Alert.alert(t('common.error'), error.message),
+                }),
+            },
+          ]),
+      },
+    ]);
   };
 
 
@@ -218,6 +245,13 @@ export default function ProfileScreen() {
         onPress={() => router.push('/friends')}
       />
       <Button label={t('auth.signOut')} variant="ghost" onPress={() => void signOut()} />
+      <Button
+        label={t('profile.deleteAccount')}
+        variant="ghost"
+        onPress={confirmDeleteAccount}
+        loading={deleteAccount.isPending}
+        style={styles.deleteAccount}
+      />
     </ScrollView>
   );
 }
@@ -292,4 +326,5 @@ const styles = StyleSheet.create({
     color: colors.rating,
   },
   langRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  deleteAccount: { opacity: 0.6 },
 });

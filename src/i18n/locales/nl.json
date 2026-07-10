@@ -26,7 +26,7 @@
   },
   "onboarding": {
     "tagline": "Volg elke beat.",
-    "subtitle": "Log je festivals, klim in de DJ Mag Top 100 en maak van elke line-up een playlist.",
+    "subtitle": "Log je festivals, klim in de pers-Top 100 en maak van elke line-up een playlist.",
     "getStarted": "Aan de slag"
   },
   "auth": {
@@ -70,7 +70,7 @@
     "generatePlaylist": "Playlist genereren",
     "communityRating": "Communitybeoordeling",
     "ratingsCount": "{{count}} beoordelingen",
-    "djmagRank": "DJ Mag-positie",
+    "djmagRank": "Perspositie",
     "bestRank": "Beste positie ooit",
     "rankingHistory": "Ranggeschiedenis",
     "editionYear": "Editie {{year}}",
@@ -111,8 +111,8 @@
     "sort": "Sorteren",
     "sortPopular": "Populairst",
     "sortName": "A–Z",
-    "sortRank": "DJ Mag-positie",
-    "sortTop100": "DJ Mag-positie",
+    "sortRank": "Pers-Top 100",
+    "sortTop100": "Pers-Top 100",
     "sortCommunity": "Communityscore",
     "sortMyRating": "Mijn beoordelingen",
     "sortDate": "Datum",
@@ -149,11 +149,22 @@
     "records": "Records",
     "mostAttendedFestival": "Vaakst bezocht",
     "mostSeenArtist": "Meest geziene artiest",
-    "mostAttendedCountry": "Vaakst bezocht land"
+    "mostAttendedCountry": "Vaakst bezocht land",
+    "deleteAccount": "Mijn account verwijderen",
+    "deleteAccountWarning": "Dit is definitief: je account en al je gegevens (beoordelingen, festivals, vrienden) worden verwijderd.",
+    "deleteAccountFinal": "Laatste bevestiging — alles wordt direct gewist."
+  },
+  "report": {
+    "title": "Melden",
+    "review": "Deze beoordeling melden",
+    "reviewDone": "Bedankt, de beoordeling is gemeld. Deze wordt snel bekeken.",
+    "block": "{{name}} blokkeren",
+    "unblock": "{{name}} deblokkeren",
+    "blockDone": "Gebruiker geblokkeerd. Je ziet zijn/haar beoordelingen niet meer."
   },
   "djmag": {
-    "title": "DJ Mag Top 100",
-    "progress": "Je hebt {{count}}/100 DJ Mag-festivals bezocht",
+    "title": "Pers-Top 100",
+    "progress": "Je hebt {{count}}/100 festivals uit de pers-Top 100 bezocht",
     "attendedOnly": "Bezocht",
     "notAttended": "Niet bezocht",
     "filterCountry": "Land"

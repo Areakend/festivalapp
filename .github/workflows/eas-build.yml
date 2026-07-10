@@ -77,16 +77,18 @@ jobs:
       # Runs the actual native build on this runner (credentials/keystore are
       # still fetched from EAS) instead of on EAS's build servers, so it
       # doesn't count against the EAS free-plan monthly build quota.
+      # The production profile produces an .aab (Play Store upload format);
+      # the others produce installable .apk files.
       - name: Build locally
         if: ${{ inputs.local }}
-        run: eas build --platform android --profile ${{ inputs.profile }} --local --non-interactive --output "${{ github.workspace }}/app.apk"
+        run: eas build --platform android --profile ${{ inputs.profile }} --local --non-interactive --output "${{ github.workspace }}/app.${{ inputs.profile == 'production' && 'aab' || 'apk' }}"
 
-      - name: Upload APK
+      - name: Upload build
         if: ${{ inputs.local }}
         uses: actions/upload-artifact@v4
         with:
           name: app-${{ inputs.profile }}
-          path: app.apk
+          path: app.${{ inputs.profile == 'production' && 'aab' || 'apk' }}
 
       # Publish as a GitHub Release so anyone (no GitHub account needed) can
       # download the APK. The stable link always serves the newest build:

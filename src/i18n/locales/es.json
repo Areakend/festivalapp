@@ -26,7 +26,7 @@
   },
   "onboarding": {
     "tagline": "Sigue cada beat.",
-    "subtitle": "Registra tus festivales, sube en el DJ Mag Top 100 y convierte cualquier lineup en una playlist.",
+    "subtitle": "Registra tus festivales, sube en el Top 100 de prensa y convierte cualquier lineup en una playlist.",
     "getStarted": "Empezar"
   },
   "auth": {
@@ -70,7 +70,7 @@
     "generatePlaylist": "Generar playlist",
     "communityRating": "Valoración de la comunidad",
     "ratingsCount": "{{count}} valoraciones",
-    "djmagRank": "Puesto DJ Mag",
+    "djmagRank": "Puesto en prensa",
     "bestRank": "Mejor puesto histórico",
     "rankingHistory": "Historial de ranking",
     "editionYear": "Edición {{year}}",
@@ -111,8 +111,8 @@
     "sort": "Ordenar",
     "sortPopular": "Más populares",
     "sortName": "A–Z",
-    "sortRank": "Puesto DJ Mag",
-    "sortTop100": "Ranking DJ Mag",
+    "sortRank": "Top 100 de prensa",
+    "sortTop100": "Top 100 de prensa",
     "sortCommunity": "Nota comunidad",
     "sortMyRating": "Mis notas",
     "sortDate": "Fecha",
@@ -149,11 +149,22 @@
     "records": "Récords",
     "mostAttendedFestival": "Más asistido",
     "mostSeenArtist": "Artista más visto",
-    "mostAttendedCountry": "País más visitado"
+    "mostAttendedCountry": "País más visitado",
+    "deleteAccount": "Eliminar mi cuenta",
+    "deleteAccountWarning": "Esta acción es definitiva: tu cuenta y todos tus datos (reseñas, festivales, amigos) se eliminarán.",
+    "deleteAccountFinal": "Última confirmación — todo se borrará de inmediato."
+  },
+  "report": {
+    "title": "Denunciar",
+    "review": "Denunciar esta reseña",
+    "reviewDone": "Gracias, la reseña ha sido denunciada. Se revisará pronto.",
+    "block": "Bloquear a {{name}}",
+    "unblock": "Desbloquear a {{name}}",
+    "blockDone": "Usuario bloqueado. Ya no verás sus reseñas."
   },
   "djmag": {
-    "title": "DJ Mag Top 100",
-    "progress": "Has asistido a {{count}}/100 festivales del DJ Mag",
+    "title": "Top 100 de prensa",
+    "progress": "Has asistido a {{count}}/100 festivales del Top 100 de prensa",
     "attendedOnly": "Asistidos",
     "notAttended": "No asistidos",
     "filterCountry": "País"

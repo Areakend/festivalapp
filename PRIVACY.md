@@ -55,7 +55,9 @@ Vos données sont conservées tant que votre compte existe. Vous pouvez demander
 
 ## 6. Vos droits
 
-Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, de suppression, de limitation et de portabilité de vos données. Pour exercer ces droits ou supprimer votre compte, contactez-nous à l'adresse ci-dessous.
+Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, de suppression, de limitation et de portabilité de vos données.
+
+**Supprimer votre compte** : directement dans l'application (Profil → « Supprimer mon compte », suppression immédiate de toutes vos données), ou hors application en suivant [ces instructions](DELETE_ACCOUNT.md). Pour les autres droits, contactez-nous à l'adresse ci-dessous.
 
 ## 7. Mineurs
 

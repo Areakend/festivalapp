@@ -26,7 +26,7 @@
   },
   "onboarding": {
     "tagline": "Vis chaque beat.",
-    "subtitle": "Note tes festivals, grimpe dans le DJ Mag Top 100 et transforme chaque lineup en playlist.",
+    "subtitle": "Note tes festivals, grimpe dans le Top 100 presse et transforme chaque lineup en playlist.",
     "getStarted": "Commencer"
   },
   "auth": {
@@ -70,7 +70,7 @@
     "generatePlaylist": "Générer la playlist",
     "communityRating": "Note de la communauté",
     "ratingsCount": "{{count}} notes",
-    "djmagRank": "Classement DJ Mag",
+    "djmagRank": "Classement presse",
     "bestRank": "Meilleur classement",
     "rankingHistory": "Historique du classement",
     "editionYear": "Édition {{year}}",
@@ -111,8 +111,8 @@
     "sort": "Trier",
     "sortPopular": "Les plus populaires",
     "sortName": "A–Z",
-    "sortRank": "Classement DJ Mag",
-    "sortTop100": "Classement DJ Mag",
+    "sortRank": "Top 100 presse",
+    "sortTop100": "Top 100 presse",
     "sortCommunity": "Note communauté",
     "sortMyRating": "Mes notes",
     "sortDate": "Date",
@@ -149,11 +149,22 @@
     "records": "Records",
     "mostAttendedFestival": "Le plus fait",
     "mostSeenArtist": "Artiste le plus vu",
-    "mostAttendedCountry": "Pays le plus visité"
+    "mostAttendedCountry": "Pays le plus visité",
+    "deleteAccount": "Supprimer mon compte",
+    "deleteAccountWarning": "Cette action est définitive : ton compte et toutes tes données (avis, festivals, amis) seront supprimés.",
+    "deleteAccountFinal": "Dernière confirmation — tout sera effacé immédiatement."
+  },
+  "report": {
+    "title": "Signaler",
+    "review": "Signaler cet avis",
+    "reviewDone": "Merci, l'avis a été signalé. Il sera examiné rapidement.",
+    "block": "Bloquer {{name}}",
+    "unblock": "Débloquer {{name}}",
+    "blockDone": "Utilisateur bloqué. Tu ne verras plus ses avis."
   },
   "djmag": {
-    "title": "DJ Mag Top 100",
-    "progress": "Tu as fait {{count}}/100 festivals du DJ Mag",
+    "title": "Top 100 Presse",
+    "progress": "Tu as fait {{count}}/100 festivals du Top 100 presse",
     "attendedOnly": "Faits",
     "notAttended": "Pas encore faits",
     "filterCountry": "Pays"
