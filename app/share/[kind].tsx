@@ -17,6 +17,7 @@ import {
   useMyStatuses,
   type CatalogItem,
 } from '@/features/festivals/api';
+import { useMyFollowedArtists } from '@/features/artists/api';
 import { useFriendsFestivalAttendance } from '@/features/friends/api';
 import { useMyReviews } from '@/features/reviews/api';
 import { colors, spacing, typography } from '@/theme';
@@ -109,7 +110,22 @@ export default function ShareScreen() {
       ? detail?.editions.find((e) => e.lineup_published)
       : detail?.editions.find((e) => e.lineup_published && e.year === last?.year);
   const { data: lineup } = useEditionLineup(lineupEdition?.id);
-  const topArtists = (lineup ?? []).slice(0, 5).map((e) => e.artists.name);
+  const { data: followedArtistIds } = useMyFollowedArtists();
+  // Followed artists first (headliner order within each group) so the
+  // "top artists" on the card are the ones the user actually cares about,
+  // not just whoever happens to be listed first in the lineup.
+  const topArtists = useMemo(() => {
+    const entries = lineup ?? [];
+    const sorted =
+      followedArtistIds && followedArtistIds.size > 0
+        ? [...entries].sort((a, b) => {
+            const aFollowed = followedArtistIds.has(a.artists.id) ? 0 : 1;
+            const bFollowed = followedArtistIds.has(b.artists.id) ? 0 : 1;
+            return aFollowed - bFollowed || a.order_index - b.order_index;
+          })
+        : entries;
+    return sorted.slice(0, 5).map((e) => e.artists.name);
+  }, [lineup, followedArtistIds]);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
