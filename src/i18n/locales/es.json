@@ -219,17 +219,32 @@
     "unavailable": "Compartir no está disponible en este dispositivo.",
     "title": "Comparte tu festival",
     "pickArtists": "Artistas en la tarjeta",
-    "pickTheme": "Color",
+    "background": "Fondo",
+    "align": "Alineación",
+    "infoShown": "Información visible",
+    "download": "Descargar",
+    "saved": "Tarjeta guardada en tu galería.",
+    "saveDenied": "Permite el acceso a fotos para guardar la tarjeta.",
+    "transparentHint": "Fondo transparente: descarga el PNG y colócalo sobre tu propia story.",
+    "toggle": {
+      "rating": "Mi nota",
+      "counter": "Contador",
+      "year": "Año",
+      "location": "Lugar",
+      "date": "Fechas",
+      "artists": "Artistas",
+      "friends": "Amigos",
+      "footer": "Insignia Mainstage"
+    },
     "card": {
-      "next": "Mi próximo festival",
       "happeningNow": "Ahora mismo",
-      "wasThere": "Estuve en {{year}}",
       "topArtists": "Cabezas de cartel",
       "with": "Con",
       "crew": "El crew",
       "footer": "Sigue tus festivales en Mainstage",
-      "festivalCount_one": "{{count}} festival registrado",
-      "festivalCount_other": "{{count}} festivales registrados"
+      "myRating": "Mi nota",
+      "festivalsThisYear_one": "{{count}} festival en {{year}}",
+      "festivalsThisYear_other": "{{count}} festivales en {{year}}"
     }
   }
 }

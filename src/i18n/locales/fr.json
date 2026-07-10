@@ -219,17 +219,32 @@
     "unavailable": "Le partage n'est pas disponible sur cet appareil.",
     "title": "Partage ton festival",
     "pickArtists": "Artistes sur la carte",
-    "pickTheme": "Couleur",
+    "background": "Fond",
+    "align": "Alignement",
+    "infoShown": "Infos affichées",
+    "download": "Télécharger",
+    "saved": "Carte enregistrée dans ta galerie.",
+    "saveDenied": "Autorise l'accès aux photos pour enregistrer la carte.",
+    "transparentHint": "Fond transparent : télécharge le PNG et pose-le sur ta propre story.",
+    "toggle": {
+      "rating": "Ma note",
+      "counter": "Compteur",
+      "year": "Année",
+      "location": "Lieu",
+      "date": "Dates",
+      "artists": "Artistes",
+      "friends": "Amis",
+      "footer": "Badge Mainstage"
+    },
     "card": {
-      "next": "Mon prochain festival",
       "happeningNow": "En ce moment",
-      "wasThere": "J'y étais en {{year}}",
       "topArtists": "Têtes d'affiche",
       "with": "Avec",
       "crew": "Le crew",
       "footer": "Suis tes festivals sur Mainstage",
-      "festivalCount_one": "{{count}} festival au compteur",
-      "festivalCount_other": "{{count}} festivals au compteur"
+      "myRating": "Ma note",
+      "festivalsThisYear_one": "{{count}} festival en {{year}}",
+      "festivalsThisYear_other": "{{count}} festivals en {{year}}"
     }
   }
 }

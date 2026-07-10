@@ -27,7 +27,20 @@
       "expo-localization",
       "expo-web-browser",
       "expo-updates",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you use one as a share card background."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "savePhotosPermission": "The app saves your generated share cards to your photos.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
