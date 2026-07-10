@@ -250,11 +250,25 @@ Deno.serve(async (req) => {
     }
 
     // Spotify caps "add items" at 100 URIs per request.
-    for (let i = 0; i < trackUris.length; i += 100) {
-      await spotifyFetch(`/playlists/${playlist.id}/tracks`, accessToken, {
-        method: 'POST',
-        body: JSON.stringify({ uris: trackUris.slice(i, i + 100) }),
-      });
+    try {
+      for (let i = 0; i < trackUris.length; i += 100) {
+        await spotifyFetch(`/playlists/${playlist.id}/tracks`, accessToken, {
+          method: 'POST',
+          body: JSON.stringify({ uris: trackUris.slice(i, i + 100) }),
+        });
+      }
+    } catch (addTracksError) {
+      // "public: true" on creation is not always honored (Spotify has been
+      // known to silently create the playlist as private) — surfacing the
+      // playlist's actual visibility plus the granted scopes turns a bare
+      // 403 into something diagnosable from a screenshot.
+      throw new Error(
+        `Spotify refused to add tracks. Curator account: ${me.id}, playlist actually public: ${
+          playlist.public
+        }, granted scopes: ${refreshed.scope ?? 'unknown'}. Underlying error: ${
+          (addTracksError as Error).message
+        }`,
+      );
     }
 
     const row: CachedPlaylistRow = {
