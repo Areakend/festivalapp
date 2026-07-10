@@ -145,14 +145,7 @@
     "displayName": "Nombre visible",
     "country": "País",
     "language": "Idioma",
-    "favoriteGenres": "Géneros favoritos",
-    "spotifyConnected": "Spotify conectado",
-    "spotifyNotConnected": "Spotify no conectado",
-    "connectSpotify": "Conectar Spotify",
-    "disconnectSpotify": "Desconectar Spotify",
-    "importSpotifyFollows": "Importar mis artistas de Spotify",
-    "importSpotifyFollowsResult_one": "{{count}} artista añadido a tus seguidos.",
-    "importSpotifyFollowsResult_other": "{{count}} artistas añadidos a tus seguidos."
+    "favoriteGenres": "Géneros favoritos"
   },
   "djmag": {
     "title": "DJ Mag Top 100",
