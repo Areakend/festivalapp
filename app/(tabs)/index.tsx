@@ -8,7 +8,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
-import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
+import {
+  useAutoAdvancePlannedFestivals,
+  useFestivals,
+  useMyStatuses,
+  type CatalogItem,
+} from '@/features/festivals/api';
 import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/friends/api';
 import { useUpdateProfile } from '@/features/profile/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
@@ -47,6 +52,7 @@ export default function Home() {
   const { data: myStatuses } = useMyStatuses();
   const { data: friendsAttendance } = useFriendsFestivalAttendance();
   const updateProfile = useUpdateProfile();
+  useAutoAdvancePlannedFestivals();
 
   const changeLanguage = (lang: SupportedLanguage) => {
     void i18n.changeLanguage(lang);
@@ -206,6 +212,16 @@ export default function Home() {
             </View>
           )}
           <Button label={t('tabs.festivals')} onPress={() => router.push('/discover')} />
+          {!hasAnything && (
+            <>
+              <Text style={styles.addFriendsHint}>{t('home.addFriendsHint')}</Text>
+              <Button
+                label={t('friends.add')}
+                variant="secondary"
+                onPress={() => router.push('/friends')}
+              />
+            </>
+          )}
         </View>
       )}
 
@@ -456,6 +472,13 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  addFriendsHint: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: spacing.xs,
   },
   languageRow: {
     flexDirection: 'row',

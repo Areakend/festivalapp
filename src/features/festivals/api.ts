@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
@@ -256,4 +257,146 @@ export function useRemoveAttendance() {
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['my-attendances'] }),
   });
+}
+
+/**
+ * Which artist appears the most often across the lineups of every edition
+ * the user has logged as attended (matched by festival_id + attended_year
+ * against festival_editions, since attendances don't always carry an
+ * edition_id). Used for the profile's "most-seen artist" stat.
+ */
+export function useMyMostSeenArtist() {
+  const { data: attendances } = useMyAttendances();
+  const key = (attendances ?? []).map((a) => `${a.festival_id}:${a.attended_year}`).sort().join(',');
+
+  return useQuery({
+    queryKey: ['my-most-seen-artist', key],
+    enabled: !!attendances && attendances.length > 0,
+    queryFn: async () => {
+      const festivalIds = [...new Set(attendances!.map((a) => a.festival_id))];
+      const { data: editions, error: editionsError } = await supabase
+        .from('festival_editions')
+        .select('id, festival_id, year')
+        .in('festival_id', festivalIds);
+      if (editionsError) throw editionsError;
+
+      const editionIdByKey = new Map(
+        (editions as { id: string; festival_id: string; year: number }[]).map((e) => [
+          `${e.festival_id}:${e.year}`,
+          e.id,
+        ]),
+      );
+      const relevantEditionIds = attendances!
+        .map((a) => editionIdByKey.get(`${a.festival_id}:${a.attended_year}`))
+        .filter((id): id is string => id != null);
+      if (relevantEditionIds.length === 0) return null;
+
+      const { data: lineups, error: lineupError } = await supabase
+        .from('edition_artists')
+        .select('artists(id, name)')
+        .in('edition_id', relevantEditionIds);
+      if (lineupError) throw lineupError;
+
+      const counts = new Map<string, { name: string; count: number }>();
+      for (const entry of lineups as unknown as { artists: { id: string; name: string } }[]) {
+        const a = entry.artists;
+        const cur = counts.get(a.id) ?? { name: a.name, count: 0 };
+        cur.count += 1;
+        counts.set(a.id, cur);
+      }
+
+      let best: { name: string; count: number } | null = null;
+      for (const v of counts.values()) {
+        if (!best || v.count > best.count) best = v;
+      }
+      return best;
+    },
+  });
+}
+
+/**
+ * For a set of festivals, the most recent edition of each that has already
+ * fully finished (end_date, or start_date if undated end, is in the past).
+ * Unlike useFestivals' nextEdition (which only looks forward), this is what
+ * lets useAutoAdvancePlannedFestivals find the edition that was "next" when
+ * a festival was marked planned and has since happened.
+ */
+function usePastEditionsForFestivals(festivalIds: string[]) {
+  const key = [...festivalIds].sort().join(',');
+  return useQuery({
+    queryKey: ['past-editions', key],
+    enabled: festivalIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('festival_editions')
+        .select('festival_id, year, start_date, end_date')
+        .in('festival_id', festivalIds)
+        .order('start_date', { ascending: false });
+      if (error) throw error;
+
+      const today = new Date().toISOString().slice(0, 10);
+      const byFestival = new Map<string, { year: number }>();
+      for (const e of data as {
+        festival_id: string;
+        year: number;
+        start_date: string | null;
+        end_date: string | null;
+      }[]) {
+        if (!e.start_date) continue;
+        const finishedBy = e.end_date ?? e.start_date;
+        if (finishedBy >= today) continue; // still upcoming or ongoing
+        // Rows are ordered by start_date desc, so the first match per
+        // festival is its most recent finished edition.
+        if (!byFestival.has(e.festival_id)) byFestival.set(e.festival_id, { year: e.year });
+      }
+      return byFestival;
+    },
+  });
+}
+
+/**
+ * Once a "planned" festival's edition has actually finished, promote it to
+ * "attended" and log that year in user_attendances automatically — so
+ * stats and the profile stay accurate without the user remembering to
+ * update it by hand after the fact. Side-effect-only hook: mount it once
+ * near the app root (the home screen, since that's the first thing opened
+ * each session).
+ */
+export function useAutoAdvancePlannedFestivals() {
+  const { data: myStatuses } = useMyStatuses();
+  const { data: myAttendances } = useMyAttendances();
+  const toggleStatus = useToggleStatus();
+  const addAttendance = useAddAttendance();
+
+  const plannedFestivalIds = (myStatuses ?? [])
+    .filter((s) => s.status === 'planned')
+    .map((s) => s.festival_id);
+
+  const { data: pastEditions } = usePastEditionsForFestivals(plannedFestivalIds);
+
+  useEffect(() => {
+    if (!pastEditions || pastEditions.size === 0) return;
+    for (const festivalId of plannedFestivalIds) {
+      const past = pastEditions.get(festivalId);
+      if (!past) continue;
+
+      toggleStatus.mutate({ festivalId, status: 'planned', active: true }); // remove
+      const alreadyAttended = (myStatuses ?? []).some(
+        (s) => s.festival_id === festivalId && s.status === 'attended',
+      );
+      if (!alreadyAttended) {
+        toggleStatus.mutate({ festivalId, status: 'attended', active: false }); // add
+      }
+      const alreadyLogged = (myAttendances ?? []).some(
+        (a) => a.festival_id === festivalId && a.attended_year === past.year,
+      );
+      if (!alreadyLogged) {
+        addAttendance.mutate({ festivalId, year: past.year });
+      }
+    }
+    // Runs again only when pastEditions changes — each processed festival
+    // drops out of plannedFestivalIds once its status flips, so this can't
+    // loop on the same festival twice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pastEditions]);
 }

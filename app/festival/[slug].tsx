@@ -32,13 +32,13 @@ import {
 import {
   REVIEW_SUMMARY_CATEGORIES,
   useFestivalReviews,
-  useMyReview,
   useReviewSummary,
   type ReviewSort,
   type ReviewSummaryCategory,
 } from '@/features/reviews/api';
 import { useMyFollowedArtists, useToggleArtistFollow } from '@/features/artists/api';
 import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/friends/api';
+import { useSessionStore } from '@/features/auth/session-store';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag, formatCompact } from '@/utils/format';
 import type { FestivalStatus } from '@/types/domain';
@@ -71,7 +71,8 @@ export default function FestivalDetailScreen() {
   const { data, isLoading } = useFestivalDetail(slug);
   const { data: myStatuses } = useMyStatuses();
   const { data: reviews } = useFestivalReviews(data?.festival.id, reviewSort);
-  const { data: myReview } = useMyReview(data?.festival.id);
+  const userId = useSessionStore((s) => s.session?.user.id);
+  const hasMyReview = (reviews ?? []).some((r) => r.user_id === userId);
   const toggleStatus = useToggleStatus();
   const { data: myAttendances } = useMyAttendances();
   const addAttendance = useAddAttendance();
@@ -393,7 +394,7 @@ export default function FestivalDetailScreen() {
         )}
 
         <Button
-          label={myReview ? t('review.editReview') : t('festival.rateReview')}
+          label={hasMyReview ? t('review.editReview') : t('festival.rateReview')}
           onPress={() => router.push({ pathname: '/review/[slug]', params: { slug } })}
           style={styles.sectionAction}
         />

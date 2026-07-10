@@ -145,7 +145,11 @@
     "displayName": "Weergavenaam",
     "country": "Land",
     "language": "Taal",
-    "favoriteGenres": "Favoriete genres"
+    "favoriteGenres": "Favoriete genres",
+    "records": "Records",
+    "mostAttendedFestival": "Vaakst bezocht",
+    "mostSeenArtist": "Meest geziene artiest",
+    "mostAttendedCountry": "Vaakst bezocht land"
   },
   "djmag": {
     "title": "DJ Mag Top 100",
@@ -202,6 +206,7 @@
     "withFriends": "Met {{names}}",
     "welcomeTitle": "Welkom bij Mainstage",
     "welcomeBody": "Blader door de catalogus, beoordeel de festivals die je hebt bezocht en plan de volgende — je aftelling verschijnt hier.",
+    "addFriendsHint": "Voeg vrienden toe om te zien wie naar dezelfde festivals gaat als jij.",
     "noPlannedTitle": "Geen gepland festival",
     "noPlannedHint": "Plan een festival om de aftelling te starten."
   },
