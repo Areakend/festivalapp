@@ -32,10 +32,18 @@ Deno.serve(async (req) => {
     const { festivalId, editionId } = await req.json();
     if (!festivalId || !editionId) throw new Error('Missing festivalId or editionId');
 
+    // Reject mismatched festival/edition pairs (same check as
+    // generate-playlist) so the export can never carry another
+    // festival's name.
     const [{ data: festival, error: festivalError }, { data: edition, error: editionError }] =
       await Promise.all([
         supabase.from('festivals').select('name').eq('id', festivalId).single(),
-        supabase.from('festival_editions').select('year').eq('id', editionId).single(),
+        supabase
+          .from('festival_editions')
+          .select('year')
+          .eq('id', editionId)
+          .eq('festival_id', festivalId)
+          .single(),
       ]);
     if (festivalError || !festival) throw new Error('Festival not found');
     if (editionError || !edition) throw new Error('Edition not found');

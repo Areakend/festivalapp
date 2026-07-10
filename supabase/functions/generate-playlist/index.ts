@@ -144,10 +144,19 @@ Deno.serve(async (req) => {
       );
     }
 
+    // The edition must belong to the festival the caller named: the result
+    // is cached by edition_id and served to every user, so a mismatched
+    // pair would poison the shared cache with a playlist carrying the
+    // wrong festival's name.
     const [{ data: festival, error: festivalError }, { data: edition, error: editionError }] =
       await Promise.all([
         supabase.from('festivals').select('name').eq('id', festivalId).single(),
-        supabase.from('festival_editions').select('year').eq('id', editionId).single(),
+        supabase
+          .from('festival_editions')
+          .select('year')
+          .eq('id', editionId)
+          .eq('festival_id', festivalId)
+          .single(),
       ]);
     if (festivalError || !festival) throw new Error('Festival not found');
     if (editionError || !edition) throw new Error('Edition not found');
@@ -226,8 +235,9 @@ Deno.serve(async (req) => {
 
     // Some dev-mode app configurations 403 on /users/{id}/playlists while
     // accepting the equivalent /me/playlists — try both before giving up.
-    // If both fail, surface everything needed to diagnose from a screenshot
-    // (account id + actually-granted scopes) instead of a bare "Forbidden".
+    // Diagnostics (account id, granted scopes, playlist visibility) go to
+    // the function logs only: this endpoint is callable by every signed-in
+    // user, and none of them should see the curator account's internals.
     let playlist;
     try {
       playlist = await spotifyFetch(`/users/${encodeURIComponent(me.id)}/playlists`, accessToken, {
@@ -241,11 +251,11 @@ Deno.serve(async (req) => {
           body: playlistBody,
         });
       } catch (creationError) {
-        throw new Error(
-          `Spotify refused to create the playlist. Curator account: ${me.id}, granted scopes: ${
-            refreshed.scope ?? 'unknown'
-          }. Underlying error: ${(creationError as Error).message}`,
+        console.error(
+          `Playlist creation failed. Curator: ${me.id}, scopes: ${refreshed.scope ?? 'unknown'}`,
+          creationError,
         );
+        throw new Error('Spotify refused to create the playlist. Please try again later.');
       }
     }
 
@@ -260,13 +270,13 @@ Deno.serve(async (req) => {
         });
       }
     } catch (addTracksError) {
-      throw new Error(
-        `Spotify refused to add tracks. Curator account: ${me.id}, playlist actually public: ${
-          playlist.public
-        }, granted scopes: ${refreshed.scope ?? 'unknown'}. Underlying error: ${
-          (addTracksError as Error).message
+      console.error(
+        `Add-tracks failed. Curator: ${me.id}, playlist public: ${playlist.public}, scopes: ${
+          refreshed.scope ?? 'unknown'
         }`,
+        addTracksError,
       );
+      throw new Error('Spotify refused to add tracks to the playlist. Please try again later.');
     }
 
     const row: CachedPlaylistRow = {
