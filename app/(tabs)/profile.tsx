@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -12,12 +12,6 @@ import { useSessionStore } from '@/features/auth/session-store';
 import { useFestivals, useMyStatuses } from '@/features/festivals/api';
 import { useMyReviews } from '@/features/reviews/api';
 import { useDjMagTop100, useMyProfile, useUpdateProfile } from '@/features/profile/api';
-import {
-  useConnectSpotify,
-  useDisconnectSpotify,
-  useImportSpotifyFollows,
-  useSpotifyConnection,
-} from '@/features/spotify/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { colors, radii, spacing, typography } from '@/theme';
 
@@ -41,10 +35,6 @@ export default function ProfileScreen() {
   const { data: myReviews } = useMyReviews();
   const { data: djmag } = useDjMagTop100();
   const updateProfile = useUpdateProfile();
-  const { data: spotifyConnection } = useSpotifyConnection();
-  const connectSpotify = useConnectSpotify();
-  const disconnectSpotify = useDisconnectSpotify();
-  const importSpotifyFollows = useImportSpotifyFollows();
 
   const [name, setName] = useState('');
   useEffect(() => {
@@ -148,50 +138,6 @@ export default function ProfileScreen() {
             />
           ))}
         </View>
-      </View>
-
-      {/* Spotify */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Spotify</Text>
-        <Text style={styles.email}>
-          {spotifyConnection ? t('profile.spotifyConnected') : t('profile.spotifyNotConnected')}
-        </Text>
-        {spotifyConnection ? (
-          <>
-            <Button
-              label={t('profile.importSpotifyFollows')}
-              variant="secondary"
-              onPress={() =>
-                importSpotifyFollows.mutate(undefined, {
-                  onSuccess: (result) =>
-                    Alert.alert(
-                      t('profile.importSpotifyFollows'),
-                      t('profile.importSpotifyFollowsResult', { count: result.importedCount }),
-                    ),
-                  onError: (error) => Alert.alert(t('common.error'), error.message),
-                })
-              }
-              loading={importSpotifyFollows.isPending}
-            />
-            <Button
-              label={t('profile.disconnectSpotify')}
-              variant="ghost"
-              onPress={() => disconnectSpotify.mutate()}
-              loading={disconnectSpotify.isPending}
-            />
-          </>
-        ) : (
-          <Button
-            label={t('profile.connectSpotify')}
-            variant="secondary"
-            onPress={() =>
-              connectSpotify.mutate(undefined, {
-                onError: (error) => Alert.alert(t('common.error'), error.message),
-              })
-            }
-            loading={connectSpotify.isPending}
-          />
-        )}
       </View>
 
       <Button

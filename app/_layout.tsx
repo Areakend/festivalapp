@@ -78,8 +78,6 @@ export default function RootLayout() {
             <Stack.Screen name="user/[id]" />
             <Stack.Screen name="list/[status]" />
             <Stack.Screen name="share/[kind]" />
-            {/* Reachable once signed in: lands the Spotify OAuth redirect. */}
-            <Stack.Screen name="spotify/callback" />
           </Stack.Protected>
           <Stack.Protected guard={!session}>
             <Stack.Screen name="(auth)" />

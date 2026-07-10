@@ -145,14 +145,7 @@
     "displayName": "Weergavenaam",
     "country": "Land",
     "language": "Taal",
-    "favoriteGenres": "Favoriete genres",
-    "spotifyConnected": "Spotify verbonden",
-    "spotifyNotConnected": "Spotify niet verbonden",
-    "connectSpotify": "Spotify verbinden",
-    "disconnectSpotify": "Spotify loskoppelen",
-    "importSpotifyFollows": "Mijn Spotify-volgend importeren",
-    "importSpotifyFollowsResult_one": "{{count}} artiest toegevoegd aan je gevolgde artiesten.",
-    "importSpotifyFollowsResult_other": "{{count}} artiesten toegevoegd aan je gevolgde artiesten."
+    "favoriteGenres": "Favoriete genres"
   },
   "djmag": {
     "title": "DJ Mag Top 100",
