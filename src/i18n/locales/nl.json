@@ -217,6 +217,19 @@
     "noLast": "Markeer eerst een festival als bijgewoond om het te delen.",
     "share": "Delen",
     "unavailable": "Delen is niet beschikbaar op dit apparaat.",
-    "title": "Deel je festival"
+    "title": "Deel je festival",
+    "pickArtists": "Artiesten op de kaart",
+    "pickTheme": "Kleur",
+    "card": {
+      "next": "Mijn volgende festival",
+      "happeningNow": "Nu bezig",
+      "wasThere": "Ik was erbij in {{year}}",
+      "topArtists": "Headliners",
+      "with": "Met",
+      "crew": "De crew",
+      "footer": "Volg je festivals op Mainstage",
+      "festivalCount_one": "{{count}} festival gelogd",
+      "festivalCount_other": "{{count}} festivals gelogd"
+    }
   }
 }

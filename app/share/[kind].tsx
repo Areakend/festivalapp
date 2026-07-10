@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +8,8 @@ import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 
 import { Button } from '@/components/ui/Button';
-import { StoryCard } from '@/components/share/StoryCard';
+import { Chip } from '@/components/ui/Chip';
+import { CARD_THEMES, StoryCard, type CardTheme } from '@/components/share/StoryCard';
 import {
   useEditionLineup,
   useFestivalDetail,
@@ -20,9 +21,10 @@ import {
 import { useMyFollowedArtists } from '@/features/artists/api';
 import { useFriendsFestivalAttendance } from '@/features/friends/api';
 import { useMyReviews } from '@/features/reviews/api';
-import { colors, spacing, typography } from '@/theme';
+import { colors, radii, spacing, typography } from '@/theme';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const MAX_CARD_ARTISTS = 5;
 
 /** Which festival to build a story card for, and its lineup/social context. */
 function useNextFestival() {
@@ -97,9 +99,13 @@ export default function ShareScreen() {
   const insets = useSafeAreaInsets();
   const cardRef = useRef<View>(null);
   const [sharing, setSharing] = useState(false);
+  const [theme, setTheme] = useState<CardTheme>('violet');
+  // null = user hasn't customized: the followed-first top 5 stays live.
+  const [customArtistIds, setCustomArtistIds] = useState<string[] | null>(null);
 
   const next = useNextFestival();
   const last = useLastFestival();
+  const { data: myAttendances } = useMyAttendances();
 
   const festivalId = kind === 'next' ? next?.item.festival.id : last?.item.festival.id;
   const { data: detail } = useFestivalDetail(
@@ -111,21 +117,44 @@ export default function ShareScreen() {
       : detail?.editions.find((e) => e.lineup_published && e.year === last?.year);
   const { data: lineup } = useEditionLineup(lineupEdition?.id);
   const { data: followedArtistIds } = useMyFollowedArtists();
+
   // Followed artists first (headliner order within each group) so the
-  // "top artists" on the card are the ones the user actually cares about,
-  // not just whoever happens to be listed first in the lineup.
-  const topArtists = useMemo(() => {
+  // default card picks — and the front of the picker row — are the artists
+  // the user actually cares about, not whoever is listed first.
+  const sortedLineup = useMemo(() => {
     const entries = lineup ?? [];
-    const sorted =
-      followedArtistIds && followedArtistIds.size > 0
-        ? [...entries].sort((a, b) => {
-            const aFollowed = followedArtistIds.has(a.artists.id) ? 0 : 1;
-            const bFollowed = followedArtistIds.has(b.artists.id) ? 0 : 1;
-            return aFollowed - bFollowed || a.order_index - b.order_index;
-          })
-        : entries;
-    return sorted.slice(0, 5).map((e) => e.artists.name);
+    if (!followedArtistIds || followedArtistIds.size === 0) return entries;
+    return [...entries].sort((a, b) => {
+      const aFollowed = followedArtistIds.has(a.artists.id) ? 0 : 1;
+      const bFollowed = followedArtistIds.has(b.artists.id) ? 0 : 1;
+      return aFollowed - bFollowed || a.order_index - b.order_index;
+    });
   }, [lineup, followedArtistIds]);
+
+  const defaultArtistIds = useMemo(
+    () => sortedLineup.slice(0, MAX_CARD_ARTISTS).map((e) => e.artists.id),
+    [sortedLineup],
+  );
+  const selectedArtistIds = customArtistIds ?? defaultArtistIds;
+  const selectedSet = useMemo(() => new Set(selectedArtistIds), [selectedArtistIds]);
+
+  const toggleArtist = (artistId: string) => {
+    const current = new Set(selectedArtistIds);
+    if (current.has(artistId)) {
+      current.delete(artistId);
+    } else {
+      if (current.size >= MAX_CARD_ARTISTS) return;
+      current.add(artistId);
+    }
+    setCustomArtistIds([...current]);
+  };
+
+  // Card order follows the lineup order (not tap order) so the result
+  // always reads like a poster.
+  const topArtists = useMemo(
+    () => sortedLineup.filter((e) => selectedSet.has(e.artists.id)).map((e) => e.artists.name),
+    [sortedLineup, selectedSet],
+  );
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
@@ -148,7 +177,7 @@ export default function ShareScreen() {
     }
   };
 
-  const data = kind === 'next' ? next : last;
+  const festivalCount = (myAttendances ?? []).length;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
@@ -159,54 +188,108 @@ export default function ShareScreen() {
         {kind === 'next' ? t('share.nextTitle') : t('share.lastTitle')}
       </Text>
 
-      <View style={styles.preview}>
-        {!festivalId ? (
-          <Text style={styles.empty}>
+      {!festivalId ? (
+        <View style={styles.empty}>
+          <Text style={styles.emptyText}>
             {kind === 'next' ? t('share.noNext') : t('share.noLast')}
           </Text>
-        ) : kind === 'next' && next ? (
-          <StoryCard
-            ref={cardRef}
-            kind="next"
-            festivalName={next.item.festival.name}
-            city={next.item.festival.city}
-            country={next.item.festival.country}
-            daysUntil={next.daysUntil}
-            happeningNow={next.happeningNow}
-            dateLabel={
-              next.item.nextEdition
-                ? `${formatDate(next.item.nextEdition.start_date)}${
-                    next.item.nextEdition.end_date
-                      ? ` – ${formatDate(next.item.nextEdition.end_date)}`
+        </View>
+      ) : (
+        <>
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.cardWrap}>
+              {kind === 'next' && next ? (
+                <StoryCard
+                  ref={cardRef}
+                  kind="next"
+                  theme={theme}
+                  festivalName={next.item.festival.name}
+                  city={next.item.festival.city}
+                  country={next.item.festival.country}
+                  daysUntil={next.daysUntil}
+                  happeningNow={next.happeningNow}
+                  dateLabel={
+                    next.item.nextEdition
+                      ? `${formatDate(next.item.nextEdition.start_date)}${
+                          next.item.nextEdition.end_date
+                            ? ` – ${formatDate(next.item.nextEdition.end_date)}`
+                            : ''
+                        }`
                       : ''
-                  }`
-                : ''
-            }
-            friendNames={next.friendNames}
-            topArtists={topArtists}
-          />
-        ) : kind === 'last' && last ? (
-          <StoryCard
-            ref={cardRef}
-            kind="last"
-            festivalName={last.item.festival.name}
-            city={last.item.festival.city}
-            country={last.item.festival.country}
-            year={last.year}
-            rating={last.rating}
-            crewNames={last.crewNames}
-            topArtists={topArtists}
-          />
-        ) : null}
-      </View>
+                  }
+                  friendNames={next.friendNames}
+                  topArtists={topArtists}
+                />
+              ) : kind === 'last' && last ? (
+                <StoryCard
+                  ref={cardRef}
+                  kind="last"
+                  theme={theme}
+                  festivalName={last.item.festival.name}
+                  city={last.item.festival.city}
+                  country={last.item.festival.country}
+                  year={last.year}
+                  rating={last.rating}
+                  festivalCount={festivalCount >= 2 ? festivalCount : null}
+                  crewNames={last.crewNames}
+                  topArtists={topArtists}
+                />
+              ) : null}
+            </View>
 
-      {festivalId && (
-        <Button
-          label={t('share.share')}
-          onPress={() => void share()}
-          loading={sharing}
-          style={styles.shareButton}
-        />
+            {/* Card color */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>{t('share.pickTheme')}</Text>
+              <View style={styles.themeRow}>
+                {(Object.keys(CARD_THEMES) as CardTheme[]).map((key) => (
+                  <Pressable
+                    key={key}
+                    onPress={() => setTheme(key)}
+                    style={[
+                      styles.themeDot,
+                      { backgroundColor: CARD_THEMES[key][0] },
+                      theme === key && styles.themeDotActive,
+                    ]}
+                  />
+                ))}
+              </View>
+            </View>
+
+            {/* Which artists show on the card (max 5) */}
+            {sortedLineup.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>
+                  {t('share.pickArtists')} · {selectedArtistIds.length}/{MAX_CARD_ARTISTS}
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.chipRow}
+                >
+                  {sortedLineup.map((entry) => (
+                    <Chip
+                      key={entry.artists.id}
+                      label={entry.artists.name}
+                      active={selectedSet.has(entry.artists.id)}
+                      onPress={() => toggleArtist(entry.artists.id)}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </ScrollView>
+
+          <Button
+            label={t('share.share')}
+            onPress={() => void share()}
+            loading={sharing}
+            style={styles.shareButton}
+          />
+        </>
       )}
     </View>
   );
@@ -219,10 +302,29 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.heading,
     fontSize: typography.sizes.xl,
     color: colors.text,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
-  preview: { alignItems: 'center', flex: 1, justifyContent: 'center' },
-  empty: {
+  scroll: { flex: 1 },
+  scrollContent: { gap: spacing.lg, paddingBottom: spacing.lg },
+  cardWrap: { alignItems: 'center' },
+  section: { gap: spacing.sm },
+  sectionLabel: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+  },
+  themeRow: { flexDirection: 'row', gap: spacing.md },
+  themeDot: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.full,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  themeDotActive: { borderColor: colors.text },
+  chipRow: { gap: spacing.sm, paddingRight: spacing.xl },
+  empty: { alignItems: 'center', flex: 1, justifyContent: 'center' },
+  emptyText: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.md,
     color: colors.textMuted,

@@ -217,6 +217,19 @@
     "noLast": "Marque un festival comme visité pour pouvoir le partager.",
     "share": "Partager",
     "unavailable": "Le partage n'est pas disponible sur cet appareil.",
-    "title": "Partage ton festival"
+    "title": "Partage ton festival",
+    "pickArtists": "Artistes sur la carte",
+    "pickTheme": "Couleur",
+    "card": {
+      "next": "Mon prochain festival",
+      "happeningNow": "En ce moment",
+      "wasThere": "J'y étais en {{year}}",
+      "topArtists": "Têtes d'affiche",
+      "with": "Avec",
+      "crew": "Le crew",
+      "footer": "Suis tes festivals sur Mainstage",
+      "festivalCount_one": "{{count}} festival au compteur",
+      "festivalCount_other": "{{count}} festivals au compteur"
+    }
   }
 }
