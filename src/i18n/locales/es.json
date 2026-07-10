@@ -217,6 +217,19 @@
     "noLast": "Marca un festival como asistido primero para compartirlo.",
     "share": "Compartir",
     "unavailable": "Compartir no está disponible en este dispositivo.",
-    "title": "Comparte tu festival"
+    "title": "Comparte tu festival",
+    "pickArtists": "Artistas en la tarjeta",
+    "pickTheme": "Color",
+    "card": {
+      "next": "Mi próximo festival",
+      "happeningNow": "Ahora mismo",
+      "wasThere": "Estuve en {{year}}",
+      "topArtists": "Cabezas de cartel",
+      "with": "Con",
+      "crew": "El crew",
+      "footer": "Sigue tus festivales en Mainstage",
+      "festivalCount_one": "{{count}} festival registrado",
+      "festivalCount_other": "{{count}} festivales registrados"
+    }
   }
 }

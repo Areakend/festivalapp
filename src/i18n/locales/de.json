@@ -217,6 +217,19 @@
     "noLast": "Markiere zuerst ein Festival als besucht, um es zu teilen.",
     "share": "Teilen",
     "unavailable": "Teilen ist auf diesem Gerät nicht verfügbar.",
-    "title": "Teile dein Festival"
+    "title": "Teile dein Festival",
+    "pickArtists": "Künstler auf der Karte",
+    "pickTheme": "Farbe",
+    "card": {
+      "next": "Mein nächstes Festival",
+      "happeningNow": "Läuft gerade",
+      "wasThere": "Ich war {{year}} dabei",
+      "topArtists": "Headliner",
+      "with": "Mit",
+      "crew": "Die Crew",
+      "footer": "Verfolge deine Festivals auf Mainstage",
+      "festivalCount_one": "{{count}} Festival im Zähler",
+      "festivalCount_other": "{{count}} Festivals im Zähler"
+    }
   }
 }

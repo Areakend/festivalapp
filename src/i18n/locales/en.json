@@ -217,6 +217,19 @@
     "noLast": "Mark a festival attended first to share it.",
     "share": "Share",
     "unavailable": "Sharing is not available on this device.",
-    "title": "Share your festival"
+    "title": "Share your festival",
+    "pickArtists": "Artists on the card",
+    "pickTheme": "Color",
+    "card": {
+      "next": "My next festival",
+      "happeningNow": "Happening now",
+      "wasThere": "I was there in {{year}}",
+      "topArtists": "Headliners",
+      "with": "With",
+      "crew": "The crew",
+      "footer": "Track your festivals on Mainstage",
+      "festivalCount_one": "{{count}} festival logged",
+      "festivalCount_other": "{{count}} festivals logged"
+    }
   }
 }
