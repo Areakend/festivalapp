@@ -84,6 +84,19 @@ export default function FestivalDetailScreen() {
 
   const lineupEdition = data?.editions.find((e) => e.lineup_published);
   const { data: lineup } = useEditionLineup(lineupEdition?.id);
+  // Followed artists first (so they always land inside the 10-artist
+  // preview instead of being buried past it), each group keeping its
+  // original order_index — not alphabetical, headliner order still wins
+  // within "followed" and within "the rest".
+  const sortedLineup = useMemo(() => {
+    if (!lineup) return lineup;
+    if (!followedArtistIds || followedArtistIds.size === 0) return lineup;
+    return [...lineup].sort((a, b) => {
+      const aFollowed = followedArtistIds.has(a.artists.id) ? 0 : 1;
+      const bFollowed = followedArtistIds.has(b.artists.id) ? 0 : 1;
+      return aFollowed - bFollowed || a.order_index - b.order_index;
+    });
+  }, [lineup, followedArtistIds]);
   const { data: aiSummary } = useReviewSummary(
     data?.festival.id,
     i18n.language,
@@ -305,7 +318,7 @@ export default function FestivalDetailScreen() {
               {t('festival.lineup')} · {lineupEdition.year}
             </Text>
             <View style={styles.lineupWrap}>
-              {(lineupExpanded ? lineup : lineup.slice(0, LINEUP_PREVIEW_COUNT)).map((entry) => {
+              {(lineupExpanded ? sortedLineup! : sortedLineup!.slice(0, LINEUP_PREVIEW_COUNT)).map((entry) => {
                 const following = followedArtistIds?.has(entry.artists.id) ?? false;
                 return (
                   <Chip
