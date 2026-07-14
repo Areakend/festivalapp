@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
 import { useSessionStore } from '@/features/auth/session-store';
-import type { Profile, Review, UserFestivalStatus } from '@/types/domain';
+import type { Profile, Review, UserAttendance, UserFestivalStatus } from '@/types/domain';
 
 export interface PublicProfile {
   id: string;
@@ -165,7 +165,12 @@ export function useFriendsFestivalAttendance() {
 
 export interface FriendProfileData {
   profile: Profile;
-  statuses: UserFestivalStatus[]; // readable thanks to the friends RLS policy
+  // "attended" is publicly readable now (see 20260714100000 migration) so
+  // this screen works for anyone whose review you tapped, not just
+  // friends — planned/wishlist/favorite still only come through for
+  // accepted friends, via the "statuses friends read" RLS policy.
+  statuses: UserFestivalStatus[];
+  attendances: UserAttendance[]; // public read, see same migration
   reviews: Review[]; // public
 }
 
@@ -174,17 +179,23 @@ export function useFriendProfile(friendId: string | undefined) {
     queryKey: ['friend-profile', friendId],
     enabled: !!friendId,
     queryFn: async (): Promise<FriendProfileData> => {
-      const [profile, statuses, reviews] = await Promise.all([
+      const [profile, statuses, attendances, reviews] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', friendId!).single(),
         supabase.from('user_festival_statuses').select('*').eq('user_id', friendId!),
+        supabase
+          .from('user_attendances')
+          .select('id, user_id, festival_id, edition_id, attended_year')
+          .eq('user_id', friendId!),
         supabase.from('reviews').select('*').eq('user_id', friendId!),
       ]);
       if (profile.error) throw profile.error;
       if (statuses.error) throw statuses.error;
+      if (attendances.error) throw attendances.error;
       if (reviews.error) throw reviews.error;
       return {
         profile: profile.data as Profile,
         statuses: (statuses.data ?? []) as UserFestivalStatus[],
+        attendances: (attendances.data ?? []) as UserAttendance[],
         reviews: (reviews.data ?? []) as Review[],
       };
     },

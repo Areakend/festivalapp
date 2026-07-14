@@ -7,11 +7,13 @@ import { colors, radii, spacing, typography } from '@/theme';
 
 interface AttendanceYearSheetProps {
   visible: boolean;
-  /** Years already recorded — shown disabled so they can't be added twice. */
+  /** Years already recorded — tapping one calls onDeselect instead of onSelect. */
   recordedYears: number[];
   /** Earliest selectable year (defaults to festival.first_year, or 30 years back). */
   fromYear: number;
   onSelect: (year: number) => void;
+  /** Tapping an already-recorded year removes it. Omit to keep it non-interactive. */
+  onDeselect?: (year: number) => void;
   onClose: () => void;
 }
 
@@ -21,6 +23,7 @@ export function AttendanceYearSheet({
   recordedYears,
   fromYear,
   onSelect,
+  onDeselect,
   onClose,
 }: AttendanceYearSheetProps) {
   const { t } = useTranslation();
@@ -33,15 +36,20 @@ export function AttendanceYearSheet({
       <View style={styles.sheet}>
         <Text style={styles.title}>{t('festival.pickAttendedYear')}</Text>
         <ScrollView contentContainerStyle={styles.grid}>
-          {years.map((year) => (
-            <Chip
-              key={year}
-              label={String(year)}
-              onPress={recordedYears.includes(year) ? undefined : () => onSelect(year)}
-              activeColor={colors.statusAttended}
-              active={recordedYears.includes(year)}
-            />
-          ))}
+          {years.map((year) => {
+            const recorded = recordedYears.includes(year);
+            return (
+              <Chip
+                key={year}
+                label={String(year)}
+                onPress={
+                  recorded ? (onDeselect ? () => onDeselect(year) : undefined) : () => onSelect(year)
+                }
+                activeColor={colors.statusAttended}
+                active={recorded}
+              />
+            );
+          })}
         </ScrollView>
         <Button label={t('common.done')} onPress={onClose} />
       </View>

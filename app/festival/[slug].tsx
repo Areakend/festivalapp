@@ -259,6 +259,10 @@ export default function FestivalDetailScreen() {
           recordedYears={festivalAttendances.map((a) => a.attended_year)}
           fromYear={festival.first_year ?? new Date().getFullYear() - 30}
           onSelect={(year) => addAttendance.mutate({ festivalId: festival.id, year })}
+          onDeselect={(year) => {
+            const match = festivalAttendances.find((a) => a.attended_year === year);
+            if (match) removeAttendance.mutate(match.id);
+          }}
           onClose={() => setYearSheetOpen(false)}
         />
 

@@ -8,7 +8,8 @@ import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { RatingBar, ratingColor } from '@/components/ui/RatingBar';
-import { useFestivalDetail, useMyAttendances } from '@/features/festivals/api';
+import { AttendanceYearSheet } from '@/components/ui/AttendanceYearSheet';
+import { useAddAttendance, useFestivalDetail, useMyAttendances } from '@/features/festivals/api';
 import { useDeleteReview, useMyReview, useUpsertReview } from '@/features/reviews/api';
 import { colors, radii, spacing, typography } from '@/theme';
 
@@ -41,6 +42,7 @@ export default function ReviewScreen() {
   const { data: myAttendances } = useMyAttendances();
   const upsert = useUpsertReview();
   const deleteReview = useDeleteReview();
+  const addAttendance = useAddAttendance();
 
   const attendedYears = (myAttendances ?? [])
     .filter((a) => a.festival_id === detail?.festival.id)
@@ -49,6 +51,7 @@ export default function ReviewScreen() {
 
   const [overall, setOverall] = useState(0);
   const [year, setYear] = useState<number | null>(null);
+  const [yearSheetOpen, setYearSheetOpen] = useState(false);
   const [comment, setComment] = useState('');
   const [subs, setSubs] = useState<Record<SubRatingKey, number>>({
     lineup_rating: 0,
@@ -97,7 +100,7 @@ export default function ReviewScreen() {
   }, [myReview]);
 
   const submit = async () => {
-    if (!detail || overall < 1) return;
+    if (!detail || overall < 1 || year == null) return;
     try {
       await upsert.mutateAsync({
         festivalId: detail.festival.id,
@@ -144,20 +147,42 @@ export default function ReviewScreen() {
       </Text>
       <Text style={styles.festivalName}>{detail?.festival.name ?? '…'}</Text>
 
-      {/* Which year this review is about — skipped entirely when there's
-          only one attended year (used directly, no picker needed).
+      {/* Which year this review is about — mandatory. Skipped entirely
+          (used directly, no picker) when there's only one attended year.
           With several, switching years loads that year's review (or
-          starts a blank one) instead of overwriting another year's. */}
-      {attendedYears.length > 1 && (
+          starts a blank one) instead of overwriting another year's. With
+          none yet, picking one here also logs it as an attended year. */}
+      {attendedYears.length > 1 ? (
         <View style={styles.card}>
-          <Text style={styles.sectionLabel}>{t('review.year')}</Text>
+          <Text style={styles.sectionLabel}>{t('review.year')} *</Text>
           <View style={styles.yearRow}>
             {attendedYears.map((y) => (
               <Chip key={y} label={String(y)} active={year === y} onPress={() => setYear(y)} />
             ))}
           </View>
         </View>
-      )}
+      ) : attendedYears.length === 0 ? (
+        <View style={styles.card}>
+          <Text style={styles.sectionLabel}>{t('review.year')} *</Text>
+          <Button
+            label={year != null ? String(year) : t('review.pickYear')}
+            variant={year != null ? 'primary' : 'secondary'}
+            onPress={() => setYearSheetOpen(true)}
+          />
+        </View>
+      ) : null}
+
+      <AttendanceYearSheet
+        visible={yearSheetOpen}
+        recordedYears={year != null ? [year] : []}
+        fromYear={detail?.festival.first_year ?? new Date().getFullYear() - 30}
+        onSelect={(y) => {
+          setYear(y);
+          if (detail) addAttendance.mutate({ festivalId: detail.festival.id, year: y });
+          setYearSheetOpen(false);
+        }}
+        onClose={() => setYearSheetOpen(false)}
+      />
 
       {/* Overall /20 — big score + tap bar */}
       <View style={styles.card}>
@@ -195,7 +220,7 @@ export default function ReviewScreen() {
         label={t('review.submit')}
         onPress={() => void submit()}
         loading={upsert.isPending}
-        disabled={overall < 1 || !isFetched}
+        disabled={overall < 1 || year == null || !isFetched}
       />
       {myReview && (
         <Button

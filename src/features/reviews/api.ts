@@ -74,6 +74,14 @@ export interface ReviewInput {
  * user/festival/year — see the reviews_one_per_year_idx migration).
  * Picking a year with no existing review creates a brand new one instead
  * of overwriting another year's review.
+ *
+ * Also makes sure a matching user_attendances row exists for that year:
+ * a review is inherently "I was there in year Y", so it should always
+ * count toward attendance stats and unlock sharing that year — without
+ * this, someone who reviews a festival without separately logging the
+ * year through the attendance sheet ends up with a review nobody can
+ * "share" (see share/[kind].tsx's useLastFestival, which reads
+ * user_attendances, not reviews).
  */
 export function useUpsertReview() {
   const queryClient = useQueryClient();
@@ -97,11 +105,27 @@ export function useUpsertReview() {
             .from('reviews')
             .insert({ user_id: userId, festival_id: festivalId, year, ...ratings });
       if (error) throw error;
+
+      if (year != null) {
+        const { data: existingAttendance } = await supabase
+          .from('user_attendances')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('festival_id', festivalId)
+          .eq('attended_year', year)
+          .maybeSingle();
+        if (!existingAttendance) {
+          await supabase
+            .from('user_attendances')
+            .insert({ user_id: userId, festival_id: festivalId, attended_year: year });
+        }
+      }
     },
     onSettled: (_data, _err, { festivalId }) => {
       queryClient.invalidateQueries({ queryKey: ['reviews', festivalId] });
       queryClient.invalidateQueries({ queryKey: ['my-review', festivalId] });
       queryClient.invalidateQueries({ queryKey: ['my-reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['my-attendances'] });
       queryClient.invalidateQueries({ queryKey: ['festivals'] }); // community stats changed
       queryClient.invalidateQueries({ queryKey: ['festival'] });
     },
@@ -165,6 +189,65 @@ export function useDeleteReview() {
       queryClient.invalidateQueries({ queryKey: ['my-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['festivals'] }); // community stats changed
       queryClient.invalidateQueries({ queryKey: ['festival'] });
+    },
+  });
+}
+
+/** Review ids the signed-in user has upvoted (for the ReviewCard toggle). */
+export function useMyReviewVotes() {
+  const userId = useSessionStore((s) => s.session?.user.id);
+  return useQuery({
+    queryKey: ['my-review-votes', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('review_votes')
+        .select('review_id')
+        .eq('user_id', userId!);
+      if (error) throw error;
+      return new Set((data as { review_id: string }[]).map((v) => v.review_id));
+    },
+  });
+}
+
+/**
+ * Upvote/un-upvote a review. reviews.upvote_count is trigger-maintained
+ * server-side, so a refetch of the reviews list picks up the new total —
+ * summarize-reviews also reads it to weigh consensus-backed reviews
+ * more heavily.
+ */
+export function useToggleReviewVote() {
+  const queryClient = useQueryClient();
+  const userId = useSessionStore((s) => s.session?.user.id);
+  return useMutation({
+    mutationFn: async ({
+      reviewId,
+      festivalId,
+      upvoted,
+    }: {
+      reviewId: string;
+      festivalId: string;
+      upvoted: boolean;
+    }) => {
+      if (!userId) throw new Error('Not signed in');
+      if (upvoted) {
+        const { error } = await supabase
+          .from('review_votes')
+          .delete()
+          .eq('review_id', reviewId)
+          .eq('user_id', userId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('review_votes')
+          .insert({ review_id: reviewId, user_id: userId });
+        if (error) throw error;
+      }
+      return festivalId;
+    },
+    onSettled: (_data, _err, { festivalId }) => {
+      queryClient.invalidateQueries({ queryKey: ['reviews', festivalId] });
+      queryClient.invalidateQueries({ queryKey: ['my-review-votes'] });
     },
   });
 }

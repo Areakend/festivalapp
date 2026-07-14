@@ -7,9 +7,16 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { TextField } from '@/components/ui/TextField';
+import { ScheduleRow } from '@/components/festival/ScheduleRow';
 import { signOut } from '@/features/auth/api';
 import { useSessionStore } from '@/features/auth/session-store';
-import { useFestivals, useMyAttendances, useMyMostSeenArtist, useMyStatuses } from '@/features/festivals/api';
+import {
+  useFestivals,
+  useMyAttendances,
+  useMyMostSeenArtist,
+  useMyStatuses,
+  type CatalogItem,
+} from '@/features/festivals/api';
 import { useMyReviews } from '@/features/reviews/api';
 import { useDjMagTop100, useMyProfile, useUpdateProfile } from '@/features/profile/api';
 import { useDeleteAccount } from '@/features/moderation/api';
@@ -111,6 +118,41 @@ export default function ProfileScreen() {
     updateProfile.mutate({ preferred_language: lang });
   };
 
+  // "Mes festivals" filter: status (attended/planned) + year (attended only).
+  const [myStatusFilter, setMyStatusFilter] = useState<'all' | 'attended' | 'planned'>('all');
+  const [myYearFilter, setMyYearFilter] = useState<number | 'all'>('all');
+
+  const myYears = useMemo(
+    () => [...new Set((myAttendances ?? []).map((a) => a.attended_year))].sort((a, b) => b - a),
+    [myAttendances],
+  );
+
+  const myFestivalItems = useMemo(() => {
+    const byId = new Map((catalog ?? []).map((item) => [item.festival.id, item]));
+    const attendedYearByFestival = new Map(
+      (myAttendances ?? []).map((a) => [a.festival_id, a.attended_year] as const),
+    );
+    return (myStatuses ?? [])
+      .filter((s) => s.status === 'attended' || s.status === 'planned')
+      .filter((s) => myStatusFilter === 'all' || s.status === myStatusFilter)
+      .map((s) => ({ item: byId.get(s.festival_id), status: s.status }))
+      .filter((row): row is { item: CatalogItem; status: 'attended' | 'planned' } => row.item != null)
+      .filter((row) => {
+        if (row.status !== 'attended' || myYearFilter === 'all') return true;
+        return attendedYearByFestival.get(row.item.festival.id) === myYearFilter;
+      })
+      .sort((a, b) => {
+        const aDate = a.item.nextEdition?.start_date;
+        const bDate = b.item.nextEdition?.start_date;
+        if (!aDate) return !bDate ? a.item.festival.name.localeCompare(b.item.festival.name) : 1;
+        if (!bDate) return -1;
+        return aDate.localeCompare(bDate);
+      });
+  }, [catalog, myStatuses, myAttendances, myStatusFilter, myYearFilter]);
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
+
   const deleteAccount = useDeleteAccount();
 
   // Double confirmation: destructive and irreversible (Play requires the
@@ -205,6 +247,67 @@ export default function ProfileScreen() {
           )}
         </View>
       )}
+
+      {/* My festivals — filterable by status/year */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>{t('profile.myFestivals')}</Text>
+        <View style={styles.filterRow}>
+          <Chip
+            label={t('common.seeAll')}
+            active={myStatusFilter === 'all'}
+            onPress={() => setMyStatusFilter('all')}
+          />
+          <Chip
+            label={t('festival.attended')}
+            active={myStatusFilter === 'attended'}
+            onPress={() => setMyStatusFilter('attended')}
+          />
+          <Chip
+            label={t('festival.planned')}
+            active={myStatusFilter === 'planned'}
+            onPress={() => setMyStatusFilter('planned')}
+          />
+        </View>
+        {myYears.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+            <Chip
+              label={t('profile.allYears')}
+              active={myYearFilter === 'all'}
+              onPress={() => setMyYearFilter('all')}
+            />
+            {myYears.map((y) => (
+              <Chip
+                key={y}
+                label={String(y)}
+                active={myYearFilter === y}
+                onPress={() => setMyYearFilter(y)}
+              />
+            ))}
+          </ScrollView>
+        )}
+        <View style={styles.myFestivalsList}>
+          {myFestivalItems.map(({ item }) => (
+            <ScheduleRow
+              key={item.festival.id}
+              item={item}
+              meta={
+                item.nextEdition
+                  ? `${formatDate(item.nextEdition.start_date)}${
+                      item.nextEdition.end_date ? ` – ${formatDate(item.nextEdition.end_date)}` : ''
+                    }`
+                  : t('home.dateTbc')
+              }
+              locale={i18n.language}
+              onPress={() =>
+                router.push({ pathname: '/festival/[slug]', params: { slug: item.festival.slug } })
+              }
+            />
+          ))}
+          {myFestivalItems.length === 0 && (
+            <Text style={styles.emptyFilter}>{t('empty.noResults')}</Text>
+          )}
+        </View>
+      </View>
 
       {/* Edit profile */}
       <View style={styles.card}>
@@ -327,4 +430,13 @@ const styles = StyleSheet.create({
   },
   langRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   deleteAccount: { opacity: 0.6 },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  myFestivalsList: { gap: spacing.sm },
+  emptyFilter: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.sm,
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingVertical: spacing.lg,
+  },
 });

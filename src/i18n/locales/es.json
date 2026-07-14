@@ -98,6 +98,7 @@
     "aiSummary": "Resumen de reseñas",
     "aiDisclaimer": "Generado por IA a partir de reseñas de la comunidad",
     "year": "¿Qué año?",
+    "pickYear": "Elegir el año",
     "category": {
       "atmosphere": "Ambiente",
       "stages": "Escenario y sonido",
@@ -149,7 +150,9 @@
     "records": "Récords",
     "mostAttendedFestival": "Más asistido",
     "mostSeenArtist": "Artista más visto",
-    "mostAttendedCountry": "País más visitado",
+        "mostAttendedCountry": "País más visitado",
+    "allYears": "Todos los años",
+    "commonWithMe": "En común conmigo",
     "deleteAccount": "Eliminar mi cuenta",
     "deleteAccountWarning": "Esta acción es definitiva: tu cuenta y todos tus datos (reseñas, festivales, amigos) se eliminarán.",
     "deleteAccountFinal": "Última confirmación — todo se borrará de inmediato."
@@ -225,7 +228,7 @@
     "nextTitle": "Compartir mi próximo festival",
     "lastTitle": "Compartir mi último festival",
     "noNext": "Planifica un festival primero para compartirlo.",
-    "noLast": "Marca un festival como asistido primero para compartirlo.",
+    "noLast": "Registra un año para un festival (mediante una reseña o su página) para poder compartirlo.",
     "share": "Compartir",
     "unavailable": "Compartir no está disponible en este dispositivo.",
     "title": "Comparte tu festival",

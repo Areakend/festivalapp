@@ -98,6 +98,7 @@
     "aiSummary": "Review summary",
     "aiDisclaimer": "AI-generated from community reviews",
     "year": "Which year?",
+    "pickYear": "Pick the year",
     "category": {
       "atmosphere": "Atmosphere",
       "stages": "Stages & sound",
@@ -149,7 +150,9 @@
     "records": "Records",
     "mostAttendedFestival": "Most attended",
     "mostSeenArtist": "Most-seen artist",
-    "mostAttendedCountry": "Most-visited country",
+        "mostAttendedCountry": "Most-visited country",
+    "allYears": "All years",
+    "commonWithMe": "In common with me",
     "deleteAccount": "Delete my account",
     "deleteAccountWarning": "This is permanent: your account and all your data (reviews, festivals, friends) will be deleted.",
     "deleteAccountFinal": "Last confirmation — everything will be erased immediately."
@@ -225,7 +228,7 @@
     "nextTitle": "Share my next festival",
     "lastTitle": "Share my last festival",
     "noNext": "Plan a festival first to share it.",
-    "noLast": "Mark a festival attended first to share it.",
+    "noLast": "Log a year for a festival (via a review or its page) to be able to share it.",
     "share": "Share",
     "unavailable": "Sharing is not available on this device.",
     "title": "Share your festival",

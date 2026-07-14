@@ -91,6 +91,7 @@ export interface Review {
   organization_rating: number | null;
   atmosphere_rating: number | null;
   value_rating: number | null;
+  upvote_count: number;
   created_at: string;
   updated_at: string;
 }

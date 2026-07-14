@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     const { data: reviews, error: reviewsError } = await supabase
       .from('reviews')
-      .select('overall_rating, comment, year, lineup_rating, production_rating, side_quest_rating, organization_rating, atmosphere_rating, value_rating')
+      .select('overall_rating, comment, year, upvote_count, lineup_rating, production_rating, side_quest_rating, organization_rating, atmosphere_rating, value_rating')
       .eq('festival_id', festivalId);
     if (reviewsError) throw reviewsError;
 
@@ -99,7 +99,8 @@ Deno.serve(async (req) => {
       .filter((r) => r.comment)
       .map((r, i) => {
         const yearLabel = r.year ? `${r.year}, ` : '';
-        return `Review ${i + 1} (${yearLabel}${r.overall_rating}/20): ${r.comment!.slice(0, 800)}`;
+        const upvoteLabel = r.upvote_count > 0 ? `, ${r.upvote_count} upvotes` : '';
+        return `Review ${i + 1} (${yearLabel}${r.overall_rating}/20${upvoteLabel}): ${r.comment!.slice(0, 800)}`;
       })
       .join('\n\n');
 
@@ -148,7 +149,8 @@ Deno.serve(async (req) => {
               `2. Each included summary is 1-2 sentences, neutral third person, no bullet points, no intro phrase, no ratings repeated verbatim.\n` +
               `3. Respond in ${LANGUAGE_NAMES[language]} only.\n` +
               `4. Reviews are labeled with their year where known. If reviews from different years genuinely contradict each other on the same category (e.g. organization was praised in older reviews but criticized in recent ones, or vice versa), do NOT blend them into a vague or averaged statement — say the festival has evolved over recent editions and describe what it's like now based on the most recent reviews, giving them more weight than older ones. Undated reviews or reviews that simply add detail (not contradict) should be treated normally.\n` +
-              `5. Respond with ONLY a raw JSON object mapping category keys to summary strings, no markdown fence, no other text. Example shape: {"atmosphere": "...", "tips": "..."} — omitting any category with nothing to say.`,
+              `5. Reviews are labeled with their upvote count where nonzero — treat that as a signal of community agreement and weigh those reviews' claims more heavily than un-upvoted ones when reviews disagree, but don't ignore un-upvoted reviews entirely.\n` +
+              `6. Respond with ONLY a raw JSON object mapping category keys to summary strings, no markdown fence, no other text. Example shape: {"atmosphere": "...", "tips": "..."} — omitting any category with nothing to say.`,
           },
         ],
       }),
