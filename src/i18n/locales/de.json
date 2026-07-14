@@ -98,6 +98,7 @@
     "aiSummary": "Zusammenfassung der Bewertungen",
     "aiDisclaimer": "KI-generiert aus Community-Bewertungen",
     "year": "Welches Jahr?",
+    "pickYear": "Jahr wählen",
     "category": {
       "atmosphere": "Stimmung",
       "stages": "Bühne & Sound",
@@ -149,7 +150,9 @@
     "records": "Rekorde",
     "mostAttendedFestival": "Am häufigsten besucht",
     "mostSeenArtist": "Meistgesehener Künstler",
-    "mostAttendedCountry": "Meistbesuchtes Land",
+        "mostAttendedCountry": "Meistbesuchtes Land",
+    "allYears": "Alle Jahre",
+    "commonWithMe": "Gemeinsam mit mir",
     "deleteAccount": "Mein Konto löschen",
     "deleteAccountWarning": "Das ist endgültig: dein Konto und alle deine Daten (Bewertungen, Festivals, Freunde) werden gelöscht.",
     "deleteAccountFinal": "Letzte Bestätigung — alles wird sofort gelöscht."
@@ -225,7 +228,7 @@
     "nextTitle": "Mein nächstes Festival teilen",
     "lastTitle": "Mein letztes Festival teilen",
     "noNext": "Plane zuerst ein Festival, um es zu teilen.",
-    "noLast": "Markiere zuerst ein Festival als besucht, um es zu teilen.",
+    "noLast": "Erfasse ein Jahr für ein Festival (über eine Bewertung oder die Festivalseite), um es teilen zu können.",
     "share": "Teilen",
     "unavailable": "Teilen ist auf diesem Gerät nicht verfügbar.",
     "title": "Teile dein Festival",

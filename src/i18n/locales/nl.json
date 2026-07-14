@@ -98,6 +98,7 @@
     "aiSummary": "Samenvatting van reviews",
     "aiDisclaimer": "Door AI gegenereerd op basis van community-reviews",
     "year": "Welk jaar?",
+    "pickYear": "Kies het jaar",
     "category": {
       "atmosphere": "Sfeer",
       "stages": "Podium & geluid",
@@ -149,7 +150,9 @@
     "records": "Records",
     "mostAttendedFestival": "Vaakst bezocht",
     "mostSeenArtist": "Meest geziene artiest",
-    "mostAttendedCountry": "Vaakst bezocht land",
+        "mostAttendedCountry": "Vaakst bezocht land",
+    "allYears": "Alle jaren",
+    "commonWithMe": "Gemeenschappelijk met mij",
     "deleteAccount": "Mijn account verwijderen",
     "deleteAccountWarning": "Dit is definitief: je account en al je gegevens (beoordelingen, festivals, vrienden) worden verwijderd.",
     "deleteAccountFinal": "Laatste bevestiging — alles wordt direct gewist."
@@ -225,7 +228,7 @@
     "nextTitle": "Deel mijn volgende festival",
     "lastTitle": "Deel mijn laatste festival",
     "noNext": "Plan eerst een festival om het te delen.",
-    "noLast": "Markeer eerst een festival als bijgewoond om het te delen.",
+    "noLast": "Log een jaar voor een festival (via een beoordeling of de festivalpagina) om het te kunnen delen.",
     "share": "Delen",
     "unavailable": "Delen is niet beschikbaar op dit apparaat.",
     "title": "Deel je festival",
