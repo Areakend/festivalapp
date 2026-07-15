@@ -243,6 +243,7 @@
     "toggle": {
       "rating": "My rating",
       "counter": "Counter",
+      "genres": "Genres",
       "location": "Location",
       "date": "Dates",
       "artists": "Artists",
@@ -252,6 +253,7 @@
     "card": {
       "happeningNow": "Happening now",
       "topArtists": "Headliners",
+      "genres": "Genres",
       "with": "With",
       "crew": "The crew",
       "footer": "Track your festivals on Mainstage",

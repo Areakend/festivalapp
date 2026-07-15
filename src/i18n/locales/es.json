@@ -243,6 +243,7 @@
     "toggle": {
       "rating": "Mi nota",
       "counter": "Contador",
+      "genres": "Géneros",
       "location": "Lugar",
       "date": "Fechas",
       "artists": "Artistas",
@@ -252,6 +253,7 @@
     "card": {
       "happeningNow": "Ahora mismo",
       "topArtists": "Cabezas de cartel",
+      "genres": "Géneros",
       "with": "Con",
       "crew": "El crew",
       "footer": "Sigue tus festivales en Mainstage",

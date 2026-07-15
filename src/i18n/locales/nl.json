@@ -243,6 +243,7 @@
     "toggle": {
       "rating": "Mijn score",
       "counter": "Teller",
+      "genres": "Genres",
       "location": "Locatie",
       "date": "Data",
       "artists": "Artiesten",
@@ -252,6 +253,7 @@
     "card": {
       "happeningNow": "Nu bezig",
       "topArtists": "Headliners",
+      "genres": "Genres",
       "with": "Met",
       "crew": "De crew",
       "footer": "Volg je festivals op Mainstage",

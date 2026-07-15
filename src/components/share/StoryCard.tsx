@@ -41,6 +41,8 @@ export type StoryCardProps = {
   metaLine: string | null;
   /** Pre-formatted day+month (no year) — null when hidden or unavailable. */
   dateLabel: string | null;
+  /** [] when hidden or the festival has none. */
+  genres: string[];
   /** [] when hidden or none selected. */
   topArtists: string[];
   /** [] when hidden or none. */
@@ -145,6 +147,15 @@ export const StoryCard = forwardRef<View, StoryCardProps>((props, ref) => {
                 </Text>
               </View>
             )}
+          </View>
+        )}
+
+        {props.genres.length > 0 && (
+          <View style={[styles.block, { alignItems }]}>
+            <Text style={[styles.blockLabel, shadow]}>{t('share.card.genres')}</Text>
+            <Text style={[styles.blockText, shadow, { textAlign }]}>
+              {props.genres.slice(0, 5).join(' · ')}
+            </Text>
           </View>
         )}
 

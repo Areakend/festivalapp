@@ -243,6 +243,7 @@
     "toggle": {
       "rating": "Meine Note",
       "counter": "Zähler",
+      "genres": "Genres",
       "location": "Ort",
       "date": "Daten",
       "artists": "Künstler",
@@ -252,6 +253,7 @@
     "card": {
       "happeningNow": "Läuft gerade",
       "topArtists": "Headliner",
+      "genres": "Genres",
       "with": "Mit",
       "crew": "Die Crew",
       "footer": "Verfolge deine Festivals auf Mainstage",

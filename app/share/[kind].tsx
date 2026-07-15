@@ -37,11 +37,19 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_CARD_ARTISTS = 5;
 
 /** Every hideable block on the card. */
-type ToggleKey = 'location' | 'date' | 'rating' | 'counter' | 'artists' | 'friends' | 'footer';
+type ToggleKey =
+  | 'location'
+  | 'date'
+  | 'rating'
+  | 'counter'
+  | 'genres'
+  | 'artists'
+  | 'friends'
+  | 'footer';
 
 const TOGGLES_BY_KIND: Record<'next' | 'last', ToggleKey[]> = {
-  next: ['date', 'location', 'artists', 'friends', 'footer'],
-  last: ['date', 'rating', 'counter', 'location', 'artists', 'friends', 'footer'],
+  next: ['date', 'location', 'genres', 'artists', 'friends', 'footer'],
+  last: ['date', 'rating', 'counter', 'location', 'genres', 'artists', 'friends', 'footer'],
 };
 
 const TOGGLE_LABEL_KEYS: Record<ToggleKey, string> = {
@@ -49,6 +57,7 @@ const TOGGLE_LABEL_KEYS: Record<ToggleKey, string> = {
   date: 'share.toggle.date',
   rating: 'share.toggle.rating',
   counter: 'share.toggle.counter',
+  genres: 'share.toggle.genres',
   artists: 'share.toggle.artists',
   friends: 'share.toggle.friends',
   footer: 'share.toggle.footer',
@@ -263,6 +272,7 @@ export default function ShareScreen() {
         : { mode: 'gradient', theme };
 
   const item = kind === 'next' ? next?.item : last?.item;
+  const genres = show('genres') ? (item?.festival.genres ?? []) : [];
   const metaLine =
     item && show('location')
       ? `${countryFlag(item.festival.country)} ${[item.festival.city, item.festival.country]
@@ -327,6 +337,7 @@ export default function ShareScreen() {
                   festivalName={next.item.festival.name}
                   metaLine={metaLine}
                   dateLabel={dateLabel}
+                  genres={genres}
                   daysUntil={next.daysUntil}
                   happeningNow={next.happeningNow}
                   friendNames={show('friends') ? next.friendNames : []}
@@ -342,6 +353,7 @@ export default function ShareScreen() {
                   festivalName={last.item.festival.name}
                   metaLine={metaLine}
                   dateLabel={dateLabel}
+                  genres={genres}
                   year={last.year}
                   rating={show('rating') ? last.rating : null}
                   yearCount={show('counter') && yearCount > 0 ? yearCount : null}
