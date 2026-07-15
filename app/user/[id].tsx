@@ -24,7 +24,7 @@ const SUB_RATINGS = [
   ['value_rating', 'review.valueRating'],
 ] as const;
 
-type StatusFilter = 'all' | 'attended' | 'planned';
+type StatusFilter = 'all' | 'attended' | 'planned' | 'wishlist';
 
 const SECTIONS: { status: FestivalStatus; labelKey: string; icon: string; color: string }[] = [
   { status: 'attended', labelKey: 'festival.attended', icon: 'checkmark-circle', color: colors.statusAttended },
@@ -125,6 +125,10 @@ export default function FriendProfileScreen() {
     () => new Set((myStatuses ?? []).filter((s) => s.status === 'planned').map((s) => s.festival_id)),
     [myStatuses],
   );
+  const myWishlistIds = useMemo(
+    () => new Set((myStatuses ?? []).filter((s) => s.status === 'wishlist').map((s) => s.festival_id)),
+    [myStatuses],
+  );
 
   const computed = useMemo(() => {
     if (!data || !catalog) return null;
@@ -149,6 +153,7 @@ export default function FriendProfileScreen() {
             if (!commonOnly) return true;
             if (section.status === 'attended') return myAttendedIds.has(item.festival.id);
             if (section.status === 'planned') return myPlannedIds.has(item.festival.id);
+            if (section.status === 'wishlist') return myWishlistIds.has(item.festival.id);
             return true;
           }),
       }))
@@ -179,7 +184,7 @@ export default function FriendProfileScreen() {
       countryList,
       reviewList,
     };
-  }, [data, catalog, statusFilter, yearFilter, commonOnly, myAttendedIds, myPlannedIds]);
+  }, [data, catalog, statusFilter, yearFilter, commonOnly, myAttendedIds, myPlannedIds, myWishlistIds]);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
@@ -250,6 +255,11 @@ export default function FriendProfileScreen() {
                 label={t('festival.planned')}
                 active={statusFilter === 'planned'}
                 onPress={() => setStatusFilter('planned')}
+              />
+              <Chip
+                label={t('festival.wishlist')}
+                active={statusFilter === 'wishlist'}
+                onPress={() => setStatusFilter('wishlist')}
               />
             </ScrollView>
             {years.length > 0 && (
