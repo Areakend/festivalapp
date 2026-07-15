@@ -226,13 +226,18 @@ export function useMyAttendances() {
       // policy), which this query must not pick up — without it, "my"
       // attendances silently included everyone's, e.g. surfacing a
       // stranger's festival as "my last festival" to share.
+      // Column list, not '*': notes is no longer grant-visible (see the
+      // security-review-fixes migration) so '*' would silently drop it —
+      // spelling out the columns we actually use keeps that intentional.
       const { data, error } = await supabase
         .from('user_attendances')
-        .select('*')
+        .select('id, user_id, festival_id, edition_id, attended_year, created_at, updated_at')
         .eq('user_id', userId!)
         .order('attended_year', { ascending: false });
       if (error) throw error;
-      return data as UserAttendance[];
+      // notes isn't selected (no longer grant-visible), so this is
+      // deliberately narrower than the full UserAttendance shape.
+      return data as Omit<UserAttendance, 'notes'>[];
     },
   });
 }
