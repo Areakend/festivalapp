@@ -65,10 +65,13 @@ export function useSearchUsers(query: string) {
     queryKey: ['user-search', trimmed],
     enabled: trimmed.length >= 2 && !!userId,
     queryFn: async () => {
+      // ilike treats % and _ as wildcards — escape them so a literal
+      // search term doesn't turn into an accidental pattern match.
+      const escaped = trimmed.replace(/[%_\\]/g, (m) => `\\${m}`);
       const { data, error } = await supabase
         .from('profiles')
         .select('id, display_name, avatar_url, country')
-        .ilike('display_name', `%${trimmed}%`)
+        .ilike('display_name', `%${escaped}%`)
         .neq('id', userId!)
         .limit(10);
       if (error) throw error;
