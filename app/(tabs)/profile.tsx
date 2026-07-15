@@ -132,7 +132,7 @@ export default function ProfileScreen() {
     const attendedYearByFestival = new Map(
       (myAttendances ?? []).map((a) => [a.festival_id, a.attended_year] as const),
     );
-    return (myStatuses ?? [])
+    const rows = (myStatuses ?? [])
       .filter((s) => s.status === 'attended' || s.status === 'planned')
       .filter((s) => myStatusFilter === 'all' || s.status === myStatusFilter)
       .map((s) => ({ item: byId.get(s.festival_id), status: s.status }))
@@ -140,14 +140,26 @@ export default function ProfileScreen() {
       .filter((row) => {
         if (row.status !== 'attended' || myYearFilter === 'all') return true;
         return attendedYearByFestival.get(row.item.festival.id) === myYearFilter;
-      })
-      .sort((a, b) => {
-        const aDate = a.item.nextEdition?.start_date;
-        const bDate = b.item.nextEdition?.start_date;
-        if (!aDate) return !bDate ? a.item.festival.name.localeCompare(b.item.festival.name) : 1;
-        if (!bDate) return -1;
-        return aDate.localeCompare(bDate);
       });
+
+    // A festival can legitimately carry both "attended" and "planned" at
+    // once (been before, going again) — in the "All" view that means the
+    // same festival matches both filtered rows above, which reads as a
+    // glitchy duplicate rather than useful info. Collapse to one row per
+    // festival, "attended" winning the displayed status.
+    const deduped = new Map<string, { item: CatalogItem; status: 'attended' | 'planned' }>();
+    for (const row of rows) {
+      const existing = deduped.get(row.item.festival.id);
+      if (!existing || row.status === 'attended') deduped.set(row.item.festival.id, row);
+    }
+
+    return [...deduped.values()].sort((a, b) => {
+      const aDate = a.item.nextEdition?.start_date;
+      const bDate = b.item.nextEdition?.start_date;
+      if (!aDate) return !bDate ? a.item.festival.name.localeCompare(b.item.festival.name) : 1;
+      if (!bDate) return -1;
+      return aDate.localeCompare(bDate);
+    });
   }, [catalog, myStatuses, myAttendances, myStatusFilter, myYearFilter]);
 
   const formatDate = (iso: string) =>

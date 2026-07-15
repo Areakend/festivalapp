@@ -9,7 +9,7 @@ import { Chip } from '@/components/ui/Chip';
 import { ScheduleRow } from '@/components/festival/ScheduleRow';
 import { ratingColor } from '@/components/ui/RatingBar';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
-import { useFriendProfile } from '@/features/friends/api';
+import { useFriendProfile, useFriendships, useRemoveFriendship } from '@/features/friends/api';
 import { useBlockUser, useMyBlockedIds } from '@/features/moderation/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
@@ -42,10 +42,26 @@ export default function FriendProfileScreen() {
   const { data: blockedIds } = useMyBlockedIds();
   const blockUser = useBlockUser();
   const isBlocked = !!id && (blockedIds?.has(id) ?? false);
+  const { data: friendships } = useFriendships();
+  const removeFriendship = useRemoveFriendship();
+  const friendshipId = friendships?.friends.find((f) => f.profile.id === id)?.friendshipId;
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [yearFilter, setYearFilter] = useState<number | 'all'>('all');
   const [commonOnly, setCommonOnly] = useState(false);
+
+  const confirmRemoveFriend = () => {
+    if (!friendshipId) return;
+    const name = data?.profile.display_name ?? '';
+    Alert.alert(t('friends.remove'), name, [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('friends.remove'),
+        style: 'destructive',
+        onPress: () => removeFriendship.mutate(friendshipId),
+      },
+    ]);
+  };
 
   const confirmBlockToggle = () => {
     if (!id) return;
@@ -151,6 +167,11 @@ export default function FriendProfileScreen() {
           {data?.profile.display_name ?? '…'}{' '}
           {data?.profile.country ? countryFlag(data.profile.country) : ''}
         </Text>
+        {friendshipId && (
+          <Pressable onPress={confirmRemoveFriend} hitSlop={12}>
+            <Ionicons name="person-remove-outline" size={20} color={colors.textMuted} />
+          </Pressable>
+        )}
         <Pressable onPress={confirmBlockToggle} hitSlop={12}>
           <Ionicons
             name={isBlocked ? 'ban' : 'ban-outline'}

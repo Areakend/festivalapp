@@ -134,7 +134,9 @@
     "requests": "Demandes d'amis",
     "accept": "Accepter",
     "requestSent": "Demande envoyée",
-    "noFriends": "Pas encore d'amis — ajoutes-en !"
+    "noFriends": "Pas encore d'amis — ajoutes-en !",
+    "decline": "Refuser",
+    "remove": "Retirer cet ami"
   },
   "profile": {
     "myFestivals": "Mes festivals",
