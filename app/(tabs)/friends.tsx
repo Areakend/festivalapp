@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import {
   useAcceptFriendRequest,
   useFriendships,
+  useRemoveFriendship,
   useSearchUsers,
   useSendFriendRequest,
   type PublicProfile,
@@ -20,12 +21,14 @@ import { countryFlag } from '@/utils/format';
 export default function FriendsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [search, setSearch] = useState('');
   const { data: friendships } = useFriendships();
   const { data: searchResults } = useSearchUsers(search);
   const sendRequest = useSendFriendRequest();
   const acceptRequest = useAcceptFriendRequest();
+  const removeFriendship = useRemoveFriendship();
 
   const pendingIds = new Set([
     ...(friendships?.outgoing ?? []).map((f) => f.profile.id),
@@ -33,16 +36,26 @@ export default function FriendsScreen() {
     ...(friendships?.friends ?? []).map((f) => f.profile.id),
   ]);
 
+  const confirmRemoveFriend = (friendshipId: string, name: string) => {
+    Alert.alert(t('friends.remove'), name, [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('friends.remove'),
+        style: 'destructive',
+        onPress: () => removeFriendship.mutate(friendshipId),
+      },
+    ]);
+  };
+
   return (
-    <Screen>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xxl }}
+    >
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </Pressable>
         <Text style={styles.title}>{t('friends.title')}</Text>
       </View>
 
-      {/* Search users */}
       <TextInput
         style={styles.search}
         placeholder={t('friends.searchUsers')}
@@ -51,56 +64,74 @@ export default function FriendsScreen() {
         onChangeText={setSearch}
         autoCapitalize="none"
       />
-      {(searchResults ?? []).map((user) => (
-        <UserRow key={user.id} user={user}>
-          {pendingIds.has(user.id) ? (
-            <Text style={styles.pendingLabel}>{t('friends.requestSent')}</Text>
-          ) : (
-            <Button
-              label={t('friends.add')}
-              variant="secondary"
-              onPress={() => sendRequest.mutate(user.id)}
-              loading={sendRequest.isPending}
-              style={styles.smallButton}
-            />
-          )}
-        </UserRow>
-      ))}
-
-      {/* Incoming requests */}
-      {(friendships?.incoming.length ?? 0) > 0 && (
-        <>
-          <Text style={styles.sectionTitle}>{t('friends.requests')}</Text>
-          {friendships!.incoming.map(({ friendshipId, profile }) => (
-            <UserRow key={friendshipId} user={profile}>
+      <View style={styles.listArea}>
+        {(searchResults ?? []).map((user) => (
+          <UserRow key={user.id} user={user}>
+            {pendingIds.has(user.id) ? (
+              <Text style={styles.pendingLabel}>{t('friends.requestSent')}</Text>
+            ) : (
               <Button
-                label={t('friends.accept')}
-                onPress={() => acceptRequest.mutate(friendshipId)}
-                loading={acceptRequest.isPending}
+                label={t('friends.add')}
+                variant="secondary"
+                onPress={() => sendRequest.mutate(user.id)}
+                loading={sendRequest.isPending}
                 style={styles.smallButton}
               />
-            </UserRow>
-          ))}
-        </>
-      )}
+            )}
+          </UserRow>
+        ))}
 
-      {/* Friends list */}
-      <Text style={styles.sectionTitle}>{t('friends.title')}</Text>
-      {(friendships?.friends.length ?? 0) === 0 ? (
-        <Text style={styles.emptyText}>{t('friends.noFriends')}</Text>
-      ) : (
-        friendships!.friends.map(({ friendshipId, profile }) => (
-          <Pressable
-            key={friendshipId}
-            onPress={() => router.push({ pathname: '/user/[id]', params: { id: profile.id } })}
-          >
-            <UserRow user={profile}>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </UserRow>
-          </Pressable>
-        ))
-      )}
-    </Screen>
+        {/* Incoming requests */}
+        {(friendships?.incoming.length ?? 0) > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>{t('friends.requests')}</Text>
+            {friendships!.incoming.map(({ friendshipId, profile }) => (
+              <UserRow key={friendshipId} user={profile}>
+                <View style={styles.requestActions}>
+                  <Button
+                    label={t('friends.accept')}
+                    onPress={() => acceptRequest.mutate(friendshipId)}
+                    loading={acceptRequest.isPending}
+                    style={styles.smallButton}
+                  />
+                  <Button
+                    label={t('friends.decline')}
+                    variant="ghost"
+                    onPress={() => removeFriendship.mutate(friendshipId)}
+                    loading={removeFriendship.isPending}
+                    style={styles.smallButton}
+                  />
+                </View>
+              </UserRow>
+            ))}
+          </>
+        )}
+
+        {/* Friends list */}
+        <Text style={styles.sectionTitle}>{t('friends.title')}</Text>
+        {(friendships?.friends.length ?? 0) === 0 ? (
+          <Text style={styles.emptyText}>{t('friends.noFriends')}</Text>
+        ) : (
+          friendships!.friends.map(({ friendshipId, profile }) => (
+            <Pressable
+              key={friendshipId}
+              onPress={() => router.push({ pathname: '/user/[id]', params: { id: profile.id } })}
+            >
+              <UserRow user={profile}>
+                <Pressable
+                  onPress={() => confirmRemoveFriend(friendshipId, profile.display_name)}
+                  hitSlop={10}
+                  style={styles.removeButton}
+                >
+                  <Ionicons name="person-remove-outline" size={18} color={colors.textMuted} />
+                </Pressable>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </UserRow>
+            </Pressable>
+          ))
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
@@ -119,12 +150,13 @@ function UserRow({ user, children }: { user: PublicProfile; children?: React.Rea
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    marginTop: spacing.lg,
     marginBottom: spacing.lg,
+    paddingHorizontal: spacing.xl,
   },
   title: {
     fontFamily: typography.fonts.heading,
@@ -142,7 +174,9 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.md,
     color: colors.text,
     marginBottom: spacing.md,
+    marginHorizontal: spacing.xl,
   },
+  listArea: { paddingHorizontal: spacing.xl },
   sectionTitle: {
     fontFamily: typography.fonts.headingMedium,
     fontSize: typography.sizes.lg,
@@ -180,7 +214,9 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.md,
     color: colors.text,
   },
+  requestActions: { flexDirection: 'row', gap: spacing.sm },
   smallButton: { minHeight: 40, paddingVertical: spacing.sm },
+  removeButton: { padding: spacing.xs },
   pendingLabel: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.xs,

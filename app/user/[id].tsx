@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -7,13 +7,22 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Chip } from '@/components/ui/Chip';
 import { ScheduleRow } from '@/components/festival/ScheduleRow';
-import { ratingColor } from '@/components/ui/RatingBar';
+import { RatingBar, ratingColor } from '@/components/ui/RatingBar';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
-import { useFriendProfile } from '@/features/friends/api';
+import { useFriendProfile, useFriendships, useRemoveFriendship } from '@/features/friends/api';
 import { useBlockUser, useMyBlockedIds } from '@/features/moderation/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
-import type { FestivalStatus } from '@/types/domain';
+import type { FestivalStatus, Review } from '@/types/domain';
+
+const SUB_RATINGS = [
+  ['lineup_rating', 'review.lineupRating'],
+  ['production_rating', 'review.productionRating'],
+  ['side_quest_rating', 'review.sideQuestRating'],
+  ['organization_rating', 'review.organizationRating'],
+  ['atmosphere_rating', 'review.atmosphereRating'],
+  ['value_rating', 'review.valueRating'],
+] as const;
 
 type StatusFilter = 'all' | 'attended' | 'planned';
 
@@ -42,10 +51,40 @@ export default function FriendProfileScreen() {
   const { data: blockedIds } = useMyBlockedIds();
   const blockUser = useBlockUser();
   const isBlocked = !!id && (blockedIds?.has(id) ?? false);
+  const { data: friendships } = useFriendships();
+  const removeFriendship = useRemoveFriendship();
+  const friendshipId = friendships?.friends.find((f) => f.profile.id === id)?.friendshipId;
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [yearFilter, setYearFilter] = useState<number | 'all'>('all');
   const [commonOnly, setCommonOnly] = useState(false);
+  // Each section is capped at 5 rows until expanded — profiles with long
+  // histories were painfully tall to scroll otherwise.
+  const [expandedSections, setExpandedSections] = useState<Set<FestivalStatus>>(new Set());
+  const [countriesOpen, setCountriesOpen] = useState(false);
+  const [reviewsOpen, setReviewsOpen] = useState(false);
+  const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null);
+  const toggleSection = (status: FestivalStatus) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
+  };
+
+  const confirmRemoveFriend = () => {
+    if (!friendshipId) return;
+    const name = data?.profile.display_name ?? '';
+    Alert.alert(t('friends.remove'), name, [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('friends.remove'),
+        style: 'destructive',
+        onPress: () => removeFriendship.mutate(friendshipId),
+      },
+    ]);
+  };
 
   const confirmBlockToggle = () => {
     if (!id) return;
@@ -116,17 +155,30 @@ export default function FriendProfileScreen() {
       .filter((s) => s.items.length > 0);
 
     const attended = data.statuses.filter((s) => s.status === 'attended');
-    const countries = new Set(
-      attended.map((s) => byId.get(s.festival_id)?.festival.country).filter(Boolean),
-    );
-    const topRated = [...data.reviews]
+
+    // Full country breakdown (not just the count) for the countries detail sheet.
+    const countryCounts = new Map<string, number>();
+    for (const s of attended) {
+      const country = byId.get(s.festival_id)?.festival.country;
+      if (!country) continue;
+      countryCounts.set(country, (countryCounts.get(country) ?? 0) + 1);
+    }
+    const countryList = [...countryCounts.entries()]
+      .map(([country, count]) => ({ country, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Full review list (not just top 5) for the reviews detail sheet.
+    const reviewList = [...data.reviews]
       .sort((a, b) => b.overall_rating - a.overall_rating)
-      .slice(0, 5)
-      .map((r) => ({
-        rating: r.overall_rating,
-        name: byId.get(r.festival_id)?.festival.name ?? '—',
-      }));
-    return { sections, attendedCount: attended.length, countryCount: countries.size, topRated };
+      .map((review) => ({ review, festivalName: byId.get(review.festival_id)?.festival.name ?? '—' }));
+
+    return {
+      sections,
+      attendedCount: attended.length,
+      countryCount: countryCounts.size,
+      countryList,
+      reviewList,
+    };
   }, [data, catalog, statusFilter, yearFilter, commonOnly, myAttendedIds, myPlannedIds]);
 
   const formatDate = (iso: string) =>
@@ -151,6 +203,11 @@ export default function FriendProfileScreen() {
           {data?.profile.display_name ?? '…'}{' '}
           {data?.profile.country ? countryFlag(data.profile.country) : ''}
         </Text>
+        {friendshipId && (
+          <Pressable onPress={confirmRemoveFriend} hitSlop={12}>
+            <Ionicons name="person-remove-outline" size={20} color={colors.textMuted} />
+          </Pressable>
+        )}
         <Pressable onPress={confirmBlockToggle} hitSlop={12}>
           <Ionicons
             name={isBlocked ? 'ban' : 'ban-outline'}
@@ -164,8 +221,16 @@ export default function FriendProfileScreen() {
         <>
           <View style={styles.statsRow}>
             <Stat value={String(computed.attendedCount)} label={t('profile.festivalsAttended')} />
-            <Stat value={String(computed.countryCount)} label={t('profile.countriesVisited')} />
-            <Stat value={String(data!.reviews.length)} label={t('festival.reviews')} />
+            <Stat
+              value={String(computed.countryCount)}
+              label={t('profile.countriesVisited')}
+              onPress={computed.countryList.length > 0 ? () => setCountriesOpen(true) : undefined}
+            />
+            <Stat
+              value={String(data!.reviews.length)}
+              label={t('festival.reviews')}
+              onPress={computed.reviewList.length > 0 ? () => setReviewsOpen(true) : undefined}
+            />
           </View>
 
           {/* Filters: status, year, in-common-with-me */}
@@ -212,72 +277,163 @@ export default function FriendProfileScreen() {
             />
           </View>
 
-          {computed.sections.map((section) => (
-            <View key={section.status} style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Ionicons name={section.icon as never} size={18} color={section.color} />
-                <Text style={[styles.sectionTitle, { color: section.color }]}>
-                  {t(section.labelKey)}
-                </Text>
-                <Text style={styles.sectionCount}>{section.items.length}</Text>
+          {computed.sections.map((section) => {
+            const expanded = expandedSections.has(section.status);
+            const visible = expanded ? section.items : section.items.slice(0, 5);
+            return (
+              <View key={section.status} style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name={section.icon as never} size={18} color={section.color} />
+                  <Text style={[styles.sectionTitle, { color: section.color }]}>
+                    {t(section.labelKey)}
+                  </Text>
+                  <Text style={styles.sectionCount}>{section.items.length}</Text>
+                </View>
+                <View style={styles.list}>
+                  {visible.map((item) => (
+                    <ScheduleRow
+                      key={item.festival.id}
+                      item={item}
+                      meta={
+                        item.nextEdition
+                          ? `${formatDate(item.nextEdition.start_date)}${
+                              item.nextEdition.end_date ? ` – ${formatDate(item.nextEdition.end_date)}` : ''
+                            }`
+                          : t('home.dateTbc')
+                      }
+                      locale={i18n.language}
+                      onPress={() => openFestival(item)}
+                    />
+                  ))}
+                  {section.items.length > 5 && (
+                    <Pressable onPress={() => toggleSection(section.status)} hitSlop={8}>
+                      <Text style={styles.seeMore}>
+                        {expanded
+                          ? t('common.seeLess')
+                          : `${t('common.seeAll')} (${section.items.length})`}
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
               </View>
-              <View style={styles.list}>
-                {section.items.map((item) => (
-                  <ScheduleRow
-                    key={item.festival.id}
-                    item={item}
-                    meta={
-                      item.nextEdition
-                        ? `${formatDate(item.nextEdition.start_date)}${
-                            item.nextEdition.end_date ? ` – ${formatDate(item.nextEdition.end_date)}` : ''
-                          }`
-                        : t('home.dateTbc')
-                    }
-                    locale={i18n.language}
-                    onPress={() => openFestival(item)}
-                  />
-                ))}
-              </View>
-            </View>
-          ))}
+            );
+          })}
           {computed.sections.length === 0 && (
             <Text style={styles.empty}>{t('empty.noResults')}</Text>
           )}
-
-          {computed.topRated.length > 0 && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Ionicons name="star" size={18} color={colors.rating} />
-                <Text style={[styles.sectionTitle, { color: colors.rating }]}>
-                  {t('profile.topRated')}
-                </Text>
-              </View>
-              <View style={styles.card}>
-                {computed.topRated.map((entry, index) => (
-                  <View key={index} style={styles.topRow}>
-                    <Text style={styles.topName} numberOfLines={1}>
-                      {entry.name}
-                    </Text>
-                    <Text style={[styles.topRating, { color: ratingColor(entry.rating) }]}>
-                      {Number(entry.rating).toFixed(0)}/20
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
         </>
       )}
+
+      {/* Countries detail sheet */}
+      <Modal visible={countriesOpen} transparent animationType="slide" onRequestClose={() => setCountriesOpen(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setCountriesOpen(false)} />
+        <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
+          <Text style={styles.sheetTitle}>{t('profile.countriesVisited')}</Text>
+          <ScrollView style={styles.sheetScroll}>
+            {(computed?.countryList ?? []).map(({ country, count }) => (
+              <View key={country} style={styles.sheetRow}>
+                <Text style={styles.sheetRowText}>
+                  {countryFlag(country)} {country}
+                </Text>
+                <Text style={styles.sheetRowCount}>{count}</Text>
+              </View>
+            ))}
+          </ScrollView>
+          <Pressable style={styles.sheetClose} onPress={() => setCountriesOpen(false)}>
+            <Text style={styles.sheetCloseText}>{t('common.done')}</Text>
+          </Pressable>
+        </View>
+      </Modal>
+
+      {/* Reviews detail sheet — tap a row to expand the full rating +
+          comment, tap again to collapse. */}
+      <Modal
+        visible={reviewsOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setReviewsOpen(false)}
+      >
+        <Pressable
+          style={styles.backdrop}
+          onPress={() => {
+            setReviewsOpen(false);
+            setExpandedReviewId(null);
+          }}
+        />
+        <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
+          <Text style={styles.sheetTitle}>{t('festival.reviews')}</Text>
+          <ScrollView style={styles.sheetScroll}>
+            {(computed?.reviewList ?? []).map(({ review, festivalName }) => {
+              const expanded = expandedReviewId === review.id;
+              return (
+                <Pressable
+                  key={review.id}
+                  style={styles.reviewCard}
+                  onPress={() => setExpandedReviewId(expanded ? null : review.id)}
+                >
+                  <View style={styles.topRow}>
+                    <Text style={styles.topName} numberOfLines={1}>
+                      {festivalName}
+                      {review.year ? ` · ${review.year}` : ''}
+                    </Text>
+                    <Text style={[styles.topRating, { color: ratingColor(review.overall_rating) }]}>
+                      {Number(review.overall_rating).toFixed(0)}/20
+                    </Text>
+                  </View>
+                  {expanded && <ReviewDetail review={review} />}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+          <Pressable
+            style={styles.sheetClose}
+            onPress={() => {
+              setReviewsOpen(false);
+              setExpandedReviewId(null);
+            }}
+          >
+            <Text style={styles.sheetCloseText}>{t('common.done')}</Text>
+          </Pressable>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+/** Comment + non-null sub-ratings, shown inline when a review row expands. */
+function ReviewDetail({ review }: { review: Review }) {
+  const { t } = useTranslation();
+  const subs = SUB_RATINGS.filter(([key]) => review[key] != null);
   return (
-    <View style={styles.statBox}>
+    <View style={styles.reviewDetail}>
+      {review.comment && <Text style={styles.reviewComment}>{review.comment}</Text>}
+      {subs.map(([key, labelKey]) => (
+        <RatingBar key={key} label={t(labelKey)} value={review[key] ?? 0} />
+      ))}
+    </View>
+  );
+}
+
+function Stat({
+  value,
+  label,
+  onPress,
+}: {
+  value: string;
+  label: string;
+  onPress?: () => void;
+}) {
+  const content = (
+    <>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    </>
+  );
+  if (!onPress) return <View style={styles.statBox}>{content}</View>;
+  return (
+    <Pressable style={({ pressed }) => [styles.statBox, pressed && { opacity: 0.7 }]} onPress={onPress}>
+      {content}
+    </Pressable>
   );
 }
 
@@ -363,5 +519,63 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
+  },
+  seeMore: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.primary,
+    paddingVertical: spacing.sm,
+  },
+  backdrop: { flex: 1, backgroundColor: '#00000088' },
+  sheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
+    padding: spacing.xl,
+    gap: spacing.md,
+    maxHeight: '75%',
+  },
+  sheetTitle: {
+    fontFamily: typography.fonts.headingMedium,
+    fontSize: typography.sizes.lg,
+    color: colors.text,
+  },
+  sheetScroll: { flexGrow: 0 },
+  sheetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  sheetRowText: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.md,
+    color: colors.text,
+  },
+  sheetRowCount: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: typography.sizes.sm,
+    color: colors.textMuted,
+  },
+  sheetClose: { alignItems: 'center', paddingTop: spacing.sm },
+  sheetCloseText: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: typography.sizes.md,
+    color: colors.primary,
+  },
+  reviewCard: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+  },
+  reviewDetail: { gap: spacing.sm, paddingBottom: spacing.xs },
+  reviewComment: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    lineHeight: 20,
   },
 });

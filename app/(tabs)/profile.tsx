@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
@@ -121,6 +122,10 @@ export default function ProfileScreen() {
   // "Mes festivals" filter: status (attended/planned) + year (attended only).
   const [myStatusFilter, setMyStatusFilter] = useState<'all' | 'attended' | 'planned'>('all');
   const [myYearFilter, setMyYearFilter] = useState<number | 'all'>('all');
+  // Kept short by default — the festival list and the settings block are
+  // what made this screen endless to scroll.
+  const [festListExpanded, setFestListExpanded] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const myYears = useMemo(
     () => [...new Set((myAttendances ?? []).map((a) => a.attended_year))].sort((a, b) => b - a),
@@ -132,7 +137,7 @@ export default function ProfileScreen() {
     const attendedYearByFestival = new Map(
       (myAttendances ?? []).map((a) => [a.festival_id, a.attended_year] as const),
     );
-    return (myStatuses ?? [])
+    const rows = (myStatuses ?? [])
       .filter((s) => s.status === 'attended' || s.status === 'planned')
       .filter((s) => myStatusFilter === 'all' || s.status === myStatusFilter)
       .map((s) => ({ item: byId.get(s.festival_id), status: s.status }))
@@ -140,14 +145,26 @@ export default function ProfileScreen() {
       .filter((row) => {
         if (row.status !== 'attended' || myYearFilter === 'all') return true;
         return attendedYearByFestival.get(row.item.festival.id) === myYearFilter;
-      })
-      .sort((a, b) => {
-        const aDate = a.item.nextEdition?.start_date;
-        const bDate = b.item.nextEdition?.start_date;
-        if (!aDate) return !bDate ? a.item.festival.name.localeCompare(b.item.festival.name) : 1;
-        if (!bDate) return -1;
-        return aDate.localeCompare(bDate);
       });
+
+    // A festival can legitimately carry both "attended" and "planned" at
+    // once (been before, going again) — in the "All" view that means the
+    // same festival matches both filtered rows above, which reads as a
+    // glitchy duplicate rather than useful info. Collapse to one row per
+    // festival, "attended" winning the displayed status.
+    const deduped = new Map<string, { item: CatalogItem; status: 'attended' | 'planned' }>();
+    for (const row of rows) {
+      const existing = deduped.get(row.item.festival.id);
+      if (!existing || row.status === 'attended') deduped.set(row.item.festival.id, row);
+    }
+
+    return [...deduped.values()].sort((a, b) => {
+      const aDate = a.item.nextEdition?.start_date;
+      const bDate = b.item.nextEdition?.start_date;
+      if (!aDate) return !bDate ? a.item.festival.name.localeCompare(b.item.festival.name) : 1;
+      if (!bDate) return -1;
+      return aDate.localeCompare(bDate);
+    });
   }, [catalog, myStatuses, myAttendances, myStatusFilter, myYearFilter]);
 
   const formatDate = (iso: string) =>
@@ -191,34 +208,19 @@ export default function ProfileScreen() {
       <Text style={styles.title}>{profile?.display_name ?? '…'}</Text>
       <Text style={styles.email}>{session?.user.email}</Text>
 
-      {/* Stats grid */}
+      {/* Stats — one compact row instead of a tall 2x2 grid */}
       <View style={styles.grid}>
         <StatBox value={String(stats.attended)} label={t('profile.festivalsAttended')} />
         <StatBox value={String(stats.countries)} label={t('profile.countriesVisited')} />
         <StatBox
-          value={stats.avgRating != null ? `${stats.avgRating.toFixed(1)}/20` : '–'}
+          value={stats.avgRating != null ? stats.avgRating.toFixed(1) : '–'}
           label={t('profile.avgRatingGiven')}
         />
-        <StatBox value={`${stats.djmagCount}/100`} label={t('djmag.title')} />
+        <StatBox value={`${stats.djmagCount}`} label={t('djmag.title')} />
       </View>
 
-      {/* Top rated */}
-      {stats.topRated.length > 0 && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{t('profile.topRated')}</Text>
-          {stats.topRated.map((entry, index) => (
-            <View key={index} style={styles.topRow}>
-              <Text style={styles.topName} numberOfLines={1}>
-                {entry.name}
-              </Text>
-              <Text style={styles.topRating}>★ {entry.rating.toFixed(1)}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* Records: most-attended festival/country, most-seen artist */}
-      {(stats.topFestival || stats.topCountry || mostSeenArtist) && (
+      {/* Records + top rated merged in one card to cut vertical weight */}
+      {(stats.topFestival || stats.topCountry || mostSeenArtist || stats.topRated.length > 0) && (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{t('profile.records')}</Text>
           {stats.topFestival && (
@@ -244,6 +246,19 @@ export default function ProfileScreen() {
               </Text>
               <Text style={styles.topRating}>{stats.topCountry.count}</Text>
             </View>
+          )}
+          {stats.topRated.length > 0 && (
+            <>
+              <Text style={styles.subLabel}>{t('profile.topRated')}</Text>
+              {stats.topRated.map((entry, index) => (
+                <View key={index} style={styles.topRow}>
+                  <Text style={styles.topName} numberOfLines={1}>
+                    {entry.name}
+                  </Text>
+                  <Text style={styles.topRating}>★ {entry.rating.toFixed(1)}</Text>
+                </View>
+              ))}
+            </>
           )}
         </View>
       )}
@@ -286,7 +301,7 @@ export default function ProfileScreen() {
           </ScrollView>
         )}
         <View style={styles.myFestivalsList}>
-          {myFestivalItems.map(({ item }) => (
+          {(festListExpanded ? myFestivalItems : myFestivalItems.slice(0, 5)).map(({ item }) => (
             <ScheduleRow
               key={item.festival.id}
               item={item}
@@ -307,34 +322,17 @@ export default function ProfileScreen() {
             <Text style={styles.emptyFilter}>{t('empty.noResults')}</Text>
           )}
         </View>
-      </View>
-
-      {/* Edit profile */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t('profile.editProfile')}</Text>
-        <TextField label={t('profile.displayName')} value={name} onChangeText={setName} />
-        {name.trim() !== (profile?.display_name ?? '') && name.trim().length > 0 && (
+        {myFestivalItems.length > 5 && (
           <Button
-            label={t('common.save')}
-            onPress={() => updateProfile.mutate({ display_name: name.trim() })}
-            loading={updateProfile.isPending}
+            label={
+              festListExpanded
+                ? t('common.seeLess')
+                : `${t('common.seeAll')} (${myFestivalItems.length})`
+            }
+            variant="ghost"
+            onPress={() => setFestListExpanded((v) => !v)}
           />
         )}
-      </View>
-
-      {/* Language */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t('settings.language')}</Text>
-        <View style={styles.langRow}>
-          {SUPPORTED_LANGUAGES.map((lang) => (
-            <Chip
-              key={lang}
-              label={LANGUAGE_LABELS[lang]}
-              active={i18n.language === lang}
-              onPress={() => changeLanguage(lang)}
-            />
-          ))}
-        </View>
       </View>
 
       <Button
@@ -342,19 +340,50 @@ export default function ProfileScreen() {
         variant="secondary"
         onPress={() => router.push({ pathname: '/share/[kind]', params: { kind: 'last' } })}
       />
-      <Button
-        label={t('friends.title')}
-        variant="secondary"
-        onPress={() => router.push('/friends')}
-      />
-      <Button label={t('auth.signOut')} variant="ghost" onPress={() => void signOut()} />
-      <Button
-        label={t('profile.deleteAccount')}
-        variant="ghost"
-        onPress={confirmDeleteAccount}
-        loading={deleteAccount.isPending}
-        style={styles.deleteAccount}
-      />
+
+      {/* Settings — name, language, session; collapsed by default so the
+          screen stays about festivals, not forms. */}
+      <View style={styles.card}>
+        <Pressable style={styles.settingsHeader} onPress={() => setSettingsOpen((v) => !v)}>
+          <Text style={styles.cardTitle}>{t('settings.title')}</Text>
+          <Ionicons
+            name={settingsOpen ? 'chevron-up' : 'chevron-down'}
+            size={18}
+            color={colors.textMuted}
+          />
+        </Pressable>
+        {settingsOpen && (
+          <>
+            <TextField label={t('profile.displayName')} value={name} onChangeText={setName} />
+            {name.trim() !== (profile?.display_name ?? '') && name.trim().length > 0 && (
+              <Button
+                label={t('common.save')}
+                onPress={() => updateProfile.mutate({ display_name: name.trim() })}
+                loading={updateProfile.isPending}
+              />
+            )}
+            <Text style={styles.subLabel}>{t('settings.language')}</Text>
+            <View style={styles.langRow}>
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <Chip
+                  key={lang}
+                  label={LANGUAGE_LABELS[lang]}
+                  active={i18n.language === lang}
+                  onPress={() => changeLanguage(lang)}
+                />
+              ))}
+            </View>
+            <Button label={t('auth.signOut')} variant="ghost" onPress={() => void signOut()} />
+            <Button
+              label={t('profile.deleteAccount')}
+              variant="ghost"
+              onPress={confirmDeleteAccount}
+              loading={deleteAccount.isPending}
+              style={styles.deleteAccount}
+            />
+          </>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -382,26 +411,28 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: -spacing.md,
   },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  grid: { flexDirection: 'row', gap: spacing.sm },
   statBox: {
-    flexBasis: '47%',
-    flexGrow: 1,
+    flex: 1,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radii.md,
-    padding: spacing.lg,
-    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
+    alignItems: 'center',
+    gap: 2,
   },
   statValue: {
     fontFamily: typography.fonts.heading,
-    fontSize: typography.sizes.xl,
+    fontSize: typography.sizes.lg,
     color: colors.text,
   },
   statLabel: {
     fontFamily: typography.fonts.body,
-    fontSize: typography.sizes.xs,
+    fontSize: 10,
     color: colors.textSecondary,
+    textAlign: 'center',
   },
   card: {
     backgroundColor: colors.surface,
@@ -430,6 +461,19 @@ const styles = StyleSheet.create({
   },
   langRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   deleteAccount: { opacity: 0.6 },
+  settingsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  subLabel: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: spacing.sm,
+  },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   myFestivalsList: { gap: spacing.sm },
   emptyFilter: {

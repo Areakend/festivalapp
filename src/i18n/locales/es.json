@@ -134,7 +134,9 @@
     "requests": "Solicitudes de amistad",
     "accept": "Aceptar",
     "requestSent": "Solicitud enviada",
-    "noFriends": "Aún no tienes amigos — ¡añade algunos!"
+    "noFriends": "Aún no tienes amigos — ¡añade algunos!",
+    "decline": "Rechazar",
+    "remove": "Eliminar amigo"
   },
   "profile": {
     "myFestivals": "Mis festivales",

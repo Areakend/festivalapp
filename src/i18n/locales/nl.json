@@ -134,7 +134,9 @@
     "requests": "Vriendschapsverzoeken",
     "accept": "Accepteren",
     "requestSent": "Verzoek verzonden",
-    "noFriends": "Nog geen vrienden — voeg er een paar toe!"
+    "noFriends": "Nog geen vrienden — voeg er een paar toe!",
+    "decline": "Weigeren",
+    "remove": "Vriend verwijderen"
   },
   "profile": {
     "myFestivals": "Mijn festivals",

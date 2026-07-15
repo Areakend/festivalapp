@@ -134,7 +134,9 @@
     "requests": "Freundschaftsanfragen",
     "accept": "Annehmen",
     "requestSent": "Anfrage gesendet",
-    "noFriends": "Noch keine Freunde — füge welche hinzu!"
+    "noFriends": "Noch keine Freunde — füge welche hinzu!",
+    "decline": "Ablehnen",
+    "remove": "Freund entfernen"
   },
   "profile": {
     "myFestivals": "Meine Festivals",
