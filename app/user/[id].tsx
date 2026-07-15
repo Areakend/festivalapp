@@ -49,6 +49,17 @@ export default function FriendProfileScreen() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [yearFilter, setYearFilter] = useState<number | 'all'>('all');
   const [commonOnly, setCommonOnly] = useState(false);
+  // Each section is capped at 5 rows until expanded — profiles with long
+  // histories were painfully tall to scroll otherwise.
+  const [expandedSections, setExpandedSections] = useState<Set<FestivalStatus>>(new Set());
+  const toggleSection = (status: FestivalStatus) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
+  };
 
   const confirmRemoveFriend = () => {
     if (!friendshipId) return;
@@ -233,34 +244,47 @@ export default function FriendProfileScreen() {
             />
           </View>
 
-          {computed.sections.map((section) => (
-            <View key={section.status} style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Ionicons name={section.icon as never} size={18} color={section.color} />
-                <Text style={[styles.sectionTitle, { color: section.color }]}>
-                  {t(section.labelKey)}
-                </Text>
-                <Text style={styles.sectionCount}>{section.items.length}</Text>
+          {computed.sections.map((section) => {
+            const expanded = expandedSections.has(section.status);
+            const visible = expanded ? section.items : section.items.slice(0, 5);
+            return (
+              <View key={section.status} style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name={section.icon as never} size={18} color={section.color} />
+                  <Text style={[styles.sectionTitle, { color: section.color }]}>
+                    {t(section.labelKey)}
+                  </Text>
+                  <Text style={styles.sectionCount}>{section.items.length}</Text>
+                </View>
+                <View style={styles.list}>
+                  {visible.map((item) => (
+                    <ScheduleRow
+                      key={item.festival.id}
+                      item={item}
+                      meta={
+                        item.nextEdition
+                          ? `${formatDate(item.nextEdition.start_date)}${
+                              item.nextEdition.end_date ? ` – ${formatDate(item.nextEdition.end_date)}` : ''
+                            }`
+                          : t('home.dateTbc')
+                      }
+                      locale={i18n.language}
+                      onPress={() => openFestival(item)}
+                    />
+                  ))}
+                  {section.items.length > 5 && (
+                    <Pressable onPress={() => toggleSection(section.status)} hitSlop={8}>
+                      <Text style={styles.seeMore}>
+                        {expanded
+                          ? t('common.seeLess')
+                          : `${t('common.seeAll')} (${section.items.length})`}
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
               </View>
-              <View style={styles.list}>
-                {section.items.map((item) => (
-                  <ScheduleRow
-                    key={item.festival.id}
-                    item={item}
-                    meta={
-                      item.nextEdition
-                        ? `${formatDate(item.nextEdition.start_date)}${
-                            item.nextEdition.end_date ? ` – ${formatDate(item.nextEdition.end_date)}` : ''
-                          }`
-                        : t('home.dateTbc')
-                    }
-                    locale={i18n.language}
-                    onPress={() => openFestival(item)}
-                  />
-                ))}
-              </View>
-            </View>
-          ))}
+            );
+          })}
           {computed.sections.length === 0 && (
             <Text style={styles.empty}>{t('empty.noResults')}</Text>
           )}
@@ -384,5 +408,11 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
+  },
+  seeMore: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.primary,
+    paddingVertical: spacing.sm,
   },
 });
