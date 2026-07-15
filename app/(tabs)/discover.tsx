@@ -264,7 +264,7 @@ export default function FestivalsScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.festival.id}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + spacing.xxl }]}
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
     backgroundColor: colors.statusAttended,
   },
-  list: { gap: spacing.sm, paddingBottom: spacing.xxl },
+  list: { gap: spacing.sm },
   loader: { marginTop: spacing.xxxl },
   row: {
     flexDirection: 'row',

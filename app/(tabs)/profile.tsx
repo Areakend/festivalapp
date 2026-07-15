@@ -185,7 +185,7 @@ export default function ProfileScreen() {
       style={styles.container}
       contentContainerStyle={[
         styles.content,
-        { paddingTop: insets.top + spacing.lg, paddingBottom: spacing.xxl },
+        { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xxl },
       ]}
     >
       <Text style={styles.title}>{profile?.display_name ?? '…'}</Text>
