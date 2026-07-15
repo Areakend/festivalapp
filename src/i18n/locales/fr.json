@@ -243,6 +243,7 @@
     "toggle": {
       "rating": "Ma note",
       "counter": "Compteur",
+      "genres": "Styles",
       "location": "Lieu",
       "date": "Dates",
       "artists": "Artistes",
@@ -252,6 +253,7 @@
     "card": {
       "happeningNow": "En ce moment",
       "topArtists": "Têtes d'affiche",
+      "genres": "Styles",
       "with": "Avec",
       "crew": "Le crew",
       "footer": "Suis tes festivals sur Mainstage",
