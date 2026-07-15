@@ -52,7 +52,7 @@ export default function MyListScreen() {
       style={styles.container}
       contentContainerStyle={[
         styles.content,
-        { paddingTop: insets.top + spacing.lg, paddingBottom: spacing.xxl },
+        { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xxl },
       ]}
     >
       <View style={styles.header}>

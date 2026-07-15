@@ -39,6 +39,8 @@ export type StoryCardProps = {
   festivalName: string;
   /** Pre-formatted "flag city, country" line — null when the user hid it. */
   metaLine: string | null;
+  /** Pre-formatted day+month (no year) — null when hidden or unavailable. */
+  dateLabel: string | null;
   /** [] when hidden or none selected. */
   topArtists: string[];
   /** [] when hidden or none. */
@@ -50,14 +52,10 @@ export type StoryCardProps = {
       kind: 'next';
       daysUntil: number;
       happeningNow: boolean;
-      /** null when hidden. */
-      dateLabel: string | null;
     }
   | {
       kind: 'last';
       year: number;
-      /** Big watermark year behind the layout — toggleable like the rest. */
-      showYear: boolean;
       /** null when hidden or no review. */
       rating: number | null;
       /** Festivals attended in `year` — null when hidden or zero. */
@@ -72,11 +70,13 @@ const ALIGN_ITEMS: Record<CardAlign, 'flex-start' | 'center' | 'flex-end'> = {
 };
 
 /**
- * Instagram-story-shaped (9:16) share card, captured to a PNG by the share
- * screen. Poster-style: no header branding, the festival name is the hero
- * (with a giant watermark year behind it for "last" cards) and the only
- * brand mark is the footer pill. Every block is optional — the screen
- * passes null/[] for anything the user toggled off.
+ * Instagram-story-shaped (9:16) story card, captured to a PNG by the share
+ * screen. Poster-style: no header branding, the festival name is the hero,
+ * and the only brand mark is the footer pill. Every block is optional —
+ * the screen passes null/[] for anything the user toggled off. dateLabel
+ * is deliberately day+month only (no year — it's minor context, not
+ * worth a prominent slot) and sits inline with the rest of the body
+ * rather than as a standalone header element.
  */
 export const StoryCard = forwardRef<View, StoryCardProps>((props, ref) => {
   const { t } = useTranslation();
@@ -110,12 +110,6 @@ export const StoryCard = forwardRef<View, StoryCardProps>((props, ref) => {
         </>
       )}
 
-      {props.kind === 'last' && props.showYear && (
-        <Text style={styles.watermarkYear} numberOfLines={1}>
-          {props.year}
-        </Text>
-      )}
-
       <View style={[styles.body, { alignItems }]}>
         {props.kind === 'next' && (
           <Text style={[styles.hero, shadow, { textAlign }]}>
@@ -129,7 +123,7 @@ export const StoryCard = forwardRef<View, StoryCardProps>((props, ref) => {
         {props.metaLine != null && (
           <Text style={[styles.meta, shadow, { textAlign }]}>{props.metaLine}</Text>
         )}
-        {props.kind === 'next' && props.dateLabel != null && (
+        {props.dateLabel != null && (
           <Text style={[styles.meta, shadow, { textAlign }]}>{props.dateLabel}</Text>
         )}
 
@@ -196,15 +190,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     padding: spacing.xl,
     justifyContent: 'flex-end',
-  },
-  watermarkYear: {
-    position: 'absolute',
-    top: spacing.lg,
-    right: -spacing.md,
-    fontFamily: typography.fonts.heading,
-    fontSize: 124,
-    lineHeight: 132,
-    color: 'rgba(255,255,255,0.10)',
   },
   body: { gap: spacing.sm },
   hero: {

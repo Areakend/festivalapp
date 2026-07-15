@@ -135,7 +135,7 @@ export default function Home() {
       style={styles.container}
       contentContainerStyle={[
         styles.content,
-        { paddingTop: insets.top + spacing.lg, paddingBottom: spacing.xxl },
+        { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xxl },
       ]}
       refreshControl={
         <RefreshControl refreshing={isRefetching} onRefresh={refresh} tintColor={colors.primary} />

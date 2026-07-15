@@ -37,11 +37,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_CARD_ARTISTS = 5;
 
 /** Every hideable block on the card. */
-type ToggleKey = 'location' | 'date' | 'rating' | 'counter' | 'year' | 'artists' | 'friends' | 'footer';
+type ToggleKey = 'location' | 'date' | 'rating' | 'counter' | 'artists' | 'friends' | 'footer';
 
 const TOGGLES_BY_KIND: Record<'next' | 'last', ToggleKey[]> = {
   next: ['date', 'location', 'artists', 'friends', 'footer'],
-  last: ['rating', 'counter', 'year', 'location', 'artists', 'friends', 'footer'],
+  last: ['date', 'rating', 'counter', 'location', 'artists', 'friends', 'footer'],
 };
 
 const TOGGLE_LABEL_KEYS: Record<ToggleKey, string> = {
@@ -49,7 +49,6 @@ const TOGGLE_LABEL_KEYS: Record<ToggleKey, string> = {
   date: 'share.toggle.date',
   rating: 'share.toggle.rating',
   counter: 'share.toggle.counter',
-  year: 'share.toggle.year',
   artists: 'share.toggle.artists',
   friends: 'share.toggle.friends',
   footer: 'share.toggle.footer',
@@ -271,6 +270,24 @@ export default function ShareScreen() {
           .join(', ')}`
       : null;
 
+  // Day + month only — no year, it's minor context and gets its own toggle,
+  // not a prominent slot on the card. "Next" reads dates off the upcoming
+  // edition already in the catalog; "last" looks up the specific edition
+  // that matches the logged attendance year.
+  const lastEditionDates =
+    kind === 'last' && last ? detail?.editions.find((e) => e.year === last.year) : undefined;
+  const dateLabel = !show('date')
+    ? null
+    : kind === 'next' && next?.item.nextEdition
+      ? `${formatDate(next.item.nextEdition.start_date)}${
+          next.item.nextEdition.end_date ? ` – ${formatDate(next.item.nextEdition.end_date)}` : ''
+        }`
+      : kind === 'last' && lastEditionDates?.start_date
+        ? `${formatDate(lastEditionDates.start_date)}${
+            lastEditionDates.end_date ? ` – ${formatDate(lastEditionDates.end_date)}` : ''
+          }`
+        : null;
+
   const yearCount =
     kind === 'last' && last
       ? (myAttendances ?? []).filter((a) => a.attended_year === last.year).length
@@ -309,17 +326,9 @@ export default function ShareScreen() {
                   align={align}
                   festivalName={next.item.festival.name}
                   metaLine={metaLine}
+                  dateLabel={dateLabel}
                   daysUntil={next.daysUntil}
                   happeningNow={next.happeningNow}
-                  dateLabel={
-                    show('date') && next.item.nextEdition
-                      ? `${formatDate(next.item.nextEdition.start_date)}${
-                          next.item.nextEdition.end_date
-                            ? ` – ${formatDate(next.item.nextEdition.end_date)}`
-                            : ''
-                        }`
-                      : null
-                  }
                   friendNames={show('friends') ? next.friendNames : []}
                   topArtists={show('artists') ? topArtists : []}
                   showFooter={show('footer')}
@@ -332,8 +341,8 @@ export default function ShareScreen() {
                   align={align}
                   festivalName={last.item.festival.name}
                   metaLine={metaLine}
+                  dateLabel={dateLabel}
                   year={last.year}
-                  showYear={show('year')}
                   rating={show('rating') ? last.rating : null}
                   yearCount={show('counter') && yearCount > 0 ? yearCount : null}
                   friendNames={show('friends') ? last.crewNames : []}
@@ -442,7 +451,7 @@ export default function ShareScreen() {
             )}
           </ScrollView>
 
-          <View style={styles.actions}>
+          <View style={[styles.actions, { paddingBottom: insets.bottom + spacing.lg }]}>
             <Button
               label={t('share.download')}
               variant="secondary"
@@ -510,6 +519,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
   },
-  actions: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.xl },
+  actions: { flexDirection: 'row', gap: spacing.md },
   actionButton: { flex: 1 },
 });
