@@ -221,9 +221,15 @@ export function useMyAttendances() {
     queryKey: ['my-attendances', userId],
     enabled: !!userId,
     queryFn: async () => {
+      // Explicit user_id filter: user_attendances is now publicly
+      // readable to any signed-in user (see the public-history RLS
+      // policy), which this query must not pick up — without it, "my"
+      // attendances silently included everyone's, e.g. surfacing a
+      // stranger's festival as "my last festival" to share.
       const { data, error } = await supabase
         .from('user_attendances')
         .select('*')
+        .eq('user_id', userId!)
         .order('attended_year', { ascending: false });
       if (error) throw error;
       return data as UserAttendance[];
