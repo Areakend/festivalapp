@@ -3,6 +3,14 @@ name: EAS Build
 on:
   workflow_dispatch:
     inputs:
+      platform:
+        description: Target platform
+        required: true
+        default: android
+        type: choice
+        options:
+          - android
+          - ios
       profile:
         description: EAS build profile (see eas.json)
         required: true
@@ -23,7 +31,9 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # iOS local builds need Xcode, only available on macOS runners. This repo
+    # is public, so macOS minutes are free — no cost concern in picking it.
+    runs-on: ${{ inputs.local && inputs.platform == 'ios' && 'macos-latest' || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -35,7 +45,7 @@ jobs:
       - run: npm ci
 
       - uses: actions/setup-java@v4
-        if: ${{ inputs.local }}
+        if: ${{ inputs.local && inputs.platform == 'android' }}
         with:
           distribution: temurin
           java-version: '17'
@@ -53,7 +63,7 @@ jobs:
       # arm64-v8a-only halves the compile work (every real phone this APK
       # targets is arm64).
       - name: Configure Gradle settings
-        if: ${{ inputs.local }}
+        if: ${{ inputs.local && inputs.platform == 'android' }}
         run: |
           mkdir -p ~/.gradle
           {
@@ -65,7 +75,7 @@ jobs:
           } >> ~/.gradle/gradle.properties
 
       - name: Setup swap space
-        if: ${{ inputs.local }}
+        if: ${{ inputs.local && inputs.platform == 'android' }}
         run: |
           sudo swapoff -a
           sudo fallocate -l 8G /swapfile
@@ -74,27 +84,42 @@ jobs:
           sudo swapon /swapfile
           sudo sysctl vm.swappiness=10
 
+      # Output extension differs by platform/profile: Android gives an .aab
+      # for production (Play Store upload format) or an installable .apk
+      # otherwise. iOS has no signing set up yet (needs an Apple Developer
+      # account), so only simulator builds work for now — those come out as
+      # a .tar.gz containing the .app bundle, installable in the iOS
+      # Simulator only, not on a real device.
+      - name: Determine output extension
+        id: vars
+        run: |
+          if [ "${{ inputs.platform }}" = "android" ]; then
+            if [ "${{ inputs.profile }}" = "production" ]; then echo "ext=aab" >> "$GITHUB_OUTPUT"; else echo "ext=apk" >> "$GITHUB_OUTPUT"; fi
+          else
+            if [ "${{ inputs.profile }}" = "production" ]; then echo "ext=ipa" >> "$GITHUB_OUTPUT"; else echo "ext=tar.gz" >> "$GITHUB_OUTPUT"; fi
+          fi
+
       # Runs the actual native build on this runner (credentials/keystore are
       # still fetched from EAS) instead of on EAS's build servers, so it
       # doesn't count against the EAS free-plan monthly build quota.
-      # The production profile produces an .aab (Play Store upload format);
-      # the others produce installable .apk files.
       - name: Build locally
         if: ${{ inputs.local }}
-        run: eas build --platform android --profile ${{ inputs.profile }} --local --non-interactive --output "${{ github.workspace }}/app.${{ inputs.profile == 'production' && 'aab' || 'apk' }}"
+        run: eas build --platform ${{ inputs.platform }} --profile ${{ inputs.profile }} --local --non-interactive --output "${{ github.workspace }}/app.${{ steps.vars.outputs.ext }}"
 
       - name: Upload build
         if: ${{ inputs.local }}
         uses: actions/upload-artifact@v4
         with:
-          name: app-${{ inputs.profile }}
-          path: app.${{ inputs.profile == 'production' && 'aab' || 'apk' }}
+          name: app-${{ inputs.platform }}-${{ inputs.profile }}
+          path: app.${{ steps.vars.outputs.ext }}
 
       # Publish as a GitHub Release so anyone (no GitHub account needed) can
       # download the APK. The stable link always serves the newest build:
       # https://github.com/Areakend/festivalapp/releases/latest/download/mainstage.apk
+      # Android-only: an iOS simulator .tar.gz isn't installable outside a Mac,
+      # so there's no equivalent "just download and run" release for it yet.
       - name: Publish release
-        if: ${{ inputs.local && inputs.profile == 'preview' }}
+        if: ${{ inputs.local && inputs.platform == 'android' && inputs.profile == 'preview' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -107,4 +132,4 @@ jobs:
 
       - name: Build on EAS cloud
         if: ${{ !inputs.local }}
-        run: eas build --platform android --profile ${{ inputs.profile }} --non-interactive --no-wait
+        run: eas build --platform ${{ inputs.platform }} --profile ${{ inputs.profile }} --non-interactive --no-wait
