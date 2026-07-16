@@ -1,0 +1,438 @@
+[
+  {
+    "slug": "808-festival",
+    "theme": "sunset"
+  },
+  {
+    "slug": "a-state-of-trance",
+    "theme": "ocean"
+  },
+  {
+    "slug": "airbeat-one",
+    "theme": "sunset"
+  },
+  {
+    "slug": "amf",
+    "theme": "ocean"
+  },
+  {
+    "slug": "amsterdam-dance-event",
+    "theme": "violet"
+  },
+  {
+    "slug": "arc",
+    "theme": "violet"
+  },
+  {
+    "slug": "ava",
+    "theme": "violet"
+  },
+  {
+    "slug": "baum",
+    "theme": "violet"
+  },
+  {
+    "slug": "beats-for-love",
+    "theme": "forest"
+  },
+  {
+    "slug": "beonix",
+    "theme": "violet"
+  },
+  {
+    "slug": "beyond-the-valley",
+    "theme": "forest"
+  },
+  {
+    "slug": "beyond-wonderland",
+    "theme": "sunset"
+  },
+  {
+    "slug": "blacklist",
+    "theme": "sunset"
+  },
+  {
+    "slug": "brunch-electronik",
+    "theme": "violet"
+  },
+  {
+    "slug": "cercle-music-festival",
+    "theme": "violet"
+  },
+  {
+    "slug": "chauffer-dans-la-noirceur",
+    "theme": "violet"
+  },
+  {
+    "slug": "creamfields-chile",
+    "theme": "violet"
+  },
+  {
+    "slug": "creamfields-hong-kong",
+    "theme": "violet"
+  },
+  {
+    "slug": "crssd",
+    "theme": "violet"
+  },
+  {
+    "slug": "decibel-open-air",
+    "theme": "violet"
+  },
+  {
+    "slug": "defected-croatia",
+    "theme": "violet"
+  },
+  {
+    "slug": "defected-malta",
+    "theme": "violet"
+  },
+  {
+    "slug": "dekmantel",
+    "theme": "violet"
+  },
+  {
+    "slug": "dimensions",
+    "theme": "sunset"
+  },
+  {
+    "slug": "djakarta-warehouse-project",
+    "theme": "violet"
+  },
+  {
+    "slug": "dream-nation",
+    "theme": "violet"
+  },
+  {
+    "slug": "dream-village",
+    "theme": "sunset"
+  },
+  {
+    "slug": "dreamfields",
+    "theme": "ocean"
+  },
+  {
+    "slug": "echelon-festival",
+    "theme": "violet"
+  },
+  {
+    "slug": "edc-china",
+    "theme": "sunset"
+  },
+  {
+    "slug": "edc-mexico",
+    "theme": "violet"
+  },
+  {
+    "slug": "edc-orlando",
+    "theme": "sunset"
+  },
+  {
+    "slug": "edc-thailand",
+    "theme": "violet"
+  },
+  {
+    "slug": "electric-mountain-festival",
+    "theme": "violet"
+  },
+  {
+    "slug": "elektric-park",
+    "theme": "violet"
+  },
+  {
+    "slug": "eskape",
+    "theme": "sunset"
+  },
+  {
+    "slug": "fcknye-festival",
+    "theme": "sunset"
+  },
+  {
+    "slug": "beauregard",
+    "theme": "forest"
+  },
+  {
+    "slug": "fly-open-air",
+    "theme": "violet"
+  },
+  {
+    "slug": "francofolies-la-rochelle",
+    "theme": "forest"
+  },
+  {
+    "slug": "francofolies-esch",
+    "theme": "forest"
+  },
+  {
+    "slug": "glitch",
+    "theme": "violet"
+  },
+  {
+    "slug": "gmo-sonic",
+    "theme": "violet"
+  },
+  {
+    "slug": "groove-cruise",
+    "theme": "violet"
+  },
+  {
+    "slug": "hard-summer",
+    "theme": "sunset"
+  },
+  {
+    "slug": "hellfest",
+    "theme": "sunset"
+  },
+  {
+    "slug": "hideout",
+    "theme": "sunset"
+  },
+  {
+    "slug": "holy-ship-wrecked",
+    "theme": "ocean"
+  },
+  {
+    "slug": "houghton",
+    "theme": "violet"
+  },
+  {
+    "slug": "iii-points",
+    "theme": "forest"
+  },
+  {
+    "slug": "into-the-woods",
+    "theme": "violet"
+  },
+  {
+    "slug": "les-ardentes",
+    "theme": "forest"
+  },
+  {
+    "slug": "les-deferlantes",
+    "theme": "forest"
+  },
+  {
+    "slug": "les-plages-electroniques",
+    "theme": "violet"
+  },
+  {
+    "slug": "lmf",
+    "theme": "violet"
+  },
+  {
+    "slug": "lost-lands",
+    "theme": "sunset"
+  },
+  {
+    "slug": "lost-village",
+    "theme": "violet"
+  },
+  {
+    "slug": "love-international",
+    "theme": "violet"
+  },
+  {
+    "slug": "lovefest",
+    "theme": "violet"
+  },
+  {
+    "slug": "loveland",
+    "theme": "violet"
+  },
+  {
+    "slug": "luxembourg-open-air",
+    "theme": "violet"
+  },
+  {
+    "slug": "medusa",
+    "theme": "sunset"
+  },
+  {
+    "slug": "movement",
+    "theme": "violet"
+  },
+  {
+    "slug": "nameless",
+    "theme": "forest"
+  },
+  {
+    "slug": "neon-countdown",
+    "theme": "violet"
+  },
+  {
+    "slug": "neopop",
+    "theme": "violet"
+  },
+  {
+    "slug": "neversea",
+    "theme": "violet"
+  },
+  {
+    "slug": "nibirii",
+    "theme": "sunset"
+  },
+  {
+    "slug": "oasis",
+    "theme": "violet"
+  },
+  {
+    "slug": "ostend-beach-festival",
+    "theme": "violet"
+  },
+  {
+    "slug": "outlook-origins",
+    "theme": "sunset"
+  },
+  {
+    "slug": "panorama",
+    "theme": "violet"
+  },
+  {
+    "slug": "parklife",
+    "theme": "forest"
+  },
+  {
+    "slug": "pitch-music-arts",
+    "theme": "violet"
+  },
+  {
+    "slug": "positiv",
+    "theme": "violet"
+  },
+  {
+    "slug": "primer",
+    "theme": "violet"
+  },
+  {
+    "slug": "rave-on-snow",
+    "theme": "violet"
+  },
+  {
+    "slug": "ravolution",
+    "theme": "ocean"
+  },
+  {
+    "slug": "rfm-somnii",
+    "theme": "violet"
+  },
+  {
+    "slug": "s2o-hong-kong",
+    "theme": "violet"
+  },
+  {
+    "slug": "s2o-bangkok",
+    "theme": "violet"
+  },
+  {
+    "slug": "s2o-taiwan",
+    "theme": "violet"
+  },
+  {
+    "slug": "saga",
+    "theme": "violet"
+  },
+  {
+    "slug": "scream-or-dance",
+    "theme": "violet"
+  },
+  {
+    "slug": "sea-star",
+    "theme": "violet"
+  },
+  {
+    "slug": "siam-songkran",
+    "theme": "violet"
+  },
+  {
+    "slug": "sonar",
+    "theme": "violet"
+  },
+  {
+    "slug": "sonar-lisboa",
+    "theme": "violet"
+  },
+  {
+    "slug": "sonus",
+    "theme": "violet"
+  },
+  {
+    "slug": "soundstorm",
+    "theme": "violet"
+  },
+  {
+    "slug": "sunset-by-neon",
+    "theme": "violet"
+  },
+  {
+    "slug": "terminal-v",
+    "theme": "violet"
+  },
+  {
+    "slug": "magic-of-tomorrowland",
+    "theme": "ocean"
+  },
+  {
+    "slug": "thuishaven",
+    "theme": "violet"
+  },
+  {
+    "slug": "together",
+    "theme": "violet"
+  },
+  {
+    "slug": "tomorrowland-winter",
+    "theme": "violet"
+  },
+  {
+    "slug": "toxicator",
+    "theme": "sunset"
+  },
+  {
+    "slug": "transmission",
+    "theme": "ocean"
+  },
+  {
+    "slug": "unseen",
+    "theme": "violet"
+  },
+  {
+    "slug": "untold-dubai",
+    "theme": "violet"
+  },
+  {
+    "slug": "valhalla",
+    "theme": "sunset"
+  },
+  {
+    "slug": "veld",
+    "theme": "forest"
+  },
+  {
+    "slug": "verknipt",
+    "theme": "sunset"
+  },
+  {
+    "slug": "vh1-supersonic",
+    "theme": "violet"
+  },
+  {
+    "slug": "vision-colour",
+    "theme": "violet"
+  },
+  {
+    "slug": "white-party-bangkok",
+    "theme": "violet"
+  },
+  {
+    "slug": "woodstoig",
+    "theme": "sunset"
+  },
+  {
+    "slug": "world-club-dome-malta",
+    "theme": "violet"
+  },
+  {
+    "slug": "world-dj-festival",
+    "theme": "violet"
+  }
+]
