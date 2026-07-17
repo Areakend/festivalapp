@@ -366,10 +366,10 @@ function usePastEditionsForFestivals(festivalIds: string[]) {
         latestByFestival.set(e.festival_id, { year: e.year, start_date: e.start_date, end_date: e.end_date });
       }
 
-      const byFestival = new Map<string, { year: number }>();
+      const byFestival = new Map<string, { year: number; finishedBy: string }>();
       for (const [festivalId, e] of latestByFestival) {
         const finishedBy = e.end_date ?? e.start_date;
-        if (finishedBy < today) byFestival.set(festivalId, { year: e.year });
+        if (finishedBy < today) byFestival.set(festivalId, { year: e.year, finishedBy });
       }
       return byFestival;
     },
@@ -401,6 +401,17 @@ export function useAutoAdvancePlannedFestivals() {
     for (const festivalId of plannedFestivalIds) {
       const past = pastEditions.get(festivalId);
       if (!past) continue;
+
+      // Only advance a status set BEFORE the edition finished — time
+      // genuinely passed it by since the user planned it. A "planned"
+      // marked AFTER it already finished (e.g. someone flagging a
+      // recurring festival they want to catch next time, before next
+      // year's dates exist yet) must not be silently reinterpreted as
+      // "yes I went" the instant it's checked.
+      const plannedStatus = (myStatuses ?? []).find(
+        (s) => s.festival_id === festivalId && s.status === 'planned',
+      );
+      if (!plannedStatus || plannedStatus.created_at >= past.finishedBy) continue;
 
       toggleStatus.mutate({ festivalId, status: 'planned', active: true }); // remove
       const alreadyAttended = (myStatuses ?? []).some(
