@@ -194,7 +194,13 @@ export default function FestivalDetailScreen() {
           <Image
             source={{ uri: festival.cover_image_url }}
             style={StyleSheet.absoluteFill}
-            contentFit="cover"
+            // Generated covers (assets/generated-covers) are square
+            // gradient+typography graphics with the festival name baked
+            // in — cropping them to this wide, short header with
+            // contentFit="cover" slices right through the text. Real
+            // Commons photos have no such constraint, so only the
+            // generated ones need the no-crop "contain" treatment.
+            contentFit={festival.cover_image_url.includes('/generated-covers/') ? 'contain' : 'cover'}
             transition={150}
           />
         ) : (
