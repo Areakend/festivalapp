@@ -134,9 +134,16 @@ export default function ProfileScreen() {
 
   const myFestivalItems = useMemo(() => {
     const byId = new Map((catalog ?? []).map((item) => [item.festival.id, item]));
-    const attendedYearByFestival = new Map(
-      (myAttendances ?? []).map((a) => [a.festival_id, a.attended_year] as const),
-    );
+    // A festival can carry several attended years, so this must keep every
+    // year per festival — a plain Map<festival_id, year> only keeps the
+    // last one seen and silently drops the rest, breaking the year filter
+    // for anyone who's been to a festival more than once.
+    const attendedYearsByFestival = new Map<string, Set<number>>();
+    for (const a of myAttendances ?? []) {
+      const set = attendedYearsByFestival.get(a.festival_id) ?? new Set<number>();
+      set.add(a.attended_year);
+      attendedYearsByFestival.set(a.festival_id, set);
+    }
     const rows = (myStatuses ?? [])
       .filter((s) => s.status === 'attended' || s.status === 'planned')
       .filter((s) => myStatusFilter === 'all' || s.status === myStatusFilter)
@@ -144,7 +151,7 @@ export default function ProfileScreen() {
       .filter((row): row is { item: CatalogItem; status: 'attended' | 'planned' } => row.item != null)
       .filter((row) => {
         if (row.status !== 'attended' || myYearFilter === 'all') return true;
-        return attendedYearByFestival.get(row.item.festival.id) === myYearFilter;
+        return attendedYearsByFestival.get(row.item.festival.id)?.has(myYearFilter) ?? false;
       });
 
     // A festival can legitimately carry both "attended" and "planned" at

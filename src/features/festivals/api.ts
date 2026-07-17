@@ -347,18 +347,25 @@ function usePastEditionsForFestivals(festivalIds: string[]) {
 
       const today = new Date().toISOString().slice(0, 10);
       const byFestival = new Map<string, { year: number }>();
+      // Rows are ordered by start_date desc, so the first row per festival
+      // is its single most recent edition — whether that one is finished
+      // or still upcoming. A festival can have both past and future
+      // editions (e.g. a recurring one with several years seeded); only
+      // its most recent edition should decide auto-conversion, otherwise
+      // an old finished edition wrongly flips a "planned" status that's
+      // actually pointing at a still-upcoming edition.
+      const seen = new Set<string>();
       for (const e of data as {
         festival_id: string;
         year: number;
         start_date: string | null;
         end_date: string | null;
       }[]) {
-        if (!e.start_date) continue;
+        if (!e.start_date || seen.has(e.festival_id)) continue;
+        seen.add(e.festival_id);
         const finishedBy = e.end_date ?? e.start_date;
-        if (finishedBy >= today) continue; // still upcoming or ongoing
-        // Rows are ordered by start_date desc, so the first match per
-        // festival is its most recent finished edition.
-        if (!byFestival.has(e.festival_id)) byFestival.set(e.festival_id, { year: e.year });
+        if (finishedBy >= today) continue; // most recent edition is still upcoming
+        byFestival.set(e.festival_id, { year: e.year });
       }
       return byFestival;
     },
