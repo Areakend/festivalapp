@@ -66,6 +66,7 @@ export interface UserFestivalStatus {
   user_id: string;
   festival_id: string;
   status: FestivalStatus;
+  created_at: string;
 }
 
 export interface UserAttendance {
