@@ -148,6 +148,18 @@ export default function FestivalDetailScreen() {
   }
 
   const { festival, editions, rankings, stats } = data;
+  // Soonest edition still upcoming; if none, fall back to the most recent
+  // one (editions come back sorted year desc, so the first dated row is
+  // it) so a past-only festival still shows *a* date rather than none.
+  const today = new Date().toISOString().slice(0, 10);
+  const nextEdition =
+    [...editions]
+      .filter((e) => e.start_date && e.start_date >= today)
+      .sort((a, b) => a.start_date!.localeCompare(b.start_date!))[0] ??
+    editions.find((e) => e.start_date) ??
+    null;
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' });
   const activeStatuses = new Set(
     (myStatuses ?? [])
       .filter((s) => s.festival_id === festival.id)
@@ -177,19 +189,7 @@ export default function FestivalDetailScreen() {
       contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xxl }}
     >
       {/* Header / cover */}
-      <View style={[styles.cover, { paddingTop: insets.top + spacing.md }]}>
-        <Pressable style={styles.back} onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </Pressable>
-        {festival.official_website && (
-          <Pressable
-            style={[styles.back, styles.websiteButton]}
-            onPress={() => Linking.openURL(festival.official_website!)}
-            hitSlop={12}
-          >
-            <Ionicons name="globe-outline" size={22} color={colors.text} />
-          </Pressable>
-        )}
+      <View style={styles.cover}>
         {festival.cover_image_url ? (
           <Image
             source={{ uri: festival.cover_image_url }}
@@ -207,6 +207,25 @@ export default function FestivalDetailScreen() {
         <Text style={styles.location}>
           {countryFlag(festival.country)} {[festival.city, festival.venue].filter(Boolean).join(' · ')}
         </Text>
+        {nextEdition?.start_date && (
+          <View style={styles.dateRow}>
+            <Ionicons name="calendar-outline" size={15} color={colors.textSecondary} />
+            <Text style={styles.dateText}>
+              {formatDate(nextEdition.start_date)}
+              {nextEdition.end_date ? ` – ${formatDate(nextEdition.end_date)}` : ''}
+            </Text>
+          </View>
+        )}
+        {festival.official_website && (
+          <Pressable
+            style={styles.websiteRow}
+            onPress={() => Linking.openURL(festival.official_website!)}
+            hitSlop={8}
+          >
+            <Ionicons name="globe-outline" size={15} color={colors.primary} />
+            <Text style={styles.websiteText}>{t('festival.website')}</Text>
+          </Pressable>
+        )}
 
         <View style={styles.genreRow}>
           {festival.genres.map((g) => (
@@ -464,17 +483,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  back: {
-    position: 'absolute',
-    left: spacing.lg,
-    top: 0,
-    marginTop: spacing.xxxl,
-    backgroundColor: `${colors.background}CC`,
-    borderRadius: radii.full,
-    padding: spacing.sm,
-    zIndex: 1,
-  },
-  websiteButton: { left: undefined, right: spacing.lg },
   coverLetter: {
     fontFamily: typography.fonts.heading,
     fontSize: 72,
@@ -490,6 +498,18 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.md,
     color: colors.textSecondary,
+  },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  dateText: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+  },
+  websiteRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  websiteText: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.primary,
   },
   genreRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   lineupWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
