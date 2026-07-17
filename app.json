@@ -11,7 +11,11 @@
     "icon": "./assets/icon.png",
     "ios": {
       "bundleIdentifier": "com.areakend.festiq",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "buildNumber": "2"
     },
     "android": {
       "package": "com.areakend.festiq",
