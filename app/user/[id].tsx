@@ -133,9 +133,14 @@ export default function FriendProfileScreen() {
   const computed = useMemo(() => {
     if (!data || !catalog) return null;
     const byId = new Map(catalog.map((item) => [item.festival.id, item]));
-    const attendedYearByFestival = new Map(
-      data.attendances.map((a) => [a.festival_id, a.attended_year] as const),
-    );
+    // A festival can be logged as attended in several different years —
+    // keep all of them per festival (see the same fix in profile.tsx).
+    const attendedYearsByFestival = new Map<string, number[]>();
+    for (const a of data.attendances) {
+      const years = attendedYearsByFestival.get(a.festival_id);
+      if (years) years.push(a.attended_year);
+      else attendedYearsByFestival.set(a.festival_id, [a.attended_year]);
+    }
 
     const sections = SECTIONS.filter((s) => statusFilter === 'all' || s.status === statusFilter)
       .map((section) => ({
@@ -147,7 +152,7 @@ export default function FriendProfileScreen() {
           .filter((item) => {
             // Year filter only makes sense for logged attendance years.
             if (section.status !== 'attended' || yearFilter === 'all') return true;
-            return attendedYearByFestival.get(item.festival.id) === yearFilter;
+            return (attendedYearsByFestival.get(item.festival.id) ?? []).includes(yearFilter);
           })
           .filter((item) => {
             if (!commonOnly) return true;
