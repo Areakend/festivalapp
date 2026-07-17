@@ -16,6 +16,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Chip } from '@/components/ui/Chip';
 import { FilterSheet } from '@/components/ui/FilterSheet';
+import { MultiFilterSheet } from '@/components/ui/MultiFilterSheet';
 import { DateRangeSheet } from '@/components/ui/DateRangeSheet';
 import { useFestivals, useMyStatuses, useToggleStatus, type CatalogItem } from '@/features/festivals/api';
 import { useMyReviews } from '@/features/reviews/api';
@@ -45,8 +46,8 @@ export default function FestivalsScreen() {
   const { data: followedRanking } = useFollowedArtistsRanking();
 
   const [search, setSearch] = useState('');
-  const [genre, setGenre] = useState<string | null>(null);
-  const [country, setCountry] = useState<string | null>(null);
+  const [genres, setGenres] = useState<string[]>([]);
+  const [countries, setCountries] = useState<string[]>([]);
   const [top100Only, setTop100Only] = useState(false);
   const [attendedOnly, setAttendedOnly] = useState(false);
   const [period, setPeriod] = useState<PeriodKey>('all');
@@ -119,8 +120,8 @@ export default function FestivalsScreen() {
     const result = data.filter((item) => {
       const { festival, nextEdition } = item;
       if (q && !festival.name.toLowerCase().includes(q)) return false;
-      if (genre && !festival.genres.includes(genre)) return false;
-      if (country && festival.country !== country) return false;
+      if (genres.length > 0 && !festival.genres.some((g) => genres.includes(g))) return false;
+      if (countries.length > 0 && !countries.includes(festival.country)) return false;
       if (top100Only && item.djmagRank == null) return false;
       if (attendedOnly && !attendedIds.has(festival.id)) return false;
       if (period !== 'all') {
@@ -158,8 +159,8 @@ export default function FestivalsScreen() {
   }, [
     data,
     search,
-    genre,
-    country,
+    genres,
+    countries,
     top100Only,
     attendedOnly,
     period,
@@ -225,13 +226,25 @@ export default function FestivalsScreen() {
           onPress={() => setAttendedOnly((v) => !v)}
         />
         <Chip
-          label={genre ?? t('festival.genres')}
-          active={genre != null}
+          label={
+            genres.length === 0
+              ? t('festival.genres')
+              : genres.length === 1
+                ? (genres[0] ?? '')
+                : `${t('festival.genres')} (${genres.length})`
+          }
+          active={genres.length > 0}
           onPress={() => setOpenSheet('genre')}
         />
         <Chip
-          label={country ? `${countryFlag(country)} ${country}` : t('djmag.filterCountry')}
-          active={country != null}
+          label={
+            countries.length === 0
+              ? t('djmag.filterCountry')
+              : countries.length === 1
+                ? `${countryFlag(countries[0] ?? '')} ${countries[0]}`
+                : `${t('djmag.filterCountry')} (${countries.length})`
+          }
+          active={countries.length > 0}
           onPress={() => setOpenSheet('country')}
         />
         <Chip
@@ -309,20 +322,20 @@ export default function FestivalsScreen() {
         />
       )}
 
-      <FilterSheet
+      <MultiFilterSheet
         visible={openSheet === 'genre'}
         title={t('festival.genres')}
         options={genreOptions}
-        selected={genre}
-        onSelect={setGenre}
+        selected={genres}
+        onChange={setGenres}
         onClose={() => setOpenSheet(null)}
       />
-      <FilterSheet
+      <MultiFilterSheet
         visible={openSheet === 'country'}
         title={t('djmag.filterCountry')}
         options={countryOptions}
-        selected={country}
-        onSelect={setCountry}
+        selected={countries}
+        onChange={setCountries}
         onClose={() => setOpenSheet(null)}
       />
       <FilterSheet
