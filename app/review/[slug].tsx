@@ -1,18 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as SecureStore from 'expo-secure-store';
 
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { RatingBar, ratingColor } from '@/components/ui/RatingBar';
 import { RatingGuideSheet, ratingBandKey } from '@/components/review/RatingGuideSheet';
+import { RatingDuelSheet, type RatingBenchmark } from '@/components/review/RatingDuelSheet';
 import { AttendanceYearSheet } from '@/components/ui/AttendanceYearSheet';
-import { useAddAttendance, useFestivalDetail, useMyAttendances } from '@/features/festivals/api';
-import { useDeleteReview, useMyReview, useUpsertReview } from '@/features/reviews/api';
+import { useAddAttendance, useFestivalDetail, useFestivals, useMyAttendances } from '@/features/festivals/api';
+import { useDeleteReview, useMyReview, useMyReviews, useUpsertReview } from '@/features/reviews/api';
 import { colors, radii, spacing, typography } from '@/theme';
 
 const SUB_RATINGS = [
@@ -42,6 +44,8 @@ export default function ReviewScreen() {
 
   const { data: detail } = useFestivalDetail(slug);
   const { data: myAttendances } = useMyAttendances();
+  const { data: catalog } = useFestivals();
+  const { data: myReviews } = useMyReviews();
   const upsert = useUpsertReview();
   const deleteReview = useDeleteReview();
   const addAttendance = useAddAttendance();
@@ -55,6 +59,47 @@ export default function ReviewScreen() {
   const [year, setYear] = useState<number | null>(null);
   const [yearSheetOpen, setYearSheetOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [duelOpen, setDuelOpen] = useState(false);
+
+  // First-ever review: open the rating guide once, automatically, so every
+  // new reviewer sees the calibration scale before their first score.
+  useEffect(() => {
+    void (async () => {
+      try {
+        const seen = await SecureStore.getItemAsync('rating_guide_seen');
+        if (!seen) {
+          setGuideOpen(true);
+          await SecureStore.setItemAsync('rating_guide_seen', '1');
+        }
+      } catch {
+        // Storage unavailable — skip the auto-open rather than block rating.
+      }
+    })();
+  }, []);
+
+  // The user's own scores for other festivals (latest year per festival) —
+  // calibration anchors for both the benchmark strip and the duel flow.
+  const benchmarks = useMemo<RatingBenchmark[]>(() => {
+    if (!myReviews || !detail) return [];
+    const nameById = new Map((catalog ?? []).map((c) => [c.festival.id, c.festival.name]));
+    const byFestival = new Map<string, RatingBenchmark>();
+    for (const r of [...myReviews].sort((a, b) => (a.year ?? 0) - (b.year ?? 0))) {
+      if (r.festival_id === detail.festival.id) continue;
+      const name = nameById.get(r.festival_id);
+      if (!name) continue;
+      byFestival.set(r.festival_id, { name, rating: Math.round(r.overall_rating) });
+    }
+    return [...byFestival.values()];
+  }, [myReviews, catalog, detail]);
+
+  // Show the 4 most useful anchors: nearest to the picked score once there
+  // is one, the user's top scores before that.
+  const shownBenchmarks = useMemo(() => {
+    const sorted = [...benchmarks].sort((a, b) =>
+      overall > 0 ? Math.abs(a.rating - overall) - Math.abs(b.rating - overall) : b.rating - a.rating,
+    );
+    return sorted.slice(0, 4);
+  }, [benchmarks, overall]);
   const [comment, setComment] = useState('');
   const [subs, setSubs] = useState<Record<SubRatingKey, number>>({
     lineup_rating: 0,
@@ -207,9 +252,41 @@ export default function ReviewScreen() {
           </Text>
         )}
         <RatingBar value={overall} onChange={setOverall} />
+
+        {/* Personal calibration: the user's own scores for other festivals,
+            re-sorted to the nearest ones once a score is picked — "is this
+            really better than the 16 I gave Dour?". */}
+        {shownBenchmarks.length > 0 && (
+          <>
+            <Text style={styles.benchmarksLabel}>{t('review.benchmarks')}</Text>
+            <View style={styles.benchmarkRow}>
+              {shownBenchmarks.map((b) => (
+                <View key={b.name} style={styles.benchmarkChip}>
+                  <Text style={styles.benchmarkName} numberOfLines={1}>
+                    {b.name}
+                  </Text>
+                  <Text style={[styles.benchmarkScore, { color: ratingColor(b.rating) }]}>
+                    {b.rating}/20
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+        {benchmarks.length >= 2 && (
+          <Pressable onPress={() => setDuelOpen(true)} hitSlop={8}>
+            <Text style={styles.duelLink}>{t('review.duelEntry')}</Text>
+          </Pressable>
+        )}
       </View>
 
       <RatingGuideSheet visible={guideOpen} onClose={() => setGuideOpen(false)} />
+      <RatingDuelSheet
+        visible={duelOpen}
+        benchmarks={benchmarks}
+        onUse={setOverall}
+        onClose={() => setDuelOpen(false)}
+      />
 
       {/* Sub-ratings /20 */}
       <View style={styles.card}>
@@ -290,6 +367,39 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     textAlign: 'center',
     marginTop: -spacing.xs,
+  },
+  benchmarksLabel: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+    marginTop: spacing.xs,
+  },
+  benchmarkRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  benchmarkChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radii.full,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    maxWidth: '100%',
+  },
+  benchmarkName: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    flexShrink: 1,
+  },
+  benchmarkScore: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: typography.sizes.sm,
+  },
+  duelLink: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.accent,
+    textAlign: 'center',
   },
   bigScore: {
     fontFamily: typography.fonts.heading,

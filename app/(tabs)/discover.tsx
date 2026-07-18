@@ -417,7 +417,9 @@ function FestivalRow({
         <View style={styles.communityRating}>
           <Ionicons name="star" size={12} color={hasCommunity ? colors.rating : colors.textMuted} />
           <Text style={[styles.communityRatingText, !hasCommunity && { color: colors.textMuted }]}>
-            {hasCommunity ? `${Number(stats.avg_rating).toFixed(1)}/20` : '–'}
+            {/* Review count shown alongside — a lone enthusiastic rating
+                should read differently from a consensus of thirty. */}
+            {hasCommunity ? `${Number(stats.avg_rating).toFixed(1)}/20 (${stats.rating_count})` : '–'}
           </Text>
         </View>
         <View style={styles.myRating}>
