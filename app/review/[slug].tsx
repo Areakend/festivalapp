@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -120,9 +120,25 @@ export default function ReviewScreen() {
 
   const { data: myReview, isFetched } = useMyReview(detail?.festival.id, year);
 
-  // One review per (user, festival, year) — switching the year reloads
-  // whichever review exists for it, or clears the form for a brand new one.
+  // Tracks the last *real* (non-null) year this effect has settled on, so a
+  // blank-form reset only fires when deliberately switching between two
+  // already-picked years (attendedYears.length > 1) — not when a year is
+  // being set for the first time after the user already started filling in
+  // the form (year starts null, e.g. no attended years yet).
+  const lastSettledYearRef = useRef<number | null>(null);
+
+  // One review per (user, festival, year) — switching between two picked
+  // years reloads whichever review exists for the new one, or clears the
+  // form for a brand new one. Gated on isFetched so this only reacts once
+  // the query for the *current* year has actually settled — otherwise the
+  // transient `undefined` while React Query refetches for a new year key
+  // would itself look like "no review", wiping whatever the user had typed
+  // before a year was even picked.
   useEffect(() => {
+    if (!isFetched) return;
+    const cameFromRealYear = lastSettledYearRef.current != null;
+    lastSettledYearRef.current = year;
+
     if (myReview) {
       setOverall(Math.round(myReview.overall_rating));
       setComment(myReview.comment ?? '');
@@ -133,7 +149,7 @@ export default function ReviewScreen() {
         });
         return next;
       });
-    } else {
+    } else if (cameFromRealYear) {
       setOverall(0);
       setComment('');
       setSubs({
@@ -145,7 +161,7 @@ export default function ReviewScreen() {
         value_rating: 0,
       });
     }
-  }, [myReview]);
+  }, [myReview, isFetched, year]);
 
   const submit = async () => {
     if (!detail || overall < 1 || year == null) return;
