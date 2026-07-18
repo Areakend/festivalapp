@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
         // tag the prompt declares as untrusted data, and anything in the
         // text that could pose as that delimiter is stripped so a review
         // can't "close" its fence and speak with the prompt's voice.
-        const safe = r.comment!.slice(0, 800).replace(/<\/?review\b[^>]*>/gi, '');
+        const safe = r.comment!.slice(0, 1000).replace(/<\/?review\b[^>]*>/gi, '');
         const yearAttr = r.year ? ` year="${r.year}"` : '';
         const upvoteAttr = r.upvote_count > 0 ? ` upvotes="${r.upvote_count}"` : '';
         return `<review index="${i + 1}"${yearAttr} rating="${r.overall_rating}/20"${upvoteAttr}>\n${safe}\n</review>`;

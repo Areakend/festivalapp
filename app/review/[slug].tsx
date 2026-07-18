@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { RatingBar, ratingColor } from '@/components/ui/RatingBar';
+import { RatingGuideSheet, ratingBandKey } from '@/components/review/RatingGuideSheet';
 import { AttendanceYearSheet } from '@/components/ui/AttendanceYearSheet';
 import { useAddAttendance, useFestivalDetail, useMyAttendances } from '@/features/festivals/api';
 import { useDeleteReview, useMyReview, useUpsertReview } from '@/features/reviews/api';
@@ -52,6 +54,7 @@ export default function ReviewScreen() {
   const [overall, setOverall] = useState(0);
   const [year, setYear] = useState<number | null>(null);
   const [yearSheetOpen, setYearSheetOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [comment, setComment] = useState('');
   const [subs, setSubs] = useState<Record<SubRatingKey, number>>({
     lineup_rating: 0,
@@ -184,15 +187,29 @@ export default function ReviewScreen() {
         onClose={() => setYearSheetOpen(false)}
       />
 
-      {/* Overall /20 — big score + tap bar */}
+      {/* Overall /20 — big score + tap bar. The "?" opens the calibration
+          guide and the live band label anchors the picked score to it, both
+          nudging against small-festival grade inflation. */}
       <View style={styles.card}>
-        <Text style={styles.sectionLabel}>{t('review.yourRating')} *</Text>
+        <View style={styles.labelRow}>
+          <Text style={styles.sectionLabel}>{t('review.yourRating')} *</Text>
+          <Pressable onPress={() => setGuideOpen(true)} hitSlop={12}>
+            <Ionicons name="help-circle-outline" size={20} color={colors.textMuted} />
+          </Pressable>
+        </View>
         <Text style={[styles.bigScore, overall > 0 && { color: ratingColor(overall) }]}>
           {overall > 0 ? overall : '–'}
           <Text style={styles.bigScoreMax}>/20</Text>
         </Text>
+        {overall > 0 && (
+          <Text style={[styles.bandHint, { color: ratingColor(overall) }]}>
+            {t(`review.${ratingBandKey(overall)}`)}
+          </Text>
+        )}
         <RatingBar value={overall} onChange={setOverall} />
       </View>
+
+      <RatingGuideSheet visible={guideOpen} onClose={() => setGuideOpen(false)} />
 
       {/* Sub-ratings /20 */}
       <View style={styles.card}>
@@ -263,6 +280,17 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   yearRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  bandHint: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    textAlign: 'center',
+    marginTop: -spacing.xs,
+  },
   bigScore: {
     fontFamily: typography.fonts.heading,
     fontSize: 48,
