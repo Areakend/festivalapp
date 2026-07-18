@@ -36,6 +36,15 @@ const SUB_LABEL_KEYS: Record<SubRatingKey, string> = {
   value_rating: 'review.valueRating',
 };
 
+const SUB_HINT_KEYS: Record<SubRatingKey, string> = {
+  lineup_rating: 'review.lineupRatingHint',
+  production_rating: 'review.productionRatingHint',
+  side_quest_rating: 'review.sideQuestRatingHint',
+  organization_rating: 'review.organizationRatingHint',
+  atmosphere_rating: 'review.atmosphereRatingHint',
+  value_rating: 'review.valueRatingHint',
+};
+
 /** Create or edit the signed-in user's /20 review for a festival. */
 export default function ReviewScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -310,6 +319,7 @@ export default function ReviewScreen() {
           <RatingBar
             key={key}
             label={t(SUB_LABEL_KEYS[key])}
+            hint={t(SUB_HINT_KEYS[key])}
             value={subs[key]}
             onChange={(v) => setSubs((prev) => ({ ...prev, [key]: v }))}
           />

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { PanResponder, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { colors, radii, spacing, typography } from '@/theme';
 
@@ -17,6 +18,10 @@ interface RatingBarProps {
   /** When provided, the bar becomes a 20-segment slide/tap input. */
   onChange?: (value: number) => void;
   label?: string;
+  /** When provided alongside `label`, shows a "?" that toggles this text
+   *  inline — what this sub-rating actually covers (e.g. Production =
+   *  staging/sound/lighting, not the lineup itself). */
+  hint?: string;
 }
 
 /**
@@ -25,7 +30,8 @@ interface RatingBarProps {
  * reads much faster than tapping 20 separate targets one at a time.
  * Display mode: thin progress bar. Both show the "x/20" value.
  */
-export function RatingBar({ value, onChange, label }: RatingBarProps) {
+export function RatingBar({ value, onChange, label, hint }: RatingBarProps) {
+  const [hintOpen, setHintOpen] = useState(false);
   const containerRef = useRef<View>(null);
   const widthRef = useRef(0);
   // Absolute screen X of the segments row's left edge. Needed because
@@ -75,7 +81,21 @@ export function RatingBar({ value, onChange, label }: RatingBarProps) {
 
   return (
     <View style={styles.container}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? (
+        <View style={styles.labelRow}>
+          <Text style={styles.label}>{label}</Text>
+          {hint ? (
+            <Pressable onPress={() => setHintOpen((v) => !v)} hitSlop={8}>
+              <Ionicons
+                name={hintOpen ? 'help-circle' : 'help-circle-outline'}
+                size={15}
+                color={colors.textMuted}
+              />
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+      {hint && hintOpen ? <Text style={styles.hint}>{hint}</Text> : null}
       <View style={styles.row}>
         {onChange ? (
           <View
@@ -120,10 +140,17 @@ export function RatingBar({ value, onChange, label }: RatingBarProps) {
 
 const styles = StyleSheet.create({
   container: { gap: spacing.xs },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   label: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
+  },
+  hint: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+    lineHeight: 16,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   segments: { flex: 1, flexDirection: 'row', gap: 2 },
