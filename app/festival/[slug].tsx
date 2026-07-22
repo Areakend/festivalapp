@@ -38,6 +38,7 @@ import {
 } from '@/features/reviews/api';
 import { useMyFollowedArtists, useToggleArtistFollow } from '@/features/artists/api';
 import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/friends/api';
+import { InviteFriendsSheet } from '@/components/festival/InviteFriendsSheet';
 import { useMyBlockedIds } from '@/features/moderation/api';
 import { useSessionStore } from '@/features/auth/session-store';
 import { colors, radii, spacing, typography } from '@/theme';
@@ -89,6 +90,7 @@ export default function FestivalDetailScreen() {
   const addAttendance = useAddAttendance();
   const removeAttendance = useRemoveAttendance();
   const [yearSheetOpen, setYearSheetOpen] = useState(false);
+  const [inviteSheetOpen, setInviteSheetOpen] = useState(false);
   const [lineupExpanded, setLineupExpanded] = useState(false);
   const { data: followedArtistIds } = useMyFollowedArtists();
   const toggleArtistFollow = useToggleArtistFollow();
@@ -261,6 +263,23 @@ export default function FestivalDetailScreen() {
             );
           })}
         </View>
+
+        {/* Invite friends to this specific upcoming/latest edition — needs a
+            dated edition to attach the invite to, so hidden otherwise. */}
+        {nextEdition && (
+          <Pressable style={styles.inviteRow} onPress={() => setInviteSheetOpen(true)} hitSlop={8}>
+            <Ionicons name="people-outline" size={16} color={colors.primary} />
+            <Text style={styles.inviteRowText}>{t('invites.inviteFriends')}</Text>
+          </Pressable>
+        )}
+        {nextEdition && (
+          <InviteFriendsSheet
+            visible={inviteSheetOpen}
+            festivalId={festival.id}
+            editionId={nextEdition.id}
+            onClose={() => setInviteSheetOpen(false)}
+          />
+        )}
 
         {/* Detailed per-year attendance log (supplements the quick "attended" status above) */}
         <View style={styles.attendanceRow}>
@@ -513,6 +532,17 @@ const styles = StyleSheet.create({
   },
   websiteRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   websiteText: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.primary,
+  },
+  inviteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  inviteRowText: {
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.sm,
     color: colors.primary,

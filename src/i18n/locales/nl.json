@@ -257,6 +257,23 @@
     "statusAdded": "Toegevoegd!",
     "statusRejected": "Niet toegevoegd"
   },
+  "invites": {
+    "title": "Uitnodigingen",
+    "inviteFriends": "Vrienden uitnodigen",
+    "pickFriends": "Wie wil je uitnodigen?",
+    "noFriends": "Voeg eerst vrienden toe om ze voor een festival uit te nodigen.",
+    "invite": "Uitnodigen",
+    "sent": "Verstuurd",
+    "received": "Ontvangen",
+    "sentSection": "Verstuurd",
+    "noneReceived": "Nog geen uitnodigingen.",
+    "noneSent": "Je hebt nog niemand uitgenodigd.",
+    "from": "Van {{name}}",
+    "to": "Aan {{name}}",
+    "status_pending": "In afwachting",
+    "status_accepted": "Geaccepteerd",
+    "status_declined": "Afgewezen"
+  },
   "home": {
     "nextFestival": "Je volgende festival",
     "inDays_one": "Over {{count}} dag",

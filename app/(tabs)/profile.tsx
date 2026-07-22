@@ -21,6 +21,7 @@ import {
 import { useMyReviews } from '@/features/reviews/api';
 import { useDjMagTop100, useMyProfile, useUpdateProfile } from '@/features/profile/api';
 import { useDeleteAccount } from '@/features/moderation/api';
+import { useMyInvites } from '@/features/invites/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
@@ -178,6 +179,9 @@ export default function ProfileScreen() {
     new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
 
   const deleteAccount = useDeleteAccount();
+  const { data: invitesData } = useMyInvites();
+  const pendingInviteCount =
+    invitesData?.received.filter((i) => i.status === 'pending').length ?? 0;
 
   // Double confirmation: destructive and irreversible (Play requires the
   // in-app path; the server function wipes auth user + all cascaded data).
@@ -348,6 +352,21 @@ export default function ProfileScreen() {
         onPress={() => router.push({ pathname: '/share/[kind]', params: { kind: 'last' } })}
       />
 
+      <Pressable style={styles.invitesRow} onPress={() => router.push('/invitations')}>
+        <View style={styles.invitesRowLeft}>
+          <Ionicons name="mail-outline" size={20} color={colors.text} />
+          <Text style={styles.invitesRowText}>{t('invites.title')}</Text>
+        </View>
+        <View style={styles.invitesRowRight}>
+          {pendingInviteCount > 0 && (
+            <View style={styles.invitesBadge}>
+              <Text style={styles.invitesBadgeText}>{pendingInviteCount}</Text>
+            </View>
+          )}
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </View>
+      </Pressable>
+
       {/* Settings — name, language, session; collapsed by default so the
           screen stays about festivals, not forms. */}
       <View style={styles.card}>
@@ -472,6 +491,38 @@ const styles = StyleSheet.create({
     color: colors.rating,
   },
   langRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  invitesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  invitesRowLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  invitesRowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  invitesRowText: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.md,
+    color: colors.text,
+  },
+  invitesBadge: {
+    backgroundColor: colors.primary,
+    borderRadius: radii.full,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  invitesBadgeText: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: typography.sizes.xs,
+    color: colors.background,
+  },
   deleteAccount: { opacity: 0.6 },
   settingsHeader: {
     flexDirection: 'row',

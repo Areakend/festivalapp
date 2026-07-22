@@ -257,6 +257,23 @@
     "statusAdded": "Hinzugefügt!",
     "statusRejected": "Nicht hinzugefügt"
   },
+  "invites": {
+    "title": "Einladungen",
+    "inviteFriends": "Freunde einladen",
+    "pickFriends": "Wen möchtest du einladen?",
+    "noFriends": "Füge zuerst Freunde hinzu, um sie zu einem Festival einzuladen.",
+    "invite": "Einladen",
+    "sent": "Gesendet",
+    "received": "Erhalten",
+    "sentSection": "Gesendet",
+    "noneReceived": "Noch keine Einladungen.",
+    "noneSent": "Du hast noch niemanden eingeladen.",
+    "from": "Von {{name}}",
+    "to": "An {{name}}",
+    "status_pending": "Ausstehend",
+    "status_accepted": "Angenommen",
+    "status_declined": "Abgelehnt"
+  },
   "home": {
     "nextFestival": "Dein nächstes Festival",
     "inDays_one": "In {{count}} Tag",
