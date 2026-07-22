@@ -239,6 +239,24 @@
     "noReviews": "Pas encore d'avis — sois le premier !",
     "noResults": "Aucun résultat pour ta recherche"
   },
+  "requestFestival": {
+    "entryPoint": "Suggérer un festival",
+    "title": "Suggérer un festival",
+    "intro": "Tu ne trouves pas un festival dans le catalogue ? Dis-nous lequel — on relit chaque suggestion à la main avant de l'ajouter.",
+    "name": "Nom du festival",
+    "namePlaceholder": "ex. Boom Festival",
+    "country": "Pays",
+    "countryPlaceholder": "ex. Portugal",
+    "website": "Site officiel",
+    "websitePlaceholder": "https://…",
+    "submit": "Envoyer la suggestion",
+    "thanksTitle": "Merci !",
+    "thanksBody": "On y jette un œil et on l'ajoute si ça colle au catalogue.",
+    "yourRequests": "Tes suggestions",
+    "statusPending": "En cours de relecture",
+    "statusAdded": "Ajouté !",
+    "statusRejected": "Pas ajouté"
+  },
   "home": {
     "nextFestival": "Ton prochain festival",
     "inDays_one": "Dans {{count}} jour",

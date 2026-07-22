@@ -239,6 +239,24 @@
     "noReviews": "Nog geen reviews — wees de eerste!",
     "noResults": "Geen resultaten voor je zoekopdracht"
   },
+  "requestFestival": {
+    "entryPoint": "Festival voorstellen",
+    "title": "Festival voorstellen",
+    "intro": "Vind je een festival niet in de catalogus? Vertel het ons — we bekijken elke suggestie handmatig voor we hem toevoegen.",
+    "name": "Naam van het festival",
+    "namePlaceholder": "bijv. Boom Festival",
+    "country": "Land",
+    "countryPlaceholder": "bijv. Portugal",
+    "website": "Officiële website",
+    "websitePlaceholder": "https://…",
+    "submit": "Suggestie versturen",
+    "thanksTitle": "Bedankt!",
+    "thanksBody": "We bekijken het en voegen het toe als het bij de catalogus past.",
+    "yourRequests": "Jouw suggesties",
+    "statusPending": "Wordt bekeken",
+    "statusAdded": "Toegevoegd!",
+    "statusRejected": "Niet toegevoegd"
+  },
   "home": {
     "nextFestival": "Je volgende festival",
     "inDays_one": "Over {{count}} dag",

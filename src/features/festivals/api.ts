@@ -8,6 +8,7 @@ import type {
   Festival,
   FestivalCommunityStats,
   FestivalEdition,
+  FestivalRequest,
   FestivalStatus,
   UserAttendance,
   UserFestivalStatus,
@@ -432,4 +433,38 @@ export function useAutoAdvancePlannedFestivals() {
     // loop on the same festival twice.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pastEditions]);
+}
+
+/** The signed-in user's own festival suggestions, newest first — RLS only
+ *  ever returns their own rows, nobody else's requests are visible. */
+export function useFestivalRequests() {
+  const userId = useSessionStore((s) => s.session?.user.id);
+  return useQuery({
+    queryKey: ['festival-requests', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('festival_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as FestivalRequest[];
+    },
+  });
+}
+
+export function useSubmitFestivalRequest() {
+  const queryClient = useQueryClient();
+  const userId = useSessionStore((s) => s.session?.user.id);
+  return useMutation({
+    mutationFn: async (input: { name: string; country: string | null; website: string | null }) => {
+      const { error } = await supabase
+        .from('festival_requests')
+        .insert({ user_id: userId!, ...input });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['festival-requests', userId] });
+    },
+  });
 }

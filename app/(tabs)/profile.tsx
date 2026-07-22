@@ -380,6 +380,11 @@ export default function ProfileScreen() {
                 />
               ))}
             </View>
+            <Button
+              label={t('requestFestival.entryPoint')}
+              variant="ghost"
+              onPress={() => router.push('/request-festival')}
+            />
             <Button label={t('auth.signOut')} variant="ghost" onPress={() => void signOut()} />
             <Button
               label={t('profile.deleteAccount')}

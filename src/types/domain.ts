@@ -78,6 +78,16 @@ export interface UserAttendance {
   notes: string | null;
 }
 
+export interface FestivalRequest {
+  id: string;
+  user_id: string;
+  name: string;
+  country: string | null;
+  website: string | null;
+  status: 'pending' | 'added' | 'rejected';
+  created_at: string;
+}
+
 export interface Review {
   id: string;
   user_id: string;

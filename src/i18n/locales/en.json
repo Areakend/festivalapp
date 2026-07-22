@@ -239,6 +239,24 @@
     "noReviews": "No reviews yet — be the first!",
     "noResults": "No results for your search"
   },
+  "requestFestival": {
+    "entryPoint": "Suggest a festival",
+    "title": "Suggest a festival",
+    "intro": "Can't find a festival in the catalog? Tell us about it — we review every suggestion by hand before adding it.",
+    "name": "Festival name",
+    "namePlaceholder": "e.g. Boom Festival",
+    "country": "Country",
+    "countryPlaceholder": "e.g. Portugal",
+    "website": "Official website",
+    "websitePlaceholder": "https://…",
+    "submit": "Send suggestion",
+    "thanksTitle": "Thanks!",
+    "thanksBody": "We'll take a look and add it if it fits the catalog.",
+    "yourRequests": "Your suggestions",
+    "statusPending": "Pending review",
+    "statusAdded": "Added!",
+    "statusRejected": "Not added"
+  },
   "home": {
     "nextFestival": "Your next festival",
     "inDays_one": "In {{count}} day",

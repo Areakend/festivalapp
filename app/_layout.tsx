@@ -78,6 +78,7 @@ export default function RootLayout() {
             <Stack.Screen name="user/[id]" />
             <Stack.Screen name="list/[status]" />
             <Stack.Screen name="share/[kind]" />
+            <Stack.Screen name="request-festival" />
           </Stack.Protected>
           <Stack.Protected guard={!session}>
             <Stack.Screen name="(auth)" />

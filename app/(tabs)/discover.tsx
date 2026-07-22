@@ -317,6 +317,9 @@ export default function FestivalsScreen() {
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={styles.emptyText}>{t('empty.noResults')}</Text>
+              <Pressable onPress={() => router.push('/request-festival')} hitSlop={8}>
+                <Text style={styles.requestLink}>{t('requestFestival.entryPoint')}</Text>
+              </Pressable>
             </View>
           }
         />
@@ -561,5 +564,11 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.md,
     color: colors.textMuted,
+  },
+  requestLink: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.accent,
+    marginTop: spacing.md,
   },
 });
