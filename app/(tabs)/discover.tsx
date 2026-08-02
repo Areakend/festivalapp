@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -18,11 +18,17 @@ import { Chip } from '@/components/ui/Chip';
 import { FilterSheet } from '@/components/ui/FilterSheet';
 import { MultiFilterSheet } from '@/components/ui/MultiFilterSheet';
 import { DateRangeSheet } from '@/components/ui/DateRangeSheet';
-import { useFestivals, useMyStatuses, useToggleStatus, type CatalogItem } from '@/features/festivals/api';
+import {
+  useFestivalIdsByArtistSearch,
+  useFestivals,
+  useMyStatuses,
+  useToggleStatus,
+  type CatalogItem,
+} from '@/features/festivals/api';
 import { useMyReviews } from '@/features/reviews/api';
 import { useFollowedArtistsRanking } from '@/features/artists/api';
 import { colors, radii, spacing, typography } from '@/theme';
-import { countryFlag } from '@/utils/format';
+import { countryFlag, countryName } from '@/utils/format';
 
 type SortKey = 'top100' | 'community' | 'myRating' | 'date' | 'name' | 'followedArtists';
 type PeriodKey = 'all' | 'upcoming' | '3m' | '6m' | 'custom';
@@ -46,6 +52,14 @@ export default function FestivalsScreen() {
   const { data: followedRanking } = useFollowedArtistsRanking();
 
   const [search, setSearch] = useState('');
+  // Debounced so typing doesn't fire a query per keystroke — only the
+  // artist-name match needs the server; name/country match locally.
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+  const { data: artistMatchIds } = useFestivalIdsByArtistSearch(debouncedSearch);
   const [genres, setGenres] = useState<string[]>([]);
   const [countries, setCountries] = useState<string[]>([]);
   const [top100Only, setTop100Only] = useState(false);
@@ -119,7 +133,17 @@ export default function FestivalsScreen() {
 
     const result = data.filter((item) => {
       const { festival, nextEdition } = item;
-      if (q && !festival.name.toLowerCase().includes(q)) return false;
+      if (q) {
+        // Matches the festival's own name, its country (code or localized
+        // name — "FR" and "France" both work), or an artist who's played
+        // there (any edition, via the debounced server-side search).
+        const nameMatch = festival.name.toLowerCase().includes(q);
+        const countryMatch =
+          festival.country.toLowerCase().includes(q) ||
+          countryName(festival.country, i18n.language).toLowerCase().includes(q);
+        const artistMatch = artistMatchIds?.has(festival.id) ?? false;
+        if (!nameMatch && !countryMatch && !artistMatch) return false;
+      }
       if (genres.length > 0 && !festival.genres.some((g) => genres.includes(g))) return false;
       if (countries.length > 0 && !countries.includes(festival.country)) return false;
       if (top100Only && item.djmagRank == null) return false;
@@ -159,6 +183,8 @@ export default function FestivalsScreen() {
   }, [
     data,
     search,
+    artistMatchIds,
+    i18n.language,
     genres,
     countries,
     top100Only,
@@ -193,7 +219,7 @@ export default function FestivalsScreen() {
       <View style={styles.searchWrap}>
         <TextInput
           style={styles.search}
-          placeholder={t('common.search')}
+          placeholder={t('discover.searchPlaceholder')}
           placeholderTextColor={colors.textMuted}
           value={search}
           onChangeText={setSearch}

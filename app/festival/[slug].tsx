@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Alert,
   Linking,
   Pressable,
   ScrollView,
@@ -19,6 +20,7 @@ import { Chip } from '@/components/ui/Chip';
 import { Button } from '@/components/ui/Button';
 import { RatingBar } from '@/components/ui/RatingBar';
 import { AttendanceYearSheet } from '@/components/ui/AttendanceYearSheet';
+import { CalendarDaysSheet, eachDay } from '@/components/ui/CalendarDaysSheet';
 import { ReviewCard } from '@/components/review/ReviewCard';
 import {
   useAddAttendance,
@@ -41,8 +43,9 @@ import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/fri
 import { InviteFriendsSheet } from '@/components/festival/InviteFriendsSheet';
 import { useMyBlockedIds } from '@/features/moderation/api';
 import { useSessionStore } from '@/features/auth/session-store';
+import { exportEventsToCalendar } from '@/lib/calendar';
 import { colors, radii, spacing, typography } from '@/theme';
-import { countryFlag, formatCompact } from '@/utils/format';
+import { countryFlag, countryName, formatCompact } from '@/utils/format';
 import type { FestivalStatus } from '@/types/domain';
 
 const STATUS_CONFIG: { status: FestivalStatus; icon: string; color: string; labelKey: string }[] = [
@@ -91,6 +94,8 @@ export default function FestivalDetailScreen() {
   const removeAttendance = useRemoveAttendance();
   const [yearSheetOpen, setYearSheetOpen] = useState(false);
   const [inviteSheetOpen, setInviteSheetOpen] = useState(false);
+  const [calendarSheetOpen, setCalendarSheetOpen] = useState(false);
+  const [calendarExporting, setCalendarExporting] = useState(false);
   const [lineupExpanded, setLineupExpanded] = useState(false);
   const { data: followedArtistIds } = useMyFollowedArtists();
   const toggleArtistFollow = useToggleArtistFollow();
@@ -170,6 +175,48 @@ export default function FestivalDetailScreen() {
   const festivalAttendances = (myAttendances ?? [])
     .filter((a) => a.festival_id === festival.id)
     .sort((a, b) => b.attended_year - a.attended_year);
+
+  // Soonest upcoming dated edition — the one "add to calendar" exports.
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const upcomingEdition = editions
+    .filter((e) => e.start_date && e.start_date >= todayStr)
+    .sort((a, b) => a.start_date!.localeCompare(b.start_date!))[0];
+  const calendarLocation = [festival.venue, festival.city, countryName(festival.country, i18n.language)]
+    .filter(Boolean)
+    .join(', ');
+  const calendarDays = upcomingEdition
+    ? eachDay(upcomingEdition.start_date!, upcomingEdition.end_date ?? upcomingEdition.start_date!)
+    : [];
+
+  const exportToCalendar = async (dates: string[]) => {
+    if (!upcomingEdition || dates.length === 0) return;
+    setCalendarExporting(true);
+    try {
+      const events = dates.map((date) => ({
+        title:
+          calendarDays.length > 1
+            ? `${festival.name} — ${t('festival.dayNumber', { count: calendarDays.indexOf(date) + 1 })}`
+            : festival.name,
+        startDate: date,
+        location: calendarLocation || undefined,
+        description: festival.official_website ?? undefined,
+      }));
+      await exportEventsToCalendar(events, `${festival.slug}-${upcomingEdition.year}.ics`);
+    } catch (error) {
+      Alert.alert(t('common.error'), error instanceof Error ? error.message : String(error));
+    } finally {
+      setCalendarExporting(false);
+      setCalendarSheetOpen(false);
+    }
+  };
+
+  const handleAddToCalendarPress = () => {
+    if (calendarDays.length > 1) {
+      setCalendarSheetOpen(true);
+    } else {
+      void exportToCalendar(calendarDays);
+    }
+  };
 
   // Friends going (planned) or who went (attended) — attended wins if a
   // friend somehow has both rows for this festival.
@@ -279,6 +326,25 @@ export default function FestivalDetailScreen() {
             editionId={nextEdition.id}
             onClose={() => setInviteSheetOpen(false)}
           />
+        )}
+
+        {upcomingEdition && (
+          <>
+            <Button
+              label={t('festival.addToCalendar')}
+              variant="secondary"
+              onPress={handleAddToCalendarPress}
+              loading={calendarExporting}
+            />
+            <CalendarDaysSheet
+              visible={calendarSheetOpen}
+              startDate={upcomingEdition.start_date!}
+              endDate={upcomingEdition.end_date ?? upcomingEdition.start_date!}
+              locale={i18n.language}
+              onExport={(dates) => void exportToCalendar(dates)}
+              onClose={() => setCalendarSheetOpen(false)}
+            />
+          </>
         )}
 
         {/* Detailed per-year attendance log (supplements the quick "attended" status above) */}

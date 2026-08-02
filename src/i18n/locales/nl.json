@@ -77,6 +77,9 @@
     "attendedYears": "Jaren dat je erbij was",
     "addYear": "Jaar toevoegen",
     "pickAttendedYear": "In welk jaar was je erbij?",
+    "addToCalendar": "Aan agenda toevoegen",
+    "pickCalendarDays": "Welke dagen toevoegen?",
+    "dayNumber": "Dag {{count}}",
     "friendsHere": "Vrienden die gaan",
     "seeMoreArtists_one": "+{{count}} artiest meer",
     "seeMoreArtists_other": "+{{count}} artiesten meer"
@@ -155,7 +158,8 @@
     "periodCustom": "Eigen periode",
     "periodFrom": "Van",
     "periodTo": "Tot",
-    "sortFollowedArtists": "Artiesten die ik volg"
+    "sortFollowedArtists": "Artiesten die ik volg",
+    "searchPlaceholder": "Naam, land of artiest…"
   },
   "friends": {
     "title": "Vrienden",
