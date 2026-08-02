@@ -92,6 +92,33 @@ export function useFestivals() {
   });
 }
 
+/**
+ * Festival ids whose lineup (any edition, not just the upcoming one)
+ * includes an artist matching the query — lets the Festivals search bar
+ * find a festival by an artist who's played there, not just by its own
+ * name. Bounded server-side query (not a bulk index) so it stays cheap as
+ * the catalog and its lineups grow; caller should debounce `query`.
+ */
+export function useFestivalIdsByArtistSearch(query: string) {
+  const q = query.trim();
+  return useQuery({
+    queryKey: ['festival-ids-by-artist', q],
+    enabled: q.length >= 2,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('edition_artists')
+        .select('festival_editions!inner(festival_id), artists!inner(name)')
+        .ilike('artists.name', `%${q}%`);
+      if (error) throw error;
+      return new Set(
+        (data as unknown as { festival_editions: { festival_id: string } }[]).map(
+          (row) => row.festival_editions.festival_id,
+        ),
+      );
+    },
+  });
+}
+
 export interface FestivalDetail {
   festival: Festival;
   editions: FestivalEdition[];

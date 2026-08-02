@@ -77,6 +77,9 @@
     "attendedYears": "Années où tu y étais",
     "addYear": "Ajouter une année",
     "pickAttendedYear": "En quelle année y étais-tu ?",
+    "addToCalendar": "Ajouter au calendrier",
+    "pickCalendarDays": "Quels jours ajouter ?",
+    "dayNumber": "Jour {{count}}",
     "friendsHere": "Amis qui y vont",
     "seeMoreArtists_one": "+{{count}} autre artiste",
     "seeMoreArtists_other": "+{{count}} autres artistes"
@@ -155,7 +158,8 @@
     "periodCustom": "Période personnalisée",
     "periodFrom": "Du",
     "periodTo": "Au",
-    "sortFollowedArtists": "Artistes que je suis"
+    "sortFollowedArtists": "Artistes que je suis",
+    "searchPlaceholder": "Nom, pays ou artiste…"
   },
   "friends": {
     "title": "Amis",
