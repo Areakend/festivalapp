@@ -135,14 +135,16 @@ export default function FestivalsScreen() {
       const { festival, nextEdition } = item;
       if (q) {
         // Matches the festival's own name, its country (code or localized
-        // name — "FR" and "France" both work), or an artist who's played
-        // there (any edition, via the debounced server-side search).
+        // name — "FR" and "France" both work), one of its genres, or an
+        // artist who's played there (any edition, via the debounced
+        // server-side search).
         const nameMatch = festival.name.toLowerCase().includes(q);
         const countryMatch =
           festival.country.toLowerCase().includes(q) ||
           countryName(festival.country, i18n.language).toLowerCase().includes(q);
+        const genreMatch = festival.genres.some((g) => g.toLowerCase().includes(q));
         const artistMatch = artistMatchIds?.has(festival.id) ?? false;
-        if (!nameMatch && !countryMatch && !artistMatch) return false;
+        if (!nameMatch && !countryMatch && !genreMatch && !artistMatch) return false;
       }
       if (genres.length > 0 && !festival.genres.some((g) => genres.includes(g))) return false;
       if (countries.length > 0 && !countries.includes(festival.country)) return false;
