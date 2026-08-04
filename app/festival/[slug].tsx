@@ -218,6 +218,21 @@ export default function FestivalDetailScreen() {
     }
   };
 
+  // Same "already happened" check as useLastFestival in the share screen —
+  // an attendance year logged ahead of time (e.g. via an early review)
+  // shouldn't count as shareable until its edition is actually over.
+  const shareableAttendance = festivalAttendances.find((a) => {
+    if (!upcomingEdition || a.attended_year !== upcomingEdition.year) return true;
+    return (upcomingEdition.end_date ?? upcomingEdition.start_date!) < today;
+  });
+  const canShare = !!upcomingEdition || !!shareableAttendance;
+  const handleSharePress = () => {
+    router.push({
+      pathname: '/share/[kind]',
+      params: { kind: upcomingEdition ? 'next' : 'last', festivalId: festival.id },
+    });
+  };
+
   // Friends going (planned) or who went (attended) — attended wins if a
   // friend somehow has both rows for this festival.
   const friendsHere = (() => {
@@ -254,6 +269,11 @@ export default function FestivalDetailScreen() {
           />
         ) : (
           <Text style={styles.coverLetter}>{festival.name.charAt(0)}</Text>
+        )}
+        {canShare && (
+          <Pressable style={styles.coverShare} onPress={handleSharePress} hitSlop={10}>
+            <Ionicons name="share-social-outline" size={18} color={colors.text} />
+          </Pressable>
         )}
       </View>
 
@@ -573,6 +593,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  coverShare: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    backgroundColor: 'rgba(11, 11, 20, 0.55)',
+    borderRadius: radii.full,
+    padding: spacing.sm,
   },
   coverLetter: {
     fontFamily: typography.fonts.heading,
