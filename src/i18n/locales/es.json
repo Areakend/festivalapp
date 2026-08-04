@@ -293,7 +293,9 @@
     "welcomeBody": "Explora el catálogo, califica los festivales a los que fuiste y planifica los próximos: tu cuenta regresiva aparecerá aquí.",
     "addFriendsHint": "Añade amigos para ver quién va a los mismos festivales que tú.",
     "noPlannedTitle": "Ningún festival planeado",
-    "noPlannedHint": "Planea un festival para iniciar la cuenta regresiva."
+    "noPlannedHint": "Planea un festival para iniciar la cuenta regresiva.",
+    "calendarView": "Vista de calendario",
+    "calendarHint": "Toca un día para ver el programa"
   },
   "share": {
     "nextTitle": "Compartir mi próximo festival",

@@ -293,7 +293,9 @@
     "welcomeBody": "Browse the catalog, rate the festivals you've been to and plan your next ones — your countdown will show up here.",
     "addFriendsHint": "Add friends to see who's going to the same festivals as you.",
     "noPlannedTitle": "No upcoming festival",
-    "noPlannedHint": "Plan a festival to start the countdown."
+    "noPlannedHint": "Plan a festival to start the countdown.",
+    "calendarView": "Calendar view",
+    "calendarHint": "Tap a day to see the lineup"
   },
   "share": {
     "nextTitle": "Share my next festival",

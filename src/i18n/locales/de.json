@@ -293,7 +293,9 @@
     "welcomeBody": "Stöbere im Katalog, bewerte deine besuchten Festivals und plane die nächsten — dein Countdown erscheint hier.",
     "addFriendsHint": "Füge Freunde hinzu, um zu sehen, wer zu denselben Festivals geht wie du.",
     "noPlannedTitle": "Kein geplantes Festival",
-    "noPlannedHint": "Plane ein Festival, um den Countdown zu starten."
+    "noPlannedHint": "Plane ein Festival, um den Countdown zu starten.",
+    "calendarView": "Kalenderansicht",
+    "calendarHint": "Tippe auf einen Tag, um das Programm zu sehen"
   },
   "share": {
     "nextTitle": "Mein nächstes Festival teilen",

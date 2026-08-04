@@ -293,7 +293,9 @@
     "welcomeBody": "Parcours le catalogue, note les festivals que tu as faits et planifie les prochains — ton compte à rebours s'affichera ici.",
     "addFriendsHint": "Ajoute des amis pour voir qui va aux mêmes festivals que toi.",
     "noPlannedTitle": "Aucun festival planifié",
-    "noPlannedHint": "Planifie un festival pour lancer le compte à rebours."
+    "noPlannedHint": "Planifie un festival pour lancer le compte à rebours.",
+    "calendarView": "Vue calendrier",
+    "calendarHint": "Appuie sur un jour pour voir le programme"
   },
   "share": {
     "nextTitle": "Partager mon prochain festival",

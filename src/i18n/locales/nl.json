@@ -293,7 +293,9 @@
     "welcomeBody": "Blader door de catalogus, beoordeel de festivals die je hebt bezocht en plan de volgende — je aftelling verschijnt hier.",
     "addFriendsHint": "Voeg vrienden toe om te zien wie naar dezelfde festivals gaat als jij.",
     "noPlannedTitle": "Geen gepland festival",
-    "noPlannedHint": "Plan een festival om de aftelling te starten."
+    "noPlannedHint": "Plan een festival om de aftelling te starten.",
+    "calendarView": "Kalenderweergave",
+    "calendarHint": "Tik op een dag om het programma te zien"
   },
   "share": {
     "nextTitle": "Deel mijn volgende festival",
