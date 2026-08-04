@@ -64,7 +64,7 @@ const TOGGLE_LABEL_KEYS: Record<ToggleKey, string> = {
 };
 
 /** Which festival to build a story card for, and its lineup/social context. */
-function useNextFestival() {
+function useNextFestival(festivalId?: string) {
   const { data: catalog } = useFestivals();
   const { data: myStatuses } = useMyStatuses();
   const { data: friendsAttendance } = useFriendsFestivalAttendance();
@@ -72,10 +72,18 @@ function useNextFestival() {
   return useMemo(() => {
     const byId = new Map((catalog ?? []).map((item) => [item.festival.id, item]));
     const now = Date.now();
-    const planned = (myStatuses ?? [])
-      .filter((s) => s.status === 'planned')
-      .map((s) => byId.get(s.festival_id))
-      .filter((item): item is CatalogItem => item != null && item.nextEdition != null)
+    // An explicit target (the "share this festival" button on the festival
+    // page) just needs that one festival's own upcoming edition — sharing
+    // doesn't require it to be tracked as "planned".
+    const candidates = festivalId
+      ? [byId.get(festivalId)].filter(
+          (item): item is CatalogItem => item != null && item.nextEdition != null,
+        )
+      : (myStatuses ?? [])
+          .filter((s) => s.status === 'planned')
+          .map((s) => byId.get(s.festival_id))
+          .filter((item): item is CatalogItem => item != null && item.nextEdition != null);
+    const planned = candidates
       .map((item) => {
         const start = new Date(item.nextEdition!.start_date).getTime();
         const end = item.nextEdition!.end_date
@@ -97,10 +105,10 @@ function useNextFestival() {
       .map((r) => r.profile.display_name);
 
     return { ...next, friendNames: [...new Set(friendNames)] };
-  }, [catalog, myStatuses, friendsAttendance]);
+  }, [catalog, myStatuses, friendsAttendance, festivalId]);
 }
 
-function useLastFestival() {
+function useLastFestival(festivalId?: string) {
   const { data: catalog } = useFestivals();
   const { data: attendances } = useMyAttendances();
   const { data: myReviews } = useMyReviews();
@@ -108,7 +116,22 @@ function useLastFestival() {
 
   return useMemo(() => {
     const byId = new Map((catalog ?? []).map((item) => [item.festival.id, item]));
-    const last = [...(attendances ?? [])].sort((a, b) => b.attended_year - a.attended_year)[0];
+    const today = new Date().toISOString().slice(0, 10);
+    const pool = festivalId
+      ? (attendances ?? []).filter((a) => a.festival_id === festivalId)
+      : (attendances ?? []);
+    // A logged attendance can predate the edition it's for actually
+    // happening — e.g. a review written ahead of time also logs the year
+    // (see useUpsertReview). Skip any year that only matches a "planned"
+    // festival's still-upcoming edition, so "last" never surfaces a
+    // festival the user hasn't been to yet.
+    const last = [...pool]
+      .sort((a, b) => b.attended_year - a.attended_year)
+      .find((a) => {
+        const upcoming = byId.get(a.festival_id)?.nextEdition;
+        if (!upcoming || upcoming.year !== a.attended_year) return true;
+        return (upcoming.end_date ?? upcoming.start_date) < today;
+      });
     if (!last) return null;
     const item = byId.get(last.festival_id);
     if (!item) return null;
@@ -126,11 +149,14 @@ function useLastFestival() {
       rating: review ? Number(review.overall_rating) : null,
       crewNames: [...new Set(crewNames)],
     };
-  }, [catalog, attendances, myReviews, friendsAttendance]);
+  }, [catalog, attendances, myReviews, friendsAttendance, festivalId]);
 }
 
 export default function ShareScreen() {
-  const { kind } = useLocalSearchParams<{ kind: 'next' | 'last' }>();
+  const { kind, festivalId: targetFestivalId } = useLocalSearchParams<{
+    kind: 'next' | 'last';
+    festivalId?: string;
+  }>();
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -145,8 +171,8 @@ export default function ShareScreen() {
   // null = user hasn't customized: the followed-first top 5 stays live.
   const [customArtistIds, setCustomArtistIds] = useState<string[] | null>(null);
 
-  const next = useNextFestival();
-  const last = useLastFestival();
+  const next = useNextFestival(targetFestivalId);
+  const last = useLastFestival(targetFestivalId);
   const { data: myAttendances } = useMyAttendances();
 
   const festivalId = kind === 'next' ? next?.item.festival.id : last?.item.festival.id;
