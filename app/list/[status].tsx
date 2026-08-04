@@ -61,6 +61,15 @@ export default function MyListScreen() {
         </Pressable>
         <Text style={styles.title}>{t(TITLE_KEYS[status ?? ''] ?? 'home.planning')}</Text>
         <Text style={styles.count}>{items.length}</Text>
+        {status === 'planned' && (
+          <Pressable
+            onPress={() => router.push('/planning-calendar')}
+            hitSlop={12}
+            accessibilityLabel={t('home.calendarView')}
+          >
+            <Ionicons name="calendar-outline" size={22} color={colors.statusPlanned} />
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.list}>
