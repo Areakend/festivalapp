@@ -335,5 +335,45 @@
       "festivalsThisYear_one": "{{count}} festival in {{year}}",
       "festivalsThisYear_other": "{{count}} festivals in {{year}}"
     }
+  },
+  "checklist": {
+    "entryPoint": "Mijn checklist",
+    "title": "Checklist",
+    "toggleSunny": "☀️ Zonnig",
+    "toggleBeach": "🏖️ Strand",
+    "toggleCamping": "⛺ Kamperen",
+    "sectionBase": "De basis",
+    "sectionMultiDay": "Meerdere dagen",
+    "sectionCustom": "Eigen items",
+    "addPlaceholder": "Item toevoegen…",
+    "item": {
+      "tickets": "Tickets / QR-code",
+      "id": "Identiteitsbewijs",
+      "cash": "Contant geld en pas",
+      "phone": "Telefoon",
+      "powerbank": "Powerbank",
+      "earplugs": "Oordopjes",
+      "backpack": "Klein rugzakje",
+      "waterBottle": "Herbruikbare waterfles",
+      "firstAid": "EHBO-set / medicijnen",
+      "wetWipes": "Vochtige doekjes",
+      "shoes": "Comfortabele schoenen",
+      "hat": "Pet of hoed",
+      "sunscreen": "Zonnebrandcrème",
+      "sunglasses": "Zonnebril",
+      "swimsuit": "Zwemkleding",
+      "towel": "Strandlaken",
+      "sandals": "Slippers of sandalen",
+      "tent": "Tent",
+      "sleepingBag": "Slaapzak",
+      "sleepingPad": "Slaapmatje",
+      "headlamp": "Hoofdlamp",
+      "campStove": "Kampeerkooktoestel",
+      "toiletPaper": "Wc-papier",
+      "spareClothes": "Extra kleding",
+      "toiletryBag": "Toilettas",
+      "trashBags": "Vuilniszakken",
+      "extraPowerbank": "Extra powerbank"
+    }
   }
 }

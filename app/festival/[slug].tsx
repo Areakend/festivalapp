@@ -375,6 +375,15 @@ export default function FestivalDetailScreen() {
           </>
         )}
 
+        {/* Packing checklist — only meaningful once you're actually going. */}
+        {activeStatuses.has('planned') && (
+          <Button
+            label={t('checklist.entryPoint')}
+            variant="secondary"
+            onPress={() => router.push({ pathname: '/checklist/[slug]', params: { slug } })}
+          />
+        )}
+
         {/* Detailed per-year attendance log (supplements the quick "attended" status above) */}
         <View style={styles.attendanceRow}>
           <Text style={styles.attendanceLabel}>{t('festival.attendedYears')}</Text>
