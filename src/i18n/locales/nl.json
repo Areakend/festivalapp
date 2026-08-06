@@ -78,6 +78,7 @@
     "addYear": "Jaar toevoegen",
     "pickAttendedYear": "In welk jaar was je erbij?",
     "addToCalendar": "Aan agenda toevoegen",
+    "calendarPermissionDenied": "Geef toegang tot je agenda om het evenement toe te voegen.",
     "pickCalendarDays": "Welke dagen toevoegen?",
     "dayNumber": "Dag {{count}}",
     "friendsHere": "Vrienden die gaan",

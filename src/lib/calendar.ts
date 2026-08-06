@@ -1,5 +1,5 @@
-import { Directory, File, Paths } from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+import { Platform } from 'react-native';
+import * as Calendar from 'expo-calendar';
 
 export interface CalendarEvent {
   title: string;
@@ -11,63 +11,54 @@ export interface CalendarEvent {
   description?: string;
 }
 
-/** YYYY-MM-DD -> YYYYMMDD (all-day iCalendar DATE format). */
-function toIcsDate(isoDate: string): string {
-  return isoDate.replace(/-/g, '');
-}
-
-/** All-day events use an exclusive DTEND, so add one day past the last day. */
+/** All-day events use an exclusive end date, so add one day past the last day. */
 function nextDay(isoDate: string): string {
   const d = new Date(`${isoDate}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + 1);
   return d.toISOString().slice(0, 10);
 }
 
-function escapeIcsText(text: string): string {
-  return text.replace(/\\/g, '\\\\').replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
-}
-
-/** Builds a minimal iCalendar (.ics) document with one all-day VEVENT per entry. */
-export function buildIcsContent(events: CalendarEvent[]): string {
-  const now = toIcsDate(new Date().toISOString().slice(0, 10));
-  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Mainstage//Festival Export//EN'];
-  for (const event of events) {
-    const end = nextDay(event.endDate ?? event.startDate);
-    lines.push(
-      'BEGIN:VEVENT',
-      `UID:${event.startDate}-${Math.random().toString(36).slice(2)}@mainstage`,
-      `DTSTAMP:${now}T000000Z`,
-      `DTSTART;VALUE=DATE:${toIcsDate(event.startDate)}`,
-      `DTEND;VALUE=DATE:${toIcsDate(end)}`,
-      `SUMMARY:${escapeIcsText(event.title)}`,
-    );
-    if (event.location) lines.push(`LOCATION:${escapeIcsText(event.location)}`);
-    if (event.description) lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`);
-    lines.push('END:VEVENT');
+async function getWritableCalendarId(): Promise<string> {
+  if (Platform.OS === 'ios') {
+    return (await Calendar.getDefaultCalendarAsync()).id;
   }
-  lines.push('END:VCALENDAR');
-  // iCalendar requires CRLF line endings.
-  return lines.join('\r\n');
+  const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+  const writable = calendars.find((c) => c.accessLevel === Calendar.CalendarAccessLevel.OWNER);
+  if (writable) return writable.id;
+  return Calendar.createCalendarAsync({
+    title: 'Mainstage',
+    color: '#8B5CF6',
+    entityType: Calendar.EntityTypes.EVENT,
+    source: { isLocalAccount: true, name: 'Mainstage', type: 'LOCAL' },
+    name: 'Mainstage',
+    ownerAccount: 'Mainstage',
+    accessLevel: Calendar.CalendarAccessLevel.OWNER,
+  });
 }
 
 /**
- * Writes the events to a temporary .ics file and opens the system share
- * sheet — the user picks Google Calendar, Apple Calendar, Outlook or
- * whatever else can import an .ics from there, so this needs no
- * per-provider integration or account connection.
+ * Writes each event straight into the device's calendar via the native
+ * Calendar API. Sharing a generated .ics file used to be how this worked,
+ * but iOS's share sheet doesn't reliably offer an "Add to Calendar" action
+ * for a shared file — it just lets the user save/forward it — so the event
+ * silently never actually lands in Calendar. Creating it directly is the
+ * only way that's guaranteed to work on both platforms.
  */
-export async function exportEventsToCalendar(events: CalendarEvent[], fileName = 'festival.ics') {
-  if (!(await Sharing.isAvailableAsync())) {
-    throw new Error('Sharing is not available on this device');
+export async function exportEventsToCalendar(events: CalendarEvent[]) {
+  const { status } = await Calendar.requestCalendarPermissionsAsync();
+  if (status !== 'granted') {
+    throw new Error('Calendar permission denied');
   }
-  const dir = new Directory(Paths.cache, 'calendar-exports');
-  dir.create({ intermediates: true, idempotent: true });
-  const file = new File(dir, fileName);
-  file.create({ overwrite: true });
-  file.write(buildIcsContent(events));
-  await Sharing.shareAsync(file.uri, {
-    mimeType: 'text/calendar',
-    dialogTitle: 'Export calendar',
-    UTI: 'com.apple.ical.ics',
-  });
+  const calendarId = await getWritableCalendarId();
+  for (const event of events) {
+    await Calendar.createEventAsync(calendarId, {
+      title: event.title,
+      startDate: new Date(`${event.startDate}T00:00:00Z`),
+      endDate: new Date(`${nextDay(event.endDate ?? event.startDate)}T00:00:00Z`),
+      allDay: true,
+      timeZone: 'UTC',
+      location: event.location,
+      notes: event.description,
+    });
+  }
 }
