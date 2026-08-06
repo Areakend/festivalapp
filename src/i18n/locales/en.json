@@ -335,5 +335,45 @@
       "festivalsThisYear_one": "{{count}} festival in {{year}}",
       "festivalsThisYear_other": "{{count}} festivals in {{year}}"
     }
+  },
+  "checklist": {
+    "entryPoint": "My checklist",
+    "title": "Checklist",
+    "toggleSunny": "☀️ Sunny",
+    "toggleBeach": "🏖️ Beach",
+    "toggleCamping": "⛺ Camping",
+    "sectionBase": "The essentials",
+    "sectionMultiDay": "Multiple days",
+    "sectionCustom": "Yours",
+    "addPlaceholder": "Add an item…",
+    "item": {
+      "tickets": "Tickets / QR code",
+      "id": "ID",
+      "cash": "Cash and card",
+      "phone": "Phone",
+      "powerbank": "Power bank",
+      "earplugs": "Earplugs",
+      "backpack": "Small backpack",
+      "waterBottle": "Reusable water bottle",
+      "firstAid": "First aid kit / medication",
+      "wetWipes": "Wet wipes",
+      "shoes": "Comfortable shoes",
+      "hat": "Hat or cap",
+      "sunscreen": "Sunscreen",
+      "sunglasses": "Sunglasses",
+      "swimsuit": "Swimsuit",
+      "towel": "Beach towel",
+      "sandals": "Flip-flops or sandals",
+      "tent": "Tent",
+      "sleepingBag": "Sleeping bag",
+      "sleepingPad": "Sleeping pad",
+      "headlamp": "Headlamp",
+      "campStove": "Camping stove",
+      "toiletPaper": "Toilet paper",
+      "spareClothes": "Spare clothes",
+      "toiletryBag": "Toiletry bag",
+      "trashBags": "Trash bags",
+      "extraPowerbank": "Extra power bank"
+    }
   }
 }

@@ -335,5 +335,45 @@
       "festivalsThisYear_one": "{{count}} festival en {{year}}",
       "festivalsThisYear_other": "{{count}} festivals en {{year}}"
     }
+  },
+  "checklist": {
+    "entryPoint": "Ma checklist",
+    "title": "Checklist",
+    "toggleSunny": "☀️ Ensoleillé",
+    "toggleBeach": "🏖️ Plage",
+    "toggleCamping": "⛺ Camping",
+    "sectionBase": "L'essentiel",
+    "sectionMultiDay": "Plusieurs jours",
+    "sectionCustom": "Perso",
+    "addPlaceholder": "Ajouter un objet…",
+    "item": {
+      "tickets": "Billets / QR code",
+      "id": "Pièce d'identité",
+      "cash": "Argent liquide et carte",
+      "phone": "Téléphone",
+      "powerbank": "Batterie externe",
+      "earplugs": "Bouchons d'oreilles",
+      "backpack": "Petit sac à dos",
+      "waterBottle": "Gourde réutilisable",
+      "firstAid": "Trousse de secours / médicaments",
+      "wetWipes": "Lingettes",
+      "shoes": "Chaussures confortables",
+      "hat": "Chapeau ou casquette",
+      "sunscreen": "Crème solaire",
+      "sunglasses": "Lunettes de soleil",
+      "swimsuit": "Maillot de bain",
+      "towel": "Serviette de plage",
+      "sandals": "Tongs ou sandales",
+      "tent": "Tente",
+      "sleepingBag": "Sac de couchage",
+      "sleepingPad": "Matelas ou tapis de sol",
+      "headlamp": "Lampe frontale",
+      "campStove": "Réchaud de camping",
+      "toiletPaper": "Papier toilette",
+      "spareClothes": "Vêtements de rechange",
+      "toiletryBag": "Trousse de toilette",
+      "trashBags": "Sacs poubelle",
+      "extraPowerbank": "Batterie externe supplémentaire"
+    }
   }
 }

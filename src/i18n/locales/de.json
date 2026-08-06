@@ -335,5 +335,45 @@
       "festivalsThisYear_one": "{{count}} Festival in {{year}}",
       "festivalsThisYear_other": "{{count}} Festivals in {{year}}"
     }
+  },
+  "checklist": {
+    "entryPoint": "Meine Checkliste",
+    "title": "Checkliste",
+    "toggleSunny": "☀️ Sonnig",
+    "toggleBeach": "🏖️ Strand",
+    "toggleCamping": "⛺ Camping",
+    "sectionBase": "Das Wichtigste",
+    "sectionMultiDay": "Mehrere Tage",
+    "sectionCustom": "Eigene",
+    "addPlaceholder": "Gegenstand hinzufügen…",
+    "item": {
+      "tickets": "Tickets / QR-Code",
+      "id": "Ausweis",
+      "cash": "Bargeld und Karte",
+      "phone": "Handy",
+      "powerbank": "Powerbank",
+      "earplugs": "Ohrstöpsel",
+      "backpack": "Kleiner Rucksack",
+      "waterBottle": "Wiederverwendbare Trinkflasche",
+      "firstAid": "Erste-Hilfe-Set / Medikamente",
+      "wetWipes": "Feuchttücher",
+      "shoes": "Bequeme Schuhe",
+      "hat": "Hut oder Cap",
+      "sunscreen": "Sonnencreme",
+      "sunglasses": "Sonnenbrille",
+      "swimsuit": "Badeanzug",
+      "towel": "Strandtuch",
+      "sandals": "Flip-Flops oder Sandalen",
+      "tent": "Zelt",
+      "sleepingBag": "Schlafsack",
+      "sleepingPad": "Isomatte",
+      "headlamp": "Stirnlampe",
+      "campStove": "Campingkocher",
+      "toiletPaper": "Toilettenpapier",
+      "spareClothes": "Wechselkleidung",
+      "toiletryBag": "Kulturbeutel",
+      "trashBags": "Müllbeutel",
+      "extraPowerbank": "Zusätzliche Powerbank"
+    }
   }
 }

@@ -114,6 +114,17 @@ export interface FestivalCommunityStats {
   bayesian_score: number;
 }
 
+export interface ChecklistItemRow {
+  id: string;
+  user_id: string;
+  festival_id: string;
+  item_key: string;
+  label: string;
+  is_checked: boolean;
+  is_custom: boolean;
+  created_at: string;
+}
+
 export interface GeneratedPlaylist {
   id: string;
   user_id: string;
