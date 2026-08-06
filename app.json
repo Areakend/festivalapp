@@ -49,6 +49,12 @@
           "savePhotosPermission": "The app saves your generated share cards to your photos.",
           "isAccessMediaLocationEnabled": false
         }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "The app adds festival dates to your calendar when you tap \"Add to calendar\"."
+        }
       ]
     ],
     "experiments": {

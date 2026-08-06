@@ -78,6 +78,7 @@
     "addYear": "Add a year",
     "pickAttendedYear": "Which year did you go?",
     "addToCalendar": "Add to calendar",
+    "calendarPermissionDenied": "Allow calendar access to add the event.",
     "pickCalendarDays": "Which days should I add?",
     "dayNumber": "Day {{count}}",
     "friendsHere": "Friends going",

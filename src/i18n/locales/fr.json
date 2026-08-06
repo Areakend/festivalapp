@@ -78,6 +78,7 @@
     "addYear": "Ajouter une année",
     "pickAttendedYear": "En quelle année y étais-tu ?",
     "addToCalendar": "Ajouter au calendrier",
+    "calendarPermissionDenied": "Autorise l'accès au calendrier pour ajouter l'événement.",
     "pickCalendarDays": "Quels jours ajouter ?",
     "dayNumber": "Jour {{count}}",
     "friendsHere": "Amis qui y vont",

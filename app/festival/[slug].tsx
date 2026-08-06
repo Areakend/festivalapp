@@ -201,9 +201,17 @@ export default function FestivalDetailScreen() {
         location: calendarLocation || undefined,
         description: festival.official_website ?? undefined,
       }));
-      await exportEventsToCalendar(events, `${festival.slug}-${upcomingEdition.year}.ics`);
+      await exportEventsToCalendar(events);
     } catch (error) {
-      Alert.alert(t('common.error'), error instanceof Error ? error.message : String(error));
+      const deniedPermission = error instanceof Error && error.message === 'Calendar permission denied';
+      Alert.alert(
+        t('common.error'),
+        deniedPermission
+          ? t('festival.calendarPermissionDenied')
+          : error instanceof Error
+            ? error.message
+            : String(error),
+      );
     } finally {
       setCalendarExporting(false);
       setCalendarSheetOpen(false);
