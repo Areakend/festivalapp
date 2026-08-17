@@ -85,10 +85,20 @@ export function useSendFriendRequest() {
   const userId = useSessionStore((s) => s.session?.user.id);
   return useMutation({
     mutationFn: async (addresseeId: string) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('friendships')
-        .insert({ requester_id: userId!, addressee_id: addresseeId });
+        .insert({ requester_id: userId!, addressee_id: addresseeId })
+        .select('id')
+        .single();
       if (error) throw error;
+      // Best-effort: a missing/expired push token, or the recipient simply
+      // not having notifications enabled, must never fail the request
+      // itself — the friendship is already created at this point.
+      void supabase.functions
+        .invoke('send-push-notification', {
+          body: { type: 'friend_request', recipientUserId: addresseeId, refId: data.id },
+        })
+        .catch(() => {});
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['friendships'] }),
   });

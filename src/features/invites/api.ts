@@ -69,13 +69,23 @@ export function useSendFestivalInvite() {
   const userId = useSessionStore((s) => s.session?.user.id);
   return useMutation({
     mutationFn: async (input: { festivalId: string; editionId: string; inviteeId: string }) => {
-      const { error } = await supabase.from('festival_invites').insert({
-        festival_id: input.festivalId,
-        edition_id: input.editionId,
-        inviter_id: userId!,
-        invitee_id: input.inviteeId,
-      });
+      const { data, error } = await supabase
+        .from('festival_invites')
+        .insert({
+          festival_id: input.festivalId,
+          edition_id: input.editionId,
+          inviter_id: userId!,
+          invitee_id: input.inviteeId,
+        })
+        .select('id')
+        .single();
       if (error) throw error;
+      // Best-effort — see useSendFriendRequest for why this never throws.
+      void supabase.functions
+        .invoke('send-push-notification', {
+          body: { type: 'festival_invite', recipientUserId: input.inviteeId, refId: data.id },
+        })
+        .catch(() => {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['festival-invites', userId] });

@@ -56,6 +56,13 @@
         {
           "calendarPermission": "The app adds festival dates to your calendar when you tap \"Add to calendar\"."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#0B0B14"
+        }
       ]
     ],
     "experiments": {

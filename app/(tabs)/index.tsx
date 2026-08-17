@@ -16,6 +16,7 @@ import {
 } from '@/features/festivals/api';
 import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/friends/api';
 import { useUpdateProfile } from '@/features/profile/api';
+import { useRegisterPushToken } from '@/features/notifications/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { colors, radii, spacing, typography } from '@/theme';
 
@@ -53,6 +54,7 @@ export default function Home() {
   const { data: friendsAttendance } = useFriendsFestivalAttendance();
   const updateProfile = useUpdateProfile();
   useAutoAdvancePlannedFestivals();
+  useRegisterPushToken();
 
   const changeLanguage = (lang: SupportedLanguage) => {
     void i18n.changeLanguage(lang);
