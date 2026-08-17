@@ -1,5 +1,14 @@
 import { ReactNode, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -32,6 +41,8 @@ const TOGGLES: { key: ChecklistToggle; labelKey: string }[] = [
   { key: 'sunny', labelKey: 'checklist.toggleSunny' },
   { key: 'beach', labelKey: 'checklist.toggleBeach' },
   { key: 'camping', labelKey: 'checklist.toggleCamping' },
+  { key: 'winter', labelKey: 'checklist.toggleWinter' },
+  { key: 'abroad', labelKey: 'checklist.toggleAbroad' },
 ];
 
 /**
@@ -126,7 +137,10 @@ export default function ChecklistScreen() {
   const customItems = (items ?? []).filter((i) => i.is_custom);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { paddingTop: insets.top + spacing.lg }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
@@ -226,7 +240,7 @@ export default function ChecklistScreen() {
           </View>
         </Section>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

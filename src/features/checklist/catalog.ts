@@ -1,4 +1,4 @@
-export type ChecklistToggle = 'sunny' | 'beach' | 'camping';
+export type ChecklistToggle = 'sunny' | 'beach' | 'camping' | 'winter' | 'abroad';
 
 export interface ChecklistItemDef {
   key: string;
@@ -9,14 +9,11 @@ export interface ChecklistItemDef {
 export const BASE_ITEMS: ChecklistItemDef[] = [
   { key: 'tickets', labelKey: 'checklist.item.tickets' },
   { key: 'id', labelKey: 'checklist.item.id' },
-  { key: 'cash', labelKey: 'checklist.item.cash' },
   { key: 'phone', labelKey: 'checklist.item.phone' },
-  { key: 'powerbank', labelKey: 'checklist.item.powerbank' },
-  { key: 'earplugs', labelKey: 'checklist.item.earplugs' },
+  { key: 'chargingCable', labelKey: 'checklist.item.chargingCable' },
   { key: 'backpack', labelKey: 'checklist.item.backpack' },
   { key: 'waterBottle', labelKey: 'checklist.item.waterBottle' },
-  { key: 'firstAid', labelKey: 'checklist.item.firstAid' },
-  { key: 'wetWipes', labelKey: 'checklist.item.wetWipes' },
+  { key: 'earplugs', labelKey: 'checklist.item.earplugs' },
   { key: 'shoes', labelKey: 'checklist.item.shoes' },
 ];
 
@@ -26,6 +23,7 @@ export const TOGGLE_ITEMS: Record<ChecklistToggle, ChecklistItemDef[]> = {
     { key: 'hat', labelKey: 'checklist.item.hat' },
     { key: 'sunscreen', labelKey: 'checklist.item.sunscreen' },
     { key: 'sunglasses', labelKey: 'checklist.item.sunglasses' },
+    { key: 'afterSun', labelKey: 'checklist.item.afterSun' },
   ],
   beach: [
     { key: 'swimsuit', labelKey: 'checklist.item.swimsuit' },
@@ -37,8 +35,25 @@ export const TOGGLE_ITEMS: Record<ChecklistToggle, ChecklistItemDef[]> = {
     { key: 'sleepingBag', labelKey: 'checklist.item.sleepingBag' },
     { key: 'sleepingPad', labelKey: 'checklist.item.sleepingPad' },
     { key: 'headlamp', labelKey: 'checklist.item.headlamp' },
-    { key: 'campStove', labelKey: 'checklist.item.campStove' },
     { key: 'toiletPaper', labelKey: 'checklist.item.toiletPaper' },
+    { key: 'firstAid', labelKey: 'checklist.item.firstAid' },
+    { key: 'wetWipes', labelKey: 'checklist.item.wetWipes' },
+    { key: 'powerbank', labelKey: 'checklist.item.powerbank' },
+    { key: 'survivalBlanket', labelKey: 'checklist.item.survivalBlanket' },
+    { key: 'trashBags', labelKey: 'checklist.item.trashBags' },
+    { key: 'padlock', labelKey: 'checklist.item.padlock' },
+  ],
+  winter: [
+    { key: 'beanie', labelKey: 'checklist.item.beanie' },
+    { key: 'gloves', labelKey: 'checklist.item.gloves' },
+    { key: 'thermalLayers', labelKey: 'checklist.item.thermalLayers' },
+    { key: 'warmJacket', labelKey: 'checklist.item.warmJacket' },
+    { key: 'handWarmers', labelKey: 'checklist.item.handWarmers' },
+  ],
+  abroad: [
+    { key: 'localCash', labelKey: 'checklist.item.localCash' },
+    { key: 'plugAdapter', labelKey: 'checklist.item.plugAdapter' },
+    { key: 'travelInsurance', labelKey: 'checklist.item.travelInsurance' },
   ],
 };
 
@@ -46,8 +61,6 @@ export const TOGGLE_ITEMS: Record<ChecklistToggle, ChecklistItemDef[]> = {
 export const MULTI_DAY_ITEMS: ChecklistItemDef[] = [
   { key: 'spareClothes', labelKey: 'checklist.item.spareClothes' },
   { key: 'toiletryBag', labelKey: 'checklist.item.toiletryBag' },
-  { key: 'trashBags', labelKey: 'checklist.item.trashBags' },
-  { key: 'extraPowerbank', labelKey: 'checklist.item.extraPowerbank' },
 ];
 
 // Coarse "generally hot/sunny" heuristic used only as the sunny toggle's
