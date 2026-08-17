@@ -226,14 +226,10 @@ export default function FestivalDetailScreen() {
     }
   };
 
-  // Same "already happened" check as useLastFestival in the share screen —
-  // an attendance year logged ahead of time (e.g. via an early review)
-  // shouldn't count as shareable until its edition is actually over.
-  const shareableAttendance = festivalAttendances.find((a) => {
-    if (!upcomingEdition || a.attended_year !== upcomingEdition.year) return true;
-    return (upcomingEdition.end_date ?? upcomingEdition.start_date!) < today;
-  });
-  const canShare = !!upcomingEdition || !!shareableAttendance;
+  // Always shown, regardless of whether this festival has an upcoming
+  // edition or a logged attendance — the share screen itself already
+  // handles having neither (share.noNext / share.noLast), so there's no
+  // broken state to gate against here.
   const handleSharePress = () => {
     router.push({
       pathname: '/share/[kind]',
@@ -278,11 +274,9 @@ export default function FestivalDetailScreen() {
         ) : (
           <Text style={styles.coverLetter}>{festival.name.charAt(0)}</Text>
         )}
-        {canShare && (
-          <Pressable style={styles.coverShare} onPress={handleSharePress} hitSlop={10}>
-            <Ionicons name="share-social-outline" size={18} color={colors.text} />
-          </Pressable>
-        )}
+        <Pressable style={styles.coverShare} onPress={handleSharePress} hitSlop={10}>
+          <Ionicons name="share-social-outline" size={18} color={colors.text} />
+        </Pressable>
       </View>
 
       <View style={styles.body}>
