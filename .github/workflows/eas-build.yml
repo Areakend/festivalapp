@@ -25,6 +25,11 @@ on:
         required: true
         default: true
         type: boolean
+      submit:
+        description: Also submit to TestFlight after building (iOS production only)
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -86,10 +91,10 @@ jobs:
 
       # Output extension differs by platform/profile: Android gives an .aab
       # for production (Play Store upload format) or an installable .apk
-      # otherwise. iOS has no signing set up yet (needs an Apple Developer
-      # account), so only simulator builds work for now — those come out as
-      # a .tar.gz containing the .app bundle, installable in the iOS
-      # Simulator only, not on a real device.
+      # otherwise. iOS gives a signed .ipa for production (TestFlight/App
+      # Store upload format, needs the Apple Developer credentials already
+      # configured on EAS) or, for development/preview, a .tar.gz containing
+      # the .app bundle, installable in the iOS Simulator only.
       - name: Determine output extension
         id: vars
         run: |
@@ -112,6 +117,14 @@ jobs:
         with:
           name: app-${{ inputs.platform }}-${{ inputs.profile }}
           path: app.${{ steps.vars.outputs.ext }}
+
+      # TestFlight only accepts the production (App Store signing) build —
+      # development/preview builds aren't submittable, hence the profile
+      # check on top of the opt-in `submit` input. Uses the ascAppId already
+      # configured under submit.production.ios in eas.json.
+      - name: Submit to TestFlight
+        if: ${{ inputs.local && inputs.platform == 'ios' && inputs.profile == 'production' && inputs.submit }}
+        run: eas submit --platform ios --profile production --path "app.${{ steps.vars.outputs.ext }}" --non-interactive
 
       # Publish as a GitHub Release so anyone (no GitHub account needed) can
       # download the APK. The stable link always serves the newest build:

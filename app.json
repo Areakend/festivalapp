@@ -3,6 +3,7 @@
     "name": "Mainstage",
     "slug": "festiq",
     "version": "0.1.0",
+    "platforms": ["ios", "android"],
     "orientation": "portrait",
     "scheme": "festiq",
     "userInterfaceStyle": "dark",
@@ -15,11 +16,11 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "3"
+      "buildNumber": "5"
     },
     "android": {
       "package": "com.areakend.festiq",
-      "versionCode": 7,
+      "versionCode": 8,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0B0B14"
@@ -48,6 +49,12 @@
         {
           "savePhotosPermission": "The app saves your generated share cards to your photos.",
           "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "The app adds festival dates to your calendar when you tap \"Add to calendar\"."
         }
       ]
     ],

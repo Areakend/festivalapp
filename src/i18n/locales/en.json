@@ -77,6 +77,10 @@
     "attendedYears": "Years you attended",
     "addYear": "Add a year",
     "pickAttendedYear": "Which year did you go?",
+    "addToCalendar": "Add to calendar",
+    "calendarPermissionDenied": "Allow calendar access to add the event.",
+    "pickCalendarDays": "Which days should I add?",
+    "dayNumber": "Day {{count}}",
     "friendsHere": "Friends going",
     "seeMoreArtists_one": "+{{count}} more artist",
     "seeMoreArtists_other": "+{{count}} more artists"
@@ -155,7 +159,8 @@
     "periodCustom": "Custom range",
     "periodFrom": "From",
     "periodTo": "To",
-    "sortFollowedArtists": "Artists I follow"
+    "sortFollowedArtists": "Artists I follow",
+    "searchPlaceholder": "Name, country, genre or artist…"
   },
   "friends": {
     "title": "Friends",
@@ -289,7 +294,9 @@
     "welcomeBody": "Browse the catalog, rate the festivals you've been to and plan your next ones — your countdown will show up here.",
     "addFriendsHint": "Add friends to see who's going to the same festivals as you.",
     "noPlannedTitle": "No upcoming festival",
-    "noPlannedHint": "Plan a festival to start the countdown."
+    "noPlannedHint": "Plan a festival to start the countdown.",
+    "calendarView": "Calendar view",
+    "calendarHint": "Tap a day to see the lineup"
   },
   "share": {
     "nextTitle": "Share my next festival",
@@ -327,6 +334,46 @@
       "myRating": "My rating",
       "festivalsThisYear_one": "{{count}} festival in {{year}}",
       "festivalsThisYear_other": "{{count}} festivals in {{year}}"
+    }
+  },
+  "checklist": {
+    "entryPoint": "My checklist",
+    "title": "Checklist",
+    "toggleSunny": "☀️ Sunny",
+    "toggleBeach": "🏖️ Beach",
+    "toggleCamping": "⛺ Camping",
+    "sectionBase": "The essentials",
+    "sectionMultiDay": "Multiple days",
+    "sectionCustom": "Yours",
+    "addPlaceholder": "Add an item…",
+    "item": {
+      "tickets": "Tickets / QR code",
+      "id": "ID",
+      "cash": "Cash and card",
+      "phone": "Phone",
+      "powerbank": "Power bank",
+      "earplugs": "Earplugs",
+      "backpack": "Small backpack",
+      "waterBottle": "Reusable water bottle",
+      "firstAid": "First aid kit / medication",
+      "wetWipes": "Wet wipes",
+      "shoes": "Comfortable shoes",
+      "hat": "Hat or cap",
+      "sunscreen": "Sunscreen",
+      "sunglasses": "Sunglasses",
+      "swimsuit": "Swimsuit",
+      "towel": "Beach towel",
+      "sandals": "Flip-flops or sandals",
+      "tent": "Tent",
+      "sleepingBag": "Sleeping bag",
+      "sleepingPad": "Sleeping pad",
+      "headlamp": "Headlamp",
+      "campStove": "Camping stove",
+      "toiletPaper": "Toilet paper",
+      "spareClothes": "Spare clothes",
+      "toiletryBag": "Toiletry bag",
+      "trashBags": "Trash bags",
+      "extraPowerbank": "Extra power bank"
     }
   }
 }

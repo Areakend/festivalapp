@@ -77,6 +77,10 @@
     "attendedYears": "Années où tu y étais",
     "addYear": "Ajouter une année",
     "pickAttendedYear": "En quelle année y étais-tu ?",
+    "addToCalendar": "Ajouter au calendrier",
+    "calendarPermissionDenied": "Autorise l'accès au calendrier pour ajouter l'événement.",
+    "pickCalendarDays": "Quels jours ajouter ?",
+    "dayNumber": "Jour {{count}}",
     "friendsHere": "Amis qui y vont",
     "seeMoreArtists_one": "+{{count}} autre artiste",
     "seeMoreArtists_other": "+{{count}} autres artistes"
@@ -155,7 +159,8 @@
     "periodCustom": "Période personnalisée",
     "periodFrom": "Du",
     "periodTo": "Au",
-    "sortFollowedArtists": "Artistes que je suis"
+    "sortFollowedArtists": "Artistes que je suis",
+    "searchPlaceholder": "Nom, pays, genre ou artiste…"
   },
   "friends": {
     "title": "Amis",
@@ -289,7 +294,9 @@
     "welcomeBody": "Parcours le catalogue, note les festivals que tu as faits et planifie les prochains — ton compte à rebours s'affichera ici.",
     "addFriendsHint": "Ajoute des amis pour voir qui va aux mêmes festivals que toi.",
     "noPlannedTitle": "Aucun festival planifié",
-    "noPlannedHint": "Planifie un festival pour lancer le compte à rebours."
+    "noPlannedHint": "Planifie un festival pour lancer le compte à rebours.",
+    "calendarView": "Vue calendrier",
+    "calendarHint": "Appuie sur un jour pour voir le programme"
   },
   "share": {
     "nextTitle": "Partager mon prochain festival",
@@ -327,6 +334,46 @@
       "myRating": "Ma note",
       "festivalsThisYear_one": "{{count}} festival en {{year}}",
       "festivalsThisYear_other": "{{count}} festivals en {{year}}"
+    }
+  },
+  "checklist": {
+    "entryPoint": "Ma checklist",
+    "title": "Checklist",
+    "toggleSunny": "☀️ Ensoleillé",
+    "toggleBeach": "🏖️ Plage",
+    "toggleCamping": "⛺ Camping",
+    "sectionBase": "L'essentiel",
+    "sectionMultiDay": "Plusieurs jours",
+    "sectionCustom": "Perso",
+    "addPlaceholder": "Ajouter un objet…",
+    "item": {
+      "tickets": "Billets / QR code",
+      "id": "Pièce d'identité",
+      "cash": "Argent liquide et carte",
+      "phone": "Téléphone",
+      "powerbank": "Batterie externe",
+      "earplugs": "Bouchons d'oreilles",
+      "backpack": "Petit sac à dos",
+      "waterBottle": "Gourde réutilisable",
+      "firstAid": "Trousse de secours / médicaments",
+      "wetWipes": "Lingettes",
+      "shoes": "Chaussures confortables",
+      "hat": "Chapeau ou casquette",
+      "sunscreen": "Crème solaire",
+      "sunglasses": "Lunettes de soleil",
+      "swimsuit": "Maillot de bain",
+      "towel": "Serviette de plage",
+      "sandals": "Tongs ou sandales",
+      "tent": "Tente",
+      "sleepingBag": "Sac de couchage",
+      "sleepingPad": "Matelas ou tapis de sol",
+      "headlamp": "Lampe frontale",
+      "campStove": "Réchaud de camping",
+      "toiletPaper": "Papier toilette",
+      "spareClothes": "Vêtements de rechange",
+      "toiletryBag": "Trousse de toilette",
+      "trashBags": "Sacs poubelle",
+      "extraPowerbank": "Batterie externe supplémentaire"
     }
   }
 }

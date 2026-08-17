@@ -77,6 +77,10 @@
     "attendedYears": "Jaren dat je erbij was",
     "addYear": "Jaar toevoegen",
     "pickAttendedYear": "In welk jaar was je erbij?",
+    "addToCalendar": "Aan agenda toevoegen",
+    "calendarPermissionDenied": "Geef toegang tot je agenda om het evenement toe te voegen.",
+    "pickCalendarDays": "Welke dagen toevoegen?",
+    "dayNumber": "Dag {{count}}",
     "friendsHere": "Vrienden die gaan",
     "seeMoreArtists_one": "+{{count}} artiest meer",
     "seeMoreArtists_other": "+{{count}} artiesten meer"
@@ -155,7 +159,8 @@
     "periodCustom": "Eigen periode",
     "periodFrom": "Van",
     "periodTo": "Tot",
-    "sortFollowedArtists": "Artiesten die ik volg"
+    "sortFollowedArtists": "Artiesten die ik volg",
+    "searchPlaceholder": "Naam, land, genre of artiest…"
   },
   "friends": {
     "title": "Vrienden",
@@ -289,7 +294,9 @@
     "welcomeBody": "Blader door de catalogus, beoordeel de festivals die je hebt bezocht en plan de volgende — je aftelling verschijnt hier.",
     "addFriendsHint": "Voeg vrienden toe om te zien wie naar dezelfde festivals gaat als jij.",
     "noPlannedTitle": "Geen gepland festival",
-    "noPlannedHint": "Plan een festival om de aftelling te starten."
+    "noPlannedHint": "Plan een festival om de aftelling te starten.",
+    "calendarView": "Kalenderweergave",
+    "calendarHint": "Tik op een dag om het programma te zien"
   },
   "share": {
     "nextTitle": "Deel mijn volgende festival",
@@ -327,6 +334,46 @@
       "myRating": "Mijn score",
       "festivalsThisYear_one": "{{count}} festival in {{year}}",
       "festivalsThisYear_other": "{{count}} festivals in {{year}}"
+    }
+  },
+  "checklist": {
+    "entryPoint": "Mijn checklist",
+    "title": "Checklist",
+    "toggleSunny": "☀️ Zonnig",
+    "toggleBeach": "🏖️ Strand",
+    "toggleCamping": "⛺ Kamperen",
+    "sectionBase": "De basis",
+    "sectionMultiDay": "Meerdere dagen",
+    "sectionCustom": "Eigen items",
+    "addPlaceholder": "Item toevoegen…",
+    "item": {
+      "tickets": "Tickets / QR-code",
+      "id": "Identiteitsbewijs",
+      "cash": "Contant geld en pas",
+      "phone": "Telefoon",
+      "powerbank": "Powerbank",
+      "earplugs": "Oordopjes",
+      "backpack": "Klein rugzakje",
+      "waterBottle": "Herbruikbare waterfles",
+      "firstAid": "EHBO-set / medicijnen",
+      "wetWipes": "Vochtige doekjes",
+      "shoes": "Comfortabele schoenen",
+      "hat": "Pet of hoed",
+      "sunscreen": "Zonnebrandcrème",
+      "sunglasses": "Zonnebril",
+      "swimsuit": "Zwemkleding",
+      "towel": "Strandlaken",
+      "sandals": "Slippers of sandalen",
+      "tent": "Tent",
+      "sleepingBag": "Slaapzak",
+      "sleepingPad": "Slaapmatje",
+      "headlamp": "Hoofdlamp",
+      "campStove": "Kampeerkooktoestel",
+      "toiletPaper": "Wc-papier",
+      "spareClothes": "Extra kleding",
+      "toiletryBag": "Toilettas",
+      "trashBags": "Vuilniszakken",
+      "extraPowerbank": "Extra powerbank"
     }
   }
 }

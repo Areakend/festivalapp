@@ -19,3 +19,12 @@ export function formatDateRange(start: string | null, end: string | null, locale
 export function formatCompact(n: number, locale: string): string {
   return new Intl.NumberFormat(locale, { notation: 'compact' }).format(n);
 }
+
+/** ISO 3166-1 alpha-2 code to localized country name (FR → "France"), for search matching. */
+export function countryName(iso: string, locale: string): string {
+  try {
+    return new Intl.DisplayNames([locale], { type: 'region' }).of(iso.toUpperCase()) ?? iso;
+  } catch {
+    return iso;
+  }
+}
