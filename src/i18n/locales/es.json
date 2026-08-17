@@ -162,7 +162,8 @@
     "periodFrom": "Desde",
     "periodTo": "Hasta",
     "sortFollowedArtists": "Artistas que sigo",
-    "searchPlaceholder": "Nombre, país, género o artista…"
+    "searchPlaceholder": "Nombre, país, género o artista…",
+    "toRate": "Por valorar"
   },
   "friends": {
     "title": "Amigos",

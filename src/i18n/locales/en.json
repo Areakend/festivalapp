@@ -162,7 +162,8 @@
     "periodFrom": "From",
     "periodTo": "To",
     "sortFollowedArtists": "Artists I follow",
-    "searchPlaceholder": "Name, country, genre or artist…"
+    "searchPlaceholder": "Name, country, genre or artist…",
+    "toRate": "To rate"
   },
   "friends": {
     "title": "Friends",

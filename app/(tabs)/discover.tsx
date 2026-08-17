@@ -64,6 +64,7 @@ export default function FestivalsScreen() {
   const [countries, setCountries] = useState<string[]>([]);
   const [top100Only, setTop100Only] = useState(false);
   const [attendedOnly, setAttendedOnly] = useState(false);
+  const [toRateOnly, setToRateOnly] = useState(false);
   const [period, setPeriod] = useState<PeriodKey>('all');
   const [customRange, setCustomRange] = useState<{ from: Date; to: Date } | null>(null);
   const [sort, setSort] = useState<SortKey>('community');
@@ -96,6 +97,14 @@ export default function FestivalsScreen() {
   const myRatingByFestival = useMemo(
     () => new Map((myReviews ?? []).map((r) => [r.festival_id, Number(r.overall_rating)])),
     [myReviews],
+  );
+  // Attended (any year) but never reviewed at all — "à noter".
+  const toRateIds = useMemo(
+    () =>
+      new Set(
+        [...attendedIds].filter((festivalId) => !myRatingByFestival.has(festivalId)),
+      ),
+    [attendedIds, myRatingByFestival],
   );
   const followedMatchByFestival = useMemo(
     () => new Map((followedRanking ?? []).map((r) => [r.festivalId, r.matchedCount])),
@@ -150,6 +159,7 @@ export default function FestivalsScreen() {
       if (countries.length > 0 && !countries.includes(festival.country)) return false;
       if (top100Only && item.djmagRank == null) return false;
       if (attendedOnly && !attendedIds.has(festival.id)) return false;
+      if (toRateOnly && !toRateIds.has(festival.id)) return false;
       if (period !== 'all') {
         if (!nextEdition) return false;
         const start = new Date(nextEdition.start_date).getTime();
@@ -191,10 +201,12 @@ export default function FestivalsScreen() {
     countries,
     top100Only,
     attendedOnly,
+    toRateOnly,
     period,
     customRange,
     sort,
     attendedIds,
+    toRateIds,
     myRatingByFestival,
     followedMatchByFestival,
   ]);
@@ -252,6 +264,12 @@ export default function FestivalsScreen() {
           active={attendedOnly}
           activeColor={colors.statusAttended}
           onPress={() => setAttendedOnly((v) => !v)}
+        />
+        <Chip
+          label={t('discover.toRate')}
+          active={toRateOnly}
+          activeColor={colors.rating}
+          onPress={() => setToRateOnly((v) => !v)}
         />
         <Chip
           label={

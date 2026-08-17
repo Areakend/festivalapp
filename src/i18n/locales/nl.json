@@ -162,7 +162,8 @@
     "periodFrom": "Van",
     "periodTo": "Tot",
     "sortFollowedArtists": "Artiesten die ik volg",
-    "searchPlaceholder": "Naam, land, genre of artiest…"
+    "searchPlaceholder": "Naam, land, genre of artiest…",
+    "toRate": "Te beoordelen"
   },
   "friends": {
     "title": "Vrienden",

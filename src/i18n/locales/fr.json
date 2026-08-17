@@ -162,7 +162,8 @@
     "periodFrom": "Du",
     "periodTo": "Au",
     "sortFollowedArtists": "Artistes que je suis",
-    "searchPlaceholder": "Nom, pays, genre ou artiste…"
+    "searchPlaceholder": "Nom, pays, genre ou artiste…",
+    "toRate": "À noter"
   },
   "friends": {
     "title": "Amis",
