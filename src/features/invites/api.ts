@@ -98,14 +98,38 @@ export function useRespondToInvite() {
   const userId = useSessionStore((s) => s.session?.user.id);
   return useMutation({
     mutationFn: async (input: { inviteId: string; accept: boolean }) => {
-      const { error } = await supabase
+      const { data: invite, error } = await supabase
         .from('festival_invites')
         .update({ status: input.accept ? 'accepted' : 'declined' })
-        .eq('id', input.inviteId);
+        .eq('id', input.inviteId)
+        .select('festival_id')
+        .single();
       if (error) throw error;
+
+      // Accepting only means something if it actually shows up as "going"
+      // wherever the rest of the app looks for that (the festival page's
+      // "friends here" list, Home) — both read user_festival_statuses, not
+      // festival_invites, so this has to write there too. Skipped if
+      // they're already 'attended': accepting an invite to a festival
+      // they've already been to shouldn't relabel it as merely "planned".
+      if (input.accept) {
+        const { data: existing } = await supabase
+          .from('user_festival_statuses')
+          .select('status')
+          .eq('user_id', userId!)
+          .eq('festival_id', invite.festival_id);
+        const statuses = new Set((existing ?? []).map((s) => s.status));
+        if (!statuses.has('attended') && !statuses.has('planned')) {
+          await supabase
+            .from('user_festival_statuses')
+            .insert({ user_id: userId!, festival_id: invite.festival_id, status: 'planned' });
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['festival-invites', userId] });
+      queryClient.invalidateQueries({ queryKey: ['my-statuses'] });
+      queryClient.invalidateQueries({ queryKey: ['friends-festival-attendance'] });
     },
   });
 }
