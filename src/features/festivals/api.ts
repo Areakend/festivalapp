@@ -234,6 +234,32 @@ export function useToggleStatus() {
         if (error) throw error;
       }
     },
+    // Optimistic: this drives a tap target (the status pill) the user
+    // expects to flip color the instant they tap it, not ~1s later once
+    // the round trip and refetch land.
+    onMutate: async (input) => {
+      const queryKey = ['my-statuses', userId];
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<UserFestivalStatus[]>(queryKey);
+      queryClient.setQueryData<UserFestivalStatus[]>(queryKey, (old = []) =>
+        input.active
+          ? old.filter((s) => !(s.festival_id === input.festivalId && s.status === input.status))
+          : [
+              ...old,
+              {
+                id: `optimistic:${input.festivalId}:${input.status}`,
+                user_id: userId!,
+                festival_id: input.festivalId,
+                status: input.status,
+                created_at: new Date().toISOString(),
+              },
+            ],
+      );
+      return { previous, queryKey };
+    },
+    onError: (_error, _input, context) => {
+      if (context) queryClient.setQueryData(context.queryKey, context.previous);
+    },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['my-statuses'] }),
   });
 }
@@ -282,17 +308,53 @@ export function useAddAttendance() {
         .insert({ user_id: userId, festival_id: input.festivalId, attended_year: input.year });
       if (error) throw error;
     },
+    // Optimistic: the year chip on a festival page should fill in the
+    // instant it's tapped, same reasoning as useToggleStatus above.
+    onMutate: async (input) => {
+      const queryKey = ['my-attendances', userId];
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<Omit<UserAttendance, 'notes'>[]>(queryKey);
+      queryClient.setQueryData<Omit<UserAttendance, 'notes'>[]>(queryKey, (old = []) => [
+        ...old,
+        {
+          id: `optimistic:${input.festivalId}:${input.year}`,
+          user_id: userId!,
+          festival_id: input.festivalId,
+          edition_id: null,
+          attended_year: input.year,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ]);
+      return { previous, queryKey };
+    },
+    onError: (_error, _input, context) => {
+      if (context) queryClient.setQueryData(context.queryKey, context.previous);
+    },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['my-attendances'] }),
   });
 }
 
 export function useRemoveAttendance() {
   const queryClient = useQueryClient();
+  const userId = useSessionStore((s) => s.session?.user.id);
 
   return useMutation({
     mutationFn: async (attendanceId: string) => {
       const { error } = await supabase.from('user_attendances').delete().eq('id', attendanceId);
       if (error) throw error;
+    },
+    onMutate: async (attendanceId) => {
+      const queryKey = ['my-attendances', userId];
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<Omit<UserAttendance, 'notes'>[]>(queryKey);
+      queryClient.setQueryData<Omit<UserAttendance, 'notes'>[]>(queryKey, (old = []) =>
+        old.filter((a) => a.id !== attendanceId),
+      );
+      return { previous, queryKey };
+    },
+    onError: (_error, _input, context) => {
+      if (context) queryClient.setQueryData(context.queryKey, context.previous);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['my-attendances'] }),
   });
