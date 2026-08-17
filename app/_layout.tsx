@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Updates from 'expo-updates';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -21,6 +22,29 @@ import { initSessionListener, useSessionStore } from '@/features/auth/session-st
 
 SplashScreen.preventAutoHideAsync();
 initSessionListener();
+
+// By default an OTA update only *downloads* on launch and doesn't take
+// effect until the *next* one — so a build could sit one full close/reopen
+// behind whatever was just published, indistinguishable from "nothing
+// happened". Checking once at startup and reloading immediately when an
+// update is actually found collapses that back to a single relaunch,
+// without adding any delay to the common case (nothing to check into,
+// nothing here waits on this before the app renders). No-ops outside a
+// real build (Expo Go, dev client) where expo-updates isn't active.
+if (Updates.isEnabled) {
+  void (async () => {
+    try {
+      const { isAvailable } = await Updates.checkForUpdateAsync();
+      if (isAvailable) {
+        await Updates.fetchUpdateAsync();
+        await Updates.reloadAsync();
+      }
+    } catch {
+      // Offline, or the check itself failed — just carry on with
+      // whichever bundle is already running.
+    }
+  })();
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
