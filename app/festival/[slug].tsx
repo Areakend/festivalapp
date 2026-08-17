@@ -2,6 +2,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -21,6 +22,7 @@ import { Button } from '@/components/ui/Button';
 import { RatingBar } from '@/components/ui/RatingBar';
 import { AttendanceYearSheet } from '@/components/ui/AttendanceYearSheet';
 import { CalendarDaysSheet, eachDay } from '@/components/ui/CalendarDaysSheet';
+import { CalendarPickerSheet } from '@/components/ui/CalendarPickerSheet';
 import { ReviewCard } from '@/components/review/ReviewCard';
 import {
   useAddAttendance,
@@ -43,7 +45,15 @@ import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/fri
 import { InviteFriendsSheet } from '@/components/festival/InviteFriendsSheet';
 import { useMyBlockedIds } from '@/features/moderation/api';
 import { useSessionStore } from '@/features/auth/session-store';
-import { exportEventsToCalendar } from '@/lib/calendar';
+import {
+  exportEventsToCalendar,
+  getPreferredCalendarId,
+  getWritableCalendars,
+  requestCalendarPermission,
+  setPreferredCalendarId,
+  type CalendarEvent,
+  type WritableCalendar,
+} from '@/lib/calendar';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag, countryName, formatCompact } from '@/utils/format';
 import type { FestivalStatus } from '@/types/domain';
@@ -96,6 +106,9 @@ export default function FestivalDetailScreen() {
   const [inviteSheetOpen, setInviteSheetOpen] = useState(false);
   const [calendarSheetOpen, setCalendarSheetOpen] = useState(false);
   const [calendarExporting, setCalendarExporting] = useState(false);
+  const [calendarPickerOpen, setCalendarPickerOpen] = useState(false);
+  const [writableCalendars, setWritableCalendars] = useState<WritableCalendar[]>([]);
+  const [pendingCalendarEvents, setPendingCalendarEvents] = useState<CalendarEvent[]>([]);
   const [lineupExpanded, setLineupExpanded] = useState(false);
   const { data: followedArtistIds } = useMyFollowedArtists();
   const toggleArtistFollow = useToggleArtistFollow();
@@ -184,20 +197,10 @@ export default function FestivalDetailScreen() {
     ? eachDay(upcomingEdition.start_date!, upcomingEdition.end_date ?? upcomingEdition.start_date!)
     : [];
 
-  const exportToCalendar = async (dates: string[]) => {
-    if (!upcomingEdition || dates.length === 0) return;
+  const doExportEvents = async (events: CalendarEvent[], calendarId?: string) => {
     setCalendarExporting(true);
     try {
-      const events = dates.map((date) => ({
-        title:
-          calendarDays.length > 1
-            ? `${festival.name} — ${t('festival.dayNumber', { count: calendarDays.indexOf(date) + 1 })}`
-            : festival.name,
-        startDate: date,
-        location: calendarLocation || undefined,
-        description: festival.official_website ?? undefined,
-      }));
-      await exportEventsToCalendar(events);
+      await exportEventsToCalendar(events, calendarId);
     } catch (error) {
       const deniedPermission = error instanceof Error && error.message === 'Calendar permission denied';
       Alert.alert(
@@ -212,6 +215,44 @@ export default function FestivalDetailScreen() {
       setCalendarExporting(false);
       setCalendarSheetOpen(false);
     }
+  };
+
+  const exportToCalendar = async (dates: string[]) => {
+    if (!upcomingEdition || dates.length === 0) return;
+    const events: CalendarEvent[] = dates.map((date) => ({
+      title:
+        calendarDays.length > 1
+          ? `${festival.name} — ${t('festival.dayNumber', { count: calendarDays.indexOf(date) + 1 })}`
+          : festival.name,
+      startDate: date,
+      location: calendarLocation || undefined,
+      description: festival.official_website ?? undefined,
+    }));
+
+    // Android has no single OS-level default calendar the way iOS does —
+    // silently picking the first writable one found isn't reliable (it can
+    // land in a manufacturer's own local calendar instead of e.g. Google).
+    // Ask once, remember the choice, skip this entirely from then on.
+    if (Platform.OS === 'android' && !(await getPreferredCalendarId())) {
+      setCalendarExporting(true);
+      const permitted = await requestCalendarPermission();
+      const calendars = permitted ? await getWritableCalendars() : [];
+      setCalendarExporting(false);
+      if (calendars.length > 1) {
+        setWritableCalendars(calendars);
+        setPendingCalendarEvents(events);
+        setCalendarPickerOpen(true);
+        return;
+      }
+    }
+
+    await doExportEvents(events);
+  };
+
+  const onCalendarPicked = (calendar: WritableCalendar) => {
+    setCalendarPickerOpen(false);
+    void setPreferredCalendarId(calendar.id);
+    void doExportEvents(pendingCalendarEvents, calendar.id);
   };
 
   const handleAddToCalendarPress = () => {
@@ -381,6 +422,12 @@ export default function FestivalDetailScreen() {
               locale={i18n.language}
               onExport={(dates) => void exportToCalendar(dates)}
               onClose={() => setCalendarSheetOpen(false)}
+            />
+            <CalendarPickerSheet
+              visible={calendarPickerOpen}
+              calendars={writableCalendars}
+              onSelect={onCalendarPicked}
+              onClose={() => setCalendarPickerOpen(false)}
             />
           </>
         )}

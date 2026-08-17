@@ -79,6 +79,7 @@
     "pickAttendedYear": "¿En qué año asististe?",
     "addToCalendar": "Añadir al calendario",
     "calendarPermissionDenied": "Permite el acceso al calendario para añadir el evento.",
+    "pickCalendar": "¿Qué calendario?",
     "pickCalendarDays": "¿Qué días añadir?",
     "dayNumber": "Día {{count}}",
     "friendsHere": "Amigos que van",

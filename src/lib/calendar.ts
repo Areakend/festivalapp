@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import * as Calendar from 'expo-calendar';
+import * as SecureStore from 'expo-secure-store';
 
 export interface CalendarEvent {
   title: string;
@@ -11,6 +12,47 @@ export interface CalendarEvent {
   description?: string;
 }
 
+export interface WritableCalendar {
+  id: string;
+  title: string;
+  /** Account/source name (e.g. a Google address, or "Xiaomi Cloud") — the
+   *  only way to tell two same-looking "Calendar" entries apart on Android,
+   *  where multiple accounts each register their own. */
+  source: string;
+}
+
+const PREFERRED_CALENDAR_KEY = 'preferred_calendar_id';
+
+export async function requestCalendarPermission(): Promise<boolean> {
+  const { status } = await Calendar.requestCalendarPermissionsAsync();
+  return status === 'granted';
+}
+
+/** Android only — iOS has a single OS-level default (Settings > Calendar)
+ *  there's no equivalent multi-account ambiguity to resolve. */
+export async function getWritableCalendars(): Promise<WritableCalendar[]> {
+  const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+  return calendars
+    .filter((c) => c.accessLevel === Calendar.CalendarAccessLevel.OWNER)
+    .map((c) => ({ id: c.id, title: c.title, source: c.source?.name ?? '' }));
+}
+
+export async function getPreferredCalendarId(): Promise<string | null> {
+  try {
+    return await SecureStore.getItemAsync(PREFERRED_CALENDAR_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export async function setPreferredCalendarId(id: string): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(PREFERRED_CALENDAR_KEY, id);
+  } catch {
+    // Non-fatal — worst case, the picker just reappears next time.
+  }
+}
+
 /** All-day events use an exclusive end date, so add one day past the last day. */
 function nextDay(isoDate: string): string {
   const d = new Date(`${isoDate}T00:00:00Z`);
@@ -18,12 +60,15 @@ function nextDay(isoDate: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-async function getWritableCalendarId(): Promise<string> {
+async function getWritableCalendarId(preferredId?: string | null): Promise<string> {
   if (Platform.OS === 'ios') {
     return (await Calendar.getDefaultCalendarAsync()).id;
   }
-  const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-  const writable = calendars.find((c) => c.accessLevel === Calendar.CalendarAccessLevel.OWNER);
+  const calendars = await getWritableCalendars();
+  // A remembered choice wins outright — but only if that calendar still
+  // exists (accounts get removed), otherwise fall through to picking one.
+  if (preferredId && calendars.some((c) => c.id === preferredId)) return preferredId;
+  const writable = calendars[0];
   if (writable) return writable.id;
   return Calendar.createCalendarAsync({
     title: 'Mainstage',
@@ -44,14 +89,13 @@ async function getWritableCalendarId(): Promise<string> {
  * silently never actually lands in Calendar. Creating it directly is the
  * only way that's guaranteed to work on both platforms.
  */
-export async function exportEventsToCalendar(events: CalendarEvent[]) {
-  const { status } = await Calendar.requestCalendarPermissionsAsync();
-  if (status !== 'granted') {
+export async function exportEventsToCalendar(events: CalendarEvent[], calendarId?: string) {
+  if (!(await requestCalendarPermission())) {
     throw new Error('Calendar permission denied');
   }
-  const calendarId = await getWritableCalendarId();
+  const resolvedCalendarId = calendarId ?? (await getWritableCalendarId(await getPreferredCalendarId()));
   for (const event of events) {
-    await Calendar.createEventAsync(calendarId, {
+    await Calendar.createEventAsync(resolvedCalendarId, {
       title: event.title,
       startDate: new Date(`${event.startDate}T00:00:00Z`),
       endDate: new Date(`${nextDay(event.endDate ?? event.startDate)}T00:00:00Z`),
