@@ -465,10 +465,15 @@ function FestivalRow({
       <View style={styles.ratingBlock}>
         <View style={styles.communityRating}>
           <Ionicons name="star" size={12} color={hasCommunity ? colors.rating : colors.textMuted} />
-          <Text style={[styles.communityRatingText, !hasCommunity && { color: colors.textMuted }]}>
-            {/* Review count shown alongside — a lone enthusiastic rating
-                should read differently from a consensus of thirty. */}
-            {hasCommunity ? `${Number(stats.avg_rating).toFixed(1)}/20 (${stats.rating_count})` : '–'}
+          <Text
+            style={[styles.communityRatingText, !hasCommunity && { color: colors.textMuted }]}
+            numberOfLines={1}
+          >
+            {hasCommunity ? `${Number(stats.avg_rating).toFixed(1)}/20` : '–'}
+            {/* Review count, visually de-emphasized — a lone enthusiastic
+                rating should read differently from a consensus of thirty,
+                but shouldn't compete with the score itself for attention. */}
+            {hasCommunity && <Text style={styles.communityRatingCount}> ({stats.rating_count})</Text>}
           </Text>
         </View>
         <View style={styles.myRating}>
@@ -592,12 +597,17 @@ const styles = StyleSheet.create({
     color: colors.statusPlanned,
     minHeight: 15,
   },
-  ratingBlock: { alignItems: 'flex-end', gap: 2, width: 66 },
+  ratingBlock: { alignItems: 'flex-end', gap: 2, width: 84 },
   communityRating: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   communityRatingText: {
     fontFamily: typography.fonts.bodySemiBold,
     fontSize: typography.sizes.sm,
     color: colors.rating,
+  },
+  communityRatingCount: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
   },
   myRating: { flexDirection: 'row', alignItems: 'center', gap: 3, minHeight: 13 },
   myRatingText: {
