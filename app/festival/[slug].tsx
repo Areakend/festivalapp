@@ -155,16 +155,17 @@ export default function FestivalDetailScreen() {
   }
 
   const { festival, editions, rankings, stats } = data;
-  // Soonest edition still upcoming; if none, fall back to the most recent
-  // one (editions come back sorted year desc, so the first dated row is
-  // it) so a past-only festival still shows *a* date rather than none.
   const today = new Date().toISOString().slice(0, 10);
-  const nextEdition =
-    [...editions]
-      .filter((e) => e.start_date && e.start_date >= today)
-      .sort((a, b) => a.start_date!.localeCompare(b.start_date!))[0] ??
-    editions.find((e) => e.start_date) ??
-    null;
+  // Soonest edition still upcoming (undefined if none) — the one "add to
+  // calendar" exports, and what decides the share button's "next" vs
+  // "last" kind. Genuinely absent, not defaulted, unlike nextEdition below.
+  const upcomingEdition = [...editions]
+    .filter((e) => e.start_date && e.start_date >= today)
+    .sort((a, b) => a.start_date!.localeCompare(b.start_date!))[0];
+  // For display: same soonest-upcoming pick, but falls back to the most
+  // recent past one (editions come back sorted year desc, so the first
+  // dated row is it) so a past-only festival still shows *a* date.
+  const nextEdition = upcomingEdition ?? editions.find((e) => e.start_date) ?? null;
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' });
   const activeStatuses = new Set(
@@ -176,11 +177,6 @@ export default function FestivalDetailScreen() {
     .filter((a) => a.festival_id === festival.id)
     .sort((a, b) => b.attended_year - a.attended_year);
 
-  // Soonest upcoming dated edition — the one "add to calendar" exports.
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const upcomingEdition = editions
-    .filter((e) => e.start_date && e.start_date >= todayStr)
-    .sort((a, b) => a.start_date!.localeCompare(b.start_date!))[0];
   const calendarLocation = [festival.venue, festival.city, countryName(festival.country, i18n.language)]
     .filter(Boolean)
     .join(', ');
