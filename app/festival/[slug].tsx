@@ -237,12 +237,32 @@ export default function FestivalDetailScreen() {
     });
   };
 
+  // Most recent edition that's already finished — used below to catch
+  // "planned" friends whose status is stale (see friendsHere).
+  const latestPastEdition = [...editions]
+    .filter((e) => e.start_date && e.start_date < today)
+    .sort((a, b) => b.start_date!.localeCompare(a.start_date!))[0];
+
   // Friends going (planned) or who went (attended) — attended wins if a
-  // friend somehow has both rows for this festival.
+  // friend somehow has both rows for this festival. A "planned" status only
+  // auto-advances to "attended" on the OWNING user's own client (see
+  // useAutoAdvancePlannedFestivals) — it never updates just because someone
+  // else views this page. So a friend who planned an edition that has since
+  // finished, and hasn't reopened the app since, would otherwise show here
+  // as "going" to whatever the festival's next edition happens to be now
+  // (e.g. next year's, once its dates exist) — skip them instead, the same
+  // staleness check the owning user's own client would apply.
   const friendsHere = (() => {
     const byProfile = new Map<string, { profile: PublicProfile; status: 'planned' | 'attended' }>();
     for (const row of friendsAttendance ?? []) {
       if (row.festival_id !== festival.id) continue;
+      if (
+        row.status === 'planned' &&
+        latestPastEdition &&
+        row.createdAt < (latestPastEdition.end_date ?? latestPastEdition.start_date!)
+      ) {
+        continue;
+      }
       const existing = byProfile.get(row.profile.id);
       if (!existing || row.status === 'attended') {
         byProfile.set(row.profile.id, { profile: row.profile, status: row.status });

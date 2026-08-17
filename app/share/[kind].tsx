@@ -125,8 +125,15 @@ function useLastFestival(festivalId?: string) {
     // (see useUpsertReview). Skip any year that only matches a "planned"
     // festival's still-upcoming edition, so "last" never surfaces a
     // festival the user hasn't been to yet.
+    //
+    // Tie-break on created_at: attended_year alone can't tell two festivals
+    // attended in the same calendar year apart, and without a secondary
+    // sort the tie fell to whatever order the DB happened to return rows
+    // in — not necessarily the one actually logged most recently.
     const last = [...pool]
-      .sort((a, b) => b.attended_year - a.attended_year)
+      .sort(
+        (a, b) => b.attended_year - a.attended_year || b.created_at.localeCompare(a.created_at),
+      )
       .find((a) => {
         const upcoming = byId.get(a.festival_id)?.nextEdition;
         if (!upcoming || upcoming.year !== a.attended_year) return true;

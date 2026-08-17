@@ -123,6 +123,11 @@ export interface FriendAttendance {
   festival_id: string;
   status: 'planned' | 'attended';
   profile: PublicProfile;
+  /** When this status was set — lets a "planned" row be checked for
+   *  staleness against a festival's editions (see festival/[slug].tsx's
+   *  friendsHere), since a friend's own client only auto-advances their
+   *  planned -> attended when *they* open the app, not on read by others. */
+  createdAt: string;
 }
 
 /**
@@ -152,7 +157,7 @@ export function useFriendsFestivalAttendance() {
 
       const { data: statuses, error: statusError } = await supabase
         .from('user_festival_statuses')
-        .select('user_id, festival_id, status')
+        .select('user_id, festival_id, status, created_at')
         .in('user_id', [...profiles.keys()])
         .in('status', ['planned', 'attended']);
       if (statusError) throw statusError;
@@ -161,6 +166,7 @@ export function useFriendsFestivalAttendance() {
         festival_id: s.festival_id as string,
         status: s.status as 'planned' | 'attended',
         profile: profiles.get(s.user_id as string)!,
+        createdAt: s.created_at as string,
       }));
     },
   });
