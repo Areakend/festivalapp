@@ -2,10 +2,20 @@ import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { useFriendships } from '@/features/friends/api';
+import { useMyInvites } from '@/features/invites/api';
 import { colors, typography } from '@/theme';
 
 export default function TabsLayout() {
   const { t } = useTranslation();
+  const { data: friendsData } = useFriendships();
+  const { data: invitesData } = useMyInvites();
+
+  // React Navigation's own badge rendering (tabBarBadge) — undefined hides
+  // it, so no "0" ever shows up on a clean tab.
+  const incomingFriendRequests = friendsData?.incoming.length || undefined;
+  const pendingInvites =
+    invitesData?.received.filter((i) => i.status === 'pending').length || undefined;
 
   return (
     <Tabs
@@ -39,6 +49,7 @@ export default function TabsLayout() {
         options={{
           title: t('friends.title'),
           tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />,
+          tabBarBadge: incomingFriendRequests,
         }}
       />
       <Tabs.Screen
@@ -46,6 +57,7 @@ export default function TabsLayout() {
         options={{
           title: t('tabs.profile'),
           tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
+          tabBarBadge: pendingInvites,
         }}
       />
     </Tabs>
