@@ -45,17 +45,17 @@ const SUB_HINT_KEYS: Record<SubRatingKey, string> = {
   value_rating: 'review.valueRatingHint',
 };
 
-// Weighted, not a flat mean: lineup and atmosphere are usually what a
-// festival is actually remembered for, organization can make or break an
-// otherwise great lineup, side quests are the one category that's a bonus
-// rather than core to "was this a good festival". Sums to 1.
+// Weighted, not a flat mean: what actually defines the fun had at a
+// festival is organization, atmosphere and everything beyond the music
+// (side quests) as much as the lineup itself — production and value matter
+// but less so. Sums to 1.
 const SUB_RATING_WEIGHTS: Record<SubRatingKey, number> = {
-  lineup_rating: 0.25,
-  atmosphere_rating: 0.2,
   organization_rating: 0.2,
+  atmosphere_rating: 0.2,
+  side_quest_rating: 0.2,
+  lineup_rating: 0.15,
   production_rating: 0.15,
-  value_rating: 0.15,
-  side_quest_rating: 0.05,
+  value_rating: 0.1,
 };
 
 /** Create or edit the signed-in user's /20 review for a festival. */
