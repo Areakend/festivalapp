@@ -20,6 +20,7 @@ import {
   type CardTheme,
 } from '@/components/share/StoryCard';
 import {
+  useAttendanceEditionDates,
   useEditionLineup,
   useFestivalDetail,
   useFestivals,
@@ -113,6 +114,9 @@ function useLastFestival(festivalId?: string) {
   const { data: attendances } = useMyAttendances();
   const { data: myReviews } = useMyReviews();
   const { data: friendsAttendance } = useFriendsFestivalAttendance();
+  const { data: editionDates } = useAttendanceEditionDates(
+    (attendances ?? []).map((a) => a.festival_id),
+  );
 
   return useMemo(() => {
     const byId = new Map((catalog ?? []).map((item) => [item.festival.id, item]));
@@ -126,14 +130,20 @@ function useLastFestival(festivalId?: string) {
     // festival's still-upcoming edition, so "last" never surfaces a
     // festival the user hasn't been to yet.
     //
-    // Tie-break on created_at: attended_year alone can't tell two festivals
-    // attended in the same calendar year apart, and without a secondary
-    // sort the tie fell to whatever order the DB happened to return rows
-    // in — not necessarily the one actually logged most recently.
+    // Tie-break on the edition's actual date, not created_at: two
+    // festivals attended in the same calendar year can be logged into the
+    // app in either order (whichever the user happened to enter last),
+    // which has nothing to do with which one actually happened last. Falls
+    // back to created_at only when an edition date isn't on record (very
+    // old years without exact dates).
     const last = [...pool]
-      .sort(
-        (a, b) => b.attended_year - a.attended_year || b.created_at.localeCompare(a.created_at),
-      )
+      .sort((a, b) => {
+        if (a.attended_year !== b.attended_year) return b.attended_year - a.attended_year;
+        const aDate = editionDates?.get(`${a.festival_id}:${a.attended_year}`);
+        const bDate = editionDates?.get(`${b.festival_id}:${b.attended_year}`);
+        if (aDate && bDate && aDate !== bDate) return bDate.localeCompare(aDate);
+        return b.created_at.localeCompare(a.created_at);
+      })
       .find((a) => {
         const upcoming = byId.get(a.festival_id)?.nextEdition;
         if (!upcoming || upcoming.year !== a.attended_year) return true;
@@ -156,7 +166,7 @@ function useLastFestival(festivalId?: string) {
       rating: review ? Number(review.overall_rating) : null,
       crewNames: [...new Set(crewNames)],
     };
-  }, [catalog, attendances, myReviews, friendsAttendance, festivalId]);
+  }, [catalog, attendances, myReviews, friendsAttendance, festivalId, editionDates]);
 }
 
 export default function ShareScreen() {

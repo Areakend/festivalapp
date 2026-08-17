@@ -296,6 +296,40 @@ export function useMyAttendances() {
   });
 }
 
+/**
+ * Actual edition date (end_date, falling back to start_date) for every
+ * (festival_id, year) pair among the given festival ids, keyed
+ * "festivalId:year". Used to tie-break "last festival" by when the event
+ * really happened rather than by when the user happened to log it — two
+ * festivals attended the same year can be logged in either order.
+ */
+export function useAttendanceEditionDates(festivalIds: string[]) {
+  const key = [...new Set(festivalIds)].sort().join(',');
+  return useQuery({
+    queryKey: ['attendance-edition-dates', key],
+    enabled: festivalIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('festival_editions')
+        .select('festival_id, year, start_date, end_date')
+        .in('festival_id', [...new Set(festivalIds)]);
+      if (error) throw error;
+      const byKey = new Map<string, string>();
+      for (const e of data as {
+        festival_id: string;
+        year: number;
+        start_date: string | null;
+        end_date: string | null;
+      }[]) {
+        const date = e.end_date ?? e.start_date;
+        if (!date) continue;
+        byKey.set(`${e.festival_id}:${e.year}`, date);
+      }
+      return byKey;
+    },
+  });
+}
+
 export function useAddAttendance() {
   const queryClient = useQueryClient();
   const userId = useSessionStore((s) => s.session?.user.id);

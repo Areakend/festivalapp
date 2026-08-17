@@ -1,5 +1,5 @@
 import { ReactNode, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -154,7 +154,11 @@ export default function ChecklistScreen() {
         ))}
       </View>
 
-      <View style={styles.list}>
+      <ScrollView
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Section title={t('checklist.sectionBase')}>
           {BASE_ITEMS.map((item) => (
             <ItemRow
@@ -221,7 +225,7 @@ export default function ChecklistScreen() {
             </Pressable>
           </View>
         </Section>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -287,7 +291,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.lg,
   },
-  list: { gap: spacing.lg, marginTop: spacing.lg, paddingBottom: spacing.xxl },
+  list: { flex: 1, marginTop: spacing.lg },
+  listContent: { gap: spacing.lg, paddingBottom: spacing.xxl },
   section: { gap: spacing.sm },
   sectionTitle: {
     fontFamily: typography.fonts.bodyMedium,
