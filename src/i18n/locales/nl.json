@@ -133,6 +133,8 @@
     "duelWorse": "Minder goed",
     "duelSuggestion": "Suggestie op basis van je antwoorden:",
     "duelUse": "Gebruik deze score",
+    "suggestedOverall": "Voorgesteld, op basis van je subscores",
+    "useSuggestion": "Gebruiken",
     "category": {
       "atmosphere": "Sfeer",
       "stages": "Podium & geluid",

@@ -133,6 +133,8 @@
     "duelWorse": "Peor",
     "duelSuggestion": "Sugerencia según tus respuestas:",
     "duelUse": "Usar esta nota",
+    "suggestedOverall": "Sugerida, según tus subvaloraciones",
+    "useSuggestion": "Usar",
     "category": {
       "atmosphere": "Ambiente",
       "stages": "Escenario y sonido",

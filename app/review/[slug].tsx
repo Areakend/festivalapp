@@ -45,6 +45,19 @@ const SUB_HINT_KEYS: Record<SubRatingKey, string> = {
   value_rating: 'review.valueRatingHint',
 };
 
+// Weighted, not a flat mean: lineup and atmosphere are usually what a
+// festival is actually remembered for, organization can make or break an
+// otherwise great lineup, side quests are the one category that's a bonus
+// rather than core to "was this a good festival". Sums to 1.
+const SUB_RATING_WEIGHTS: Record<SubRatingKey, number> = {
+  lineup_rating: 0.25,
+  atmosphere_rating: 0.2,
+  organization_rating: 0.2,
+  production_rating: 0.15,
+  value_rating: 0.15,
+  side_quest_rating: 0.05,
+};
+
 /** Create or edit the signed-in user's /20 review for a festival. */
 export default function ReviewScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -118,6 +131,21 @@ export default function ReviewScreen() {
     atmosphere_rating: 0,
     value_rating: 0,
   });
+
+  // Suggests the overall score once every sub-rating is filled in, as a
+  // weighted average (SUB_RATING_WEIGHTS) rather than a flat mean — purely
+  // a starting point the user can still drag away from, never applied
+  // automatically.
+  const allSubsFilled = SUB_RATINGS.every((key) => subs[key] > 0);
+  const suggestedOverall = allSubsFilled
+    ? Math.min(
+        20,
+        Math.max(
+          1,
+          Math.round(SUB_RATINGS.reduce((sum, key) => sum + subs[key] * SUB_RATING_WEIGHTS[key], 0)),
+        ),
+      )
+    : null;
 
   // Default to the most recently attended year — silently, with no picker
   // shown, when it's the only one. With several attended years, the picker
@@ -324,6 +352,18 @@ export default function ReviewScreen() {
             onChange={(v) => setSubs((prev) => ({ ...prev, [key]: v }))}
           />
         ))}
+        {suggestedOverall != null && (
+          <View style={styles.suggestionRow}>
+            <View style={styles.suggestionText}>
+              <Text style={styles.suggestionLabel}>{t('review.suggestedOverall')}</Text>
+              <Text style={[styles.suggestionValue, { color: ratingColor(suggestedOverall) }]}>
+                {suggestedOverall}
+                <Text style={styles.suggestionValueMax}>/20</Text>
+              </Text>
+            </View>
+            <Button label={t('review.useSuggestion')} variant="secondary" onPress={() => setOverall(suggestedOverall)} />
+          </View>
+        )}
       </View>
 
       <TextInput
@@ -426,6 +466,29 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.accent,
     textAlign: 'center',
+  },
+  suggestionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.md,
+    marginTop: spacing.xs,
+  },
+  suggestionText: { gap: 2 },
+  suggestionLabel: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+  },
+  suggestionValue: {
+    fontFamily: typography.fonts.heading,
+    fontSize: typography.sizes.xl,
+  },
+  suggestionValueMax: {
+    fontSize: typography.sizes.sm,
+    color: colors.textMuted,
   },
   bigScore: {
     fontFamily: typography.fonts.heading,

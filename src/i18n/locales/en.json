@@ -133,6 +133,8 @@
     "duelWorse": "Not as good",
     "duelSuggestion": "Suggestion based on your answers:",
     "duelUse": "Use this score",
+    "suggestedOverall": "Suggested, from your sub-ratings",
+    "useSuggestion": "Use this",
     "category": {
       "atmosphere": "Atmosphere",
       "stages": "Stages & sound",

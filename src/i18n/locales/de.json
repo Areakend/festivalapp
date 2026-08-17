@@ -133,6 +133,8 @@
     "duelWorse": "Schlechter",
     "duelSuggestion": "Vorschlag auf Basis deiner Antworten:",
     "duelUse": "Diese Note übernehmen",
+    "suggestedOverall": "Vorschlag aus deinen Unterbewertungen",
+    "useSuggestion": "Übernehmen",
     "category": {
       "atmosphere": "Stimmung",
       "stages": "Bühne & Sound",
