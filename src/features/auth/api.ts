@@ -1,5 +1,6 @@
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 import { supabase } from '@/lib/supabase';
 
@@ -162,4 +163,34 @@ export async function signInWithGoogle() {
     'Completing Google sign-in',
   );
   if (exchangeError) throw exchangeError;
+}
+
+/**
+ * Apple's native sign-in sheet, unlike Google's, needs no browser redirect
+ * or deep-link callback — it returns a signed identity token directly,
+ * which Supabase exchanges for a session on its own. iOS only: Android has
+ * no equivalent OS-level Apple account, and Apple's own guidelines only
+ * require offering this on their own platform.
+ */
+export async function signInWithApple() {
+  const credential = await AppleAuthentication.signInAsync({
+    requestedScopes: [
+      AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+      AppleAuthentication.AppleAuthenticationScope.EMAIL,
+    ],
+  });
+
+  if (!credential.identityToken) {
+    throw new Error('Apple did not return an identity token');
+  }
+
+  const { error } = await withTimeout(
+    supabase.auth.signInWithIdToken({
+      provider: 'apple',
+      token: credential.identityToken,
+    }),
+    15_000,
+    'Completing Apple sign-in',
+  );
+  if (error) throw error;
 }

@@ -9,8 +9,9 @@ import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
 import { TermsGate } from '@/components/auth/TermsGate';
+import { AppleSignInButton } from '@/components/auth/AppleSignInButton';
 import { signInSchema, type SignInInput } from '@/features/auth/schemas';
-import { signInWithEmail, signInWithGoogle } from '@/features/auth/api';
+import { signInWithEmail, signInWithGoogle, signInWithApple } from '@/features/auth/api';
 import { colors, spacing, typography } from '@/theme';
 
 export default function SignIn() {
@@ -45,6 +46,16 @@ export default function SignIn() {
       setSubmitError(e instanceof Error ? e.message : t('common.error'));
     } finally {
       setGoogleLoading(false);
+    }
+  };
+
+  const onApple = async () => {
+    setSubmitError(null);
+    try {
+      await signInWithApple();
+    } catch (e) {
+      if (e instanceof Error && e.message.includes('ERR_REQUEST_CANCELED')) return;
+      setSubmitError(e instanceof Error ? e.message : t('common.error'));
     }
   };
 
@@ -99,6 +110,7 @@ export default function SignIn() {
           loading={googleLoading}
           disabled={!agreedToTerms}
         />
+        <AppleSignInButton disabled={!agreedToTerms} onPress={() => void onApple()} />
         <Button
           label={t('auth.forgotPassword')}
           variant="ghost"
