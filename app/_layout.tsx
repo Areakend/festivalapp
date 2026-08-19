@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   useFonts,
   SpaceGrotesk_500Medium,
@@ -21,6 +22,16 @@ import { initSessionListener, useSessionStore } from '@/features/auth/session-st
 
 SplashScreen.preventAutoHideAsync();
 initSessionListener();
+
+// React Query's "refetch on focus" is a no-op by default on React Native —
+// it listens for the browser's window focus event, which never fires here.
+// Without this, data that changed on ANOTHER device (a friend accepting a
+// request, someone RSVPing to a shared festival) never refreshes on this
+// one until something else happens to remount the screen — the local cache
+// just sits there looking stale-but-confident indefinitely.
+AppState.addEventListener('change', (status: AppStateStatus) => {
+  focusManager.setFocused(status === 'active');
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {

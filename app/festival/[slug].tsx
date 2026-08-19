@@ -200,7 +200,15 @@ export default function FestivalDetailScreen() {
   const doExportEvents = async (events: CalendarEvent[], calendarId?: string) => {
     setCalendarExporting(true);
     try {
-      await exportEventsToCalendar(events, calendarId);
+      const { added, skipped } = await exportEventsToCalendar(events, calendarId);
+      if (skipped > 0) {
+        Alert.alert(
+          t('festival.calendarExported'),
+          added > 0
+            ? t('festival.calendarExportedSomeSkipped', { added, skipped })
+            : t('festival.calendarExportedAllSkipped'),
+        );
+      }
     } catch (error) {
       const deniedPermission = error instanceof Error && error.message === 'Calendar permission denied';
       Alert.alert(

@@ -81,6 +81,12 @@ async function getWritableCalendarId(preferredId?: string | null): Promise<strin
   });
 }
 
+export interface ExportResult {
+  added: number;
+  /** Already had a same-titled event on the same day in that calendar. */
+  skipped: number;
+}
+
 /**
  * Writes each event straight into the device's calendar via the native
  * Calendar API. Sharing a generated .ics file used to be how this worked,
@@ -88,21 +94,40 @@ async function getWritableCalendarId(preferredId?: string | null): Promise<strin
  * for a shared file — it just lets the user save/forward it — so the event
  * silently never actually lands in Calendar. Creating it directly is the
  * only way that's guaranteed to work on both platforms.
+ *
+ * Re-exporting the same festival (e.g. after re-opening the export sheet)
+ * would otherwise create a second copy of every day's event every time —
+ * checked by title against whatever's already on that day in the target
+ * calendar before creating.
  */
-export async function exportEventsToCalendar(events: CalendarEvent[], calendarId?: string) {
+export async function exportEventsToCalendar(
+  events: CalendarEvent[],
+  calendarId?: string,
+): Promise<ExportResult> {
   if (!(await requestCalendarPermission())) {
     throw new Error('Calendar permission denied');
   }
   const resolvedCalendarId = calendarId ?? (await getWritableCalendarId(await getPreferredCalendarId()));
+  let added = 0;
+  let skipped = 0;
   for (const event of events) {
+    const rangeStart = new Date(`${event.startDate}T00:00:00Z`);
+    const rangeEnd = new Date(`${nextDay(event.endDate ?? event.startDate)}T00:00:00Z`);
+    const existing = await Calendar.getEventsAsync([resolvedCalendarId], rangeStart, rangeEnd);
+    if (existing.some((e) => e.title === event.title)) {
+      skipped += 1;
+      continue;
+    }
     await Calendar.createEventAsync(resolvedCalendarId, {
       title: event.title,
-      startDate: new Date(`${event.startDate}T00:00:00Z`),
-      endDate: new Date(`${nextDay(event.endDate ?? event.startDate)}T00:00:00Z`),
+      startDate: rangeStart,
+      endDate: rangeEnd,
       allDay: true,
       timeZone: 'UTC',
       location: event.location,
       notes: event.description,
     });
+    added += 1;
   }
+  return { added, skipped };
 }

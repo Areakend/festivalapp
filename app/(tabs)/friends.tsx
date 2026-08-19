@@ -30,11 +30,9 @@ export default function FriendsScreen() {
   const acceptRequest = useAcceptFriendRequest();
   const removeFriendship = useRemoveFriendship();
 
-  const pendingIds = new Set([
-    ...(friendships?.outgoing ?? []).map((f) => f.profile.id),
-    ...(friendships?.incoming ?? []).map((f) => f.profile.id),
-    ...(friendships?.friends ?? []).map((f) => f.profile.id),
-  ]);
+  const friendIds = new Set((friendships?.friends ?? []).map((f) => f.profile.id));
+  const outgoingIds = new Set((friendships?.outgoing ?? []).map((f) => f.profile.id));
+  const incomingIds = new Set((friendships?.incoming ?? []).map((f) => f.profile.id));
 
   const confirmRemoveFriend = (friendshipId: string, name: string) => {
     Alert.alert(t('friends.remove'), name, [
@@ -67,8 +65,12 @@ export default function FriendsScreen() {
       <View style={styles.listArea}>
         {(searchResults ?? []).map((user) => (
           <UserRow key={user.id} user={user}>
-            {pendingIds.has(user.id) ? (
+            {friendIds.has(user.id) ? (
+              <Text style={styles.pendingLabel}>{t('friends.alreadyFriends')}</Text>
+            ) : outgoingIds.has(user.id) ? (
               <Text style={styles.pendingLabel}>{t('friends.requestSent')}</Text>
+            ) : incomingIds.has(user.id) ? (
+              <Text style={styles.pendingLabel}>{t('friends.requestReceived')}</Text>
             ) : (
               <Button
                 label={t('friends.add')}

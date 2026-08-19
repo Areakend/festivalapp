@@ -7,6 +7,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
+import { DetailSheet, type DetailSheetRow } from '@/components/ui/DetailSheet';
 import { TextField } from '@/components/ui/TextField';
 import { ScheduleRow } from '@/components/festival/ScheduleRow';
 import { signOut } from '@/features/auth/api';
@@ -24,7 +25,7 @@ import { useDeleteAccount } from '@/features/moderation/api';
 import { useMyInvites } from '@/features/invites/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { colors, radii, spacing, typography } from '@/theme';
-import { countryFlag } from '@/utils/format';
+import { countryFlag, countryName } from '@/utils/format';
 
 const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
   en: 'English',
@@ -112,8 +113,64 @@ export default function ProfileScreen() {
       topRated,
       topFestival,
       topCountry,
+      attendedFestivalIds: [...attendedIds],
+      countryCounts,
     };
   }, [catalog, myStatuses, myAttendances, myReviews, djmag]);
+
+  // Drill-down content for each stat box, built lazily off the same data —
+  // tapping a stat should explain the number, not just repeat it.
+  const [statDetail, setStatDetail] = useState<'attended' | 'countries' | 'rating' | 'djmag' | null>(
+    null,
+  );
+  const statDetailRows = useMemo((): DetailSheetRow[] => {
+    const byId = new Map((catalog ?? []).map((item) => [item.festival.id, item.festival]));
+    if (statDetail === 'attended') {
+      return stats.attendedFestivalIds
+        .map((id) => byId.get(id))
+        .filter((f): f is NonNullable<typeof f> => !!f)
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((f) => ({ key: f.id, leading: countryFlag(f.country), label: f.name }));
+    }
+    if (statDetail === 'countries') {
+      return [...stats.countryCounts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([code, count]) => ({
+          key: code,
+          leading: countryFlag(code),
+          label: countryName(code, i18n.language),
+          value: String(count),
+        }));
+    }
+    if (statDetail === 'rating') {
+      return [...(myReviews ?? [])]
+        .sort((a, b) => b.overall_rating - a.overall_rating)
+        .map((r) => ({
+          key: r.id,
+          label: byId.get(r.festival_id)?.name ?? '—',
+          value: r.overall_rating.toFixed(1),
+        }));
+    }
+    if (statDetail === 'djmag') {
+      const attendedIds = new Set(stats.attendedFestivalIds);
+      return (djmag?.entries ?? [])
+        .filter((e) => attendedIds.has(e.festivals.id))
+        .sort((a, b) => a.rank_position - b.rank_position)
+        .map((e) => ({ key: e.festivals.id, label: e.festivals.name, value: `#${e.rank_position}` }));
+    }
+    return [];
+  }, [statDetail, catalog, stats, myReviews, djmag, i18n.language]);
+
+  const statDetailTitle =
+    statDetail === 'attended'
+      ? t('profile.festivalsAttended')
+      : statDetail === 'countries'
+        ? t('profile.countriesVisited')
+        : statDetail === 'rating'
+          ? t('profile.avgRatingGiven')
+          : statDetail === 'djmag'
+            ? t('djmag.title')
+            : '';
 
   const changeLanguage = (lang: SupportedLanguage) => {
     void i18n.changeLanguage(lang);
@@ -221,14 +278,35 @@ export default function ProfileScreen() {
 
       {/* Stats — one compact row instead of a tall 2x2 grid */}
       <View style={styles.grid}>
-        <StatBox value={String(stats.attended)} label={t('profile.festivalsAttended')} />
-        <StatBox value={String(stats.countries)} label={t('profile.countriesVisited')} />
+        <StatBox
+          value={String(stats.attended)}
+          label={t('profile.festivalsAttended')}
+          onPress={() => setStatDetail('attended')}
+        />
+        <StatBox
+          value={String(stats.countries)}
+          label={t('profile.countriesVisited')}
+          onPress={() => setStatDetail('countries')}
+        />
         <StatBox
           value={stats.avgRating != null ? stats.avgRating.toFixed(1) : '–'}
           label={t('profile.avgRatingGiven')}
+          onPress={() => setStatDetail('rating')}
         />
-        <StatBox value={`${stats.djmagCount}`} label={t('djmag.title')} />
+        <StatBox
+          value={`${stats.djmagCount}`}
+          label={t('djmag.title')}
+          onPress={() => setStatDetail('djmag')}
+        />
       </View>
+
+      <DetailSheet
+        visible={statDetail != null}
+        title={statDetailTitle}
+        rows={statDetailRows}
+        emptyLabel={t('profile.statDetailEmpty')}
+        onClose={() => setStatDetail(null)}
+      />
 
       {/* Records + top rated merged in one card to cut vertical weight */}
       {(stats.topFestival || stats.topCountry || mostSeenArtist || stats.topRated.length > 0) && (
@@ -419,12 +497,21 @@ export default function ProfileScreen() {
   );
 }
 
-function StatBox({ value, label }: { value: string; label: string }) {
+function StatBox({
+  value,
+  label,
+  onPress,
+}: {
+  value: string;
+  label: string;
+  onPress?: () => void;
+}) {
   return (
-    <View style={styles.statBox}>
+    <Pressable style={styles.statBox} onPress={onPress}>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
-    </View>
+      {onPress && <Ionicons name="chevron-down" size={10} color={colors.textMuted} />}
+    </Pressable>
   );
 }
 
