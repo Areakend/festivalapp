@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { ratingColor } from '@/components/ui/RatingBar';
+import { ReportBlockSheet } from '@/components/review/ReportBlockSheet';
 import { useSessionStore } from '@/features/auth/session-store';
 import { useBlockUser, useReportReview } from '@/features/moderation/api';
 import { useMyReviewVotes, useToggleReviewVote } from '@/features/reviews/api';
@@ -24,6 +26,7 @@ export function ReviewCard({ review }: { review: ReviewWithAuthor }) {
   const blockUser = useBlockUser();
   const { data: myVotes } = useMyReviewVotes();
   const toggleVote = useToggleReviewVote();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const date = new Intl.DateTimeFormat(i18n.language, {
     day: 'numeric',
@@ -34,33 +37,24 @@ export function ReviewCard({ review }: { review: ReviewWithAuthor }) {
   const authorName = review.profiles?.display_name ?? '—';
   const upvoted = myVotes?.has(review.id) ?? false;
 
-  const openMenu = () => {
-    Alert.alert(t('report.title'), authorName, [
+  const doReport = () => {
+    reportReview.mutate(
+      { reviewId: review.id, reportedUserId: review.user_id },
       {
-        text: t('report.review'),
-        onPress: () =>
-          reportReview.mutate(
-            { reviewId: review.id, reportedUserId: review.user_id },
-            {
-              onSuccess: () => Alert.alert(t('report.title'), t('report.reviewDone')),
-              onError: (error) => Alert.alert(t('common.error'), error.message),
-            },
-          ),
+        onSuccess: () => Alert.alert(t('report.title'), t('report.reviewDone')),
+        onError: (error) => Alert.alert(t('common.error'), error.message),
       },
+    );
+  };
+
+  const doBlock = () => {
+    blockUser.mutate(
+      { blockedId: review.user_id, blocked: false },
       {
-        text: t('report.block', { name: authorName }),
-        style: 'destructive',
-        onPress: () =>
-          blockUser.mutate(
-            { blockedId: review.user_id, blocked: false },
-            {
-              onSuccess: () => Alert.alert(t('report.title'), t('report.blockDone')),
-              onError: (error) => Alert.alert(t('common.error'), error.message),
-            },
-          ),
+        onSuccess: () => Alert.alert(t('report.title'), t('report.blockDone')),
+        onError: (error) => Alert.alert(t('common.error'), error.message),
       },
-      { text: t('common.cancel'), style: 'cancel' },
-    ]);
+    );
   };
 
   return (
@@ -83,7 +77,7 @@ export function ReviewCard({ review }: { review: ReviewWithAuthor }) {
             </Text>
           </View>
           {myUserId != null && review.user_id !== myUserId && (
-            <Pressable onPress={openMenu} hitSlop={10}>
+            <Pressable onPress={() => setMenuOpen(true)} hitSlop={10}>
               <Ionicons name="ellipsis-vertical" size={16} color={colors.textMuted} />
             </Pressable>
           )}
@@ -112,6 +106,14 @@ export function ReviewCard({ review }: { review: ReviewWithAuthor }) {
           )}
         </Pressable>
       </View>
+
+      <ReportBlockSheet
+        visible={menuOpen}
+        authorName={authorName}
+        onReport={doReport}
+        onBlock={doBlock}
+        onClose={() => setMenuOpen(false)}
+      />
     </View>
   );
 }
