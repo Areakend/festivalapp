@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
+import { TermsGate } from '@/components/auth/TermsGate';
 import { signUpSchema, type SignUpInput } from '@/features/auth/schemas';
 import { checkUsernameAvailable, signUpWithEmail, signInWithGoogle } from '@/features/auth/api';
 import { colors, spacing, typography } from '@/theme';
@@ -17,6 +18,7 @@ export default function SignUp() {
   const router = useRouter();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const {
     control,
@@ -116,12 +118,20 @@ export default function SignUp() {
 
         {submitError && <Text style={styles.submitError}>{submitError}</Text>}
 
-        <Button label={t('auth.signUp')} onPress={handleSubmit(onSubmit)} loading={isSubmitting} />
+        <TermsGate agreed={agreedToTerms} onToggle={() => setAgreedToTerms((v) => !v)} />
+
+        <Button
+          label={t('auth.signUp')}
+          onPress={handleSubmit(onSubmit)}
+          loading={isSubmitting}
+          disabled={!agreedToTerms}
+        />
         <Button
           label={t('auth.signInWithGoogle')}
           variant="secondary"
           onPress={onGoogle}
           loading={googleLoading}
+          disabled={!agreedToTerms}
         />
         <Button
           label={t('auth.haveAccount')}

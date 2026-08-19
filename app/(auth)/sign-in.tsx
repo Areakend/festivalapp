@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
+import { TermsGate } from '@/components/auth/TermsGate';
 import { signInSchema, type SignInInput } from '@/features/auth/schemas';
 import { signInWithEmail, signInWithGoogle } from '@/features/auth/api';
 import { colors, spacing, typography } from '@/theme';
@@ -17,6 +18,7 @@ export default function SignIn() {
   const router = useRouter();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const {
     control,
@@ -84,11 +86,18 @@ export default function SignIn() {
         {submitError && <Text style={styles.submitError}>{submitError}</Text>}
 
         <Button label={t('auth.signIn')} onPress={handleSubmit(onSubmit)} loading={isSubmitting} />
+
+        {/* Google here can just as well create a brand-new account as sign
+            in an existing one, so it needs the same terms gate as sign-up —
+            plain email sign-in doesn't, since that path only ever logs in
+            an account that already went through sign-up's gate once. */}
+        <TermsGate agreed={agreedToTerms} onToggle={() => setAgreedToTerms((v) => !v)} />
         <Button
           label={t('auth.signInWithGoogle')}
           variant="secondary"
           onPress={onGoogle}
           loading={googleLoading}
+          disabled={!agreedToTerms}
         />
         <Button
           label={t('auth.forgotPassword')}
