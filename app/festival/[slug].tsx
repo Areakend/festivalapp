@@ -503,6 +503,14 @@ export default function FestivalDetailScreen() {
                   <Text style={styles.friendName} numberOfLines={1}>
                     {profile.display_name}
                   </Text>
+                  <Text
+                    style={[
+                      styles.friendStatus,
+                      { color: status === 'attended' ? colors.statusAttended : colors.statusPlanned },
+                    ]}
+                  >
+                    {t(status === 'attended' ? 'festival.friendStatusAttended' : 'festival.friendStatusPlanned')}
+                  </Text>
                 </Pressable>
               ))}
             </View>
@@ -811,6 +819,10 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.sm,
     color: colors.text,
+  },
+  friendStatus: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
   },
   sectionTitle: {
     fontFamily: typography.fonts.headingMedium,

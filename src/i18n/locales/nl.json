@@ -94,7 +94,9 @@
     "pickCalendar": "Welke agenda?",
     "pickCalendarDays": "Welke dagen toevoegen?",
     "dayNumber": "Dag {{count}}",
-    "friendsHere": "Vrienden die gaan",
+    "friendsHere": "Vrienden",
+    "friendStatusAttended": "was erbij",
+    "friendStatusPlanned": "gaat",
     "seeMoreArtists_one": "+{{count}} artiest meer",
     "seeMoreArtists_other": "+{{count}} artiesten meer"
   },
