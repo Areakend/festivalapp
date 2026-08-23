@@ -177,6 +177,7 @@
     "periodTo": "Tot",
     "sortFollowedArtists": "Artiesten die ik volg",
     "searchPlaceholder": "Naam, land, genre of artiest…",
+    "artistMatchHint": "Komt overeen met artiest {{name}}",
     "toRate": "Te beoordelen"
   },
   "friends": {

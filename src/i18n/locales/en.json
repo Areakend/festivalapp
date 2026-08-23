@@ -177,6 +177,7 @@
     "periodTo": "To",
     "sortFollowedArtists": "Artists I follow",
     "searchPlaceholder": "Name, country, genre or artist…",
+    "artistMatchHint": "Matches artist {{name}}",
     "toRate": "To rate"
   },
   "friends": {

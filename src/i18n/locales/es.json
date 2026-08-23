@@ -177,6 +177,7 @@
     "periodTo": "Hasta",
     "sortFollowedArtists": "Artistas que sigo",
     "searchPlaceholder": "Nombre, país, género o artista…",
+    "artistMatchHint": "Coincide con el artista {{name}}",
     "toRate": "Por valorar"
   },
   "friends": {

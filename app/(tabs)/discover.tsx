@@ -211,6 +211,28 @@ export default function FestivalsScreen() {
     followedMatchByFestival,
   ]);
 
+  // Which matched festivals only showed up because of their lineup, not
+  // their own name/country/genre — worth a small "why" hint, since
+  // "Awakenings" appearing for "dec" (an artist there, not the festival
+  // itself) reads as a bug otherwise.
+  const artistOnlyMatchNames = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const result = new Map<string, string>();
+    if (!q || !artistMatchIds) return result;
+    for (const item of data ?? []) {
+      const { festival } = item;
+      const artistName = artistMatchIds.get(festival.id);
+      if (!artistName) continue;
+      const nameMatch = festival.name.toLowerCase().includes(q);
+      const countryMatch =
+        festival.country.toLowerCase().includes(q) ||
+        countryName(festival.country, i18n.language).toLowerCase().includes(q);
+      const genreMatch = festival.genres.some((g) => g.toLowerCase().includes(q));
+      if (!nameMatch && !countryMatch && !genreMatch) result.set(festival.id, artistName);
+    }
+    return result;
+  }, [data, search, artistMatchIds, i18n.language]);
+
   const top100Attended = useMemo(
     () => (data ?? []).filter((i) => i.djmagRank != null && attendedIds.has(i.festival.id)).length,
     [data, attendedIds],
@@ -334,6 +356,7 @@ export default function FestivalsScreen() {
           renderItem={({ item }) => (
             <FestivalRow
               item={item}
+              artistMatchHint={artistOnlyMatchNames.get(item.festival.id)}
               attended={attendedIds.has(item.festival.id)}
               onToggleAttended={() =>
                 toggleStatus.mutate({
@@ -434,6 +457,7 @@ export default function FestivalsScreen() {
 
 function FestivalRow({
   item,
+  artistMatchHint,
   attended,
   onToggleAttended,
   myRating,
@@ -442,6 +466,7 @@ function FestivalRow({
   onPress,
 }: {
   item: CatalogItem;
+  artistMatchHint: string | undefined;
   attended: boolean;
   onToggleAttended: () => void;
   myRating: number | undefined;
@@ -449,6 +474,7 @@ function FestivalRow({
   dateLabel: string | undefined;
   onPress: () => void;
 }) {
+  const { t } = useTranslation();
   const { festival, stats } = item;
   const hasCommunity = stats != null && stats.rating_count > 0;
   return (
@@ -461,6 +487,11 @@ function FestivalRow({
         <Text style={styles.rowDate} numberOfLines={1}>
           {dateLabel ?? ' '}
         </Text>
+        {artistMatchHint && (
+          <Text style={styles.artistMatchHint} numberOfLines={1}>
+            {t('discover.artistMatchHint', { name: artistMatchHint })}
+          </Text>
+        )}
       </View>
       <View style={styles.ratingBlock}>
         <View style={styles.communityRating}>
@@ -596,6 +627,12 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: colors.statusPlanned,
     minHeight: 15,
+  },
+  artistMatchHint: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+    fontStyle: 'italic',
   },
   ratingBlock: { alignItems: 'flex-end', gap: 2, width: 84 },
   communityRating: { flexDirection: 'row', alignItems: 'center', gap: 3 },

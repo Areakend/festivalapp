@@ -110,11 +110,17 @@ export function useFestivalIdsByArtistSearch(query: string) {
         .select('festival_editions!inner(festival_id), artists!inner(name)')
         .ilike('artists.name', `%${q}%`);
       if (error) throw error;
-      return new Set(
-        (data as unknown as { festival_editions: { festival_id: string } }[]).map(
-          (row) => row.festival_editions.festival_id,
-        ),
-      );
+      // One matching artist name per festival is enough to explain the
+      // match in the UI ("matches artist: X") — first one found wins.
+      const byFestival = new Map<string, string>();
+      for (const row of data as unknown as {
+        festival_editions: { festival_id: string };
+        artists: { name: string };
+      }[]) {
+        const id = row.festival_editions.festival_id;
+        if (!byFestival.has(id)) byFestival.set(id, row.artists.name);
+      }
+      return byFestival;
     },
   });
 }
