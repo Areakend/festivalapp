@@ -94,9 +94,8 @@
     "pickCalendar": "Welcher Kalender?",
     "pickCalendarDays": "Welche Tage hinzufügen?",
     "dayNumber": "Tag {{count}}",
-    "friendsHere": "Freunde",
-    "friendStatusAttended": "war dabei",
-    "friendStatusPlanned": "geht hin",
+    "friendsGoing": "Freunde, die hingehen",
+    "friendsAttended": "Freunde, die schon dabei waren",
     "seeMoreArtists_one": "+{{count}} weiterer Artist",
     "seeMoreArtists_other": "+{{count}} weitere Artists"
   },

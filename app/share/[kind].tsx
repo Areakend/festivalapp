@@ -29,7 +29,7 @@ import {
   type CatalogItem,
 } from '@/features/festivals/api';
 import { useMyFollowedArtists } from '@/features/artists/api';
-import { useFriendsFestivalAttendance } from '@/features/friends/api';
+import { useFriendsFestivalAttendance, useFriendsWhoAttendedYear } from '@/features/friends/api';
 import { useMyReviews } from '@/features/reviews/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
@@ -102,7 +102,7 @@ function useNextFestival(festivalId?: string) {
     if (!next) return null;
 
     const friendNames = (friendsAttendance ?? [])
-      .filter((r) => r.festival_id === next.item.festival.id)
+      .filter((r) => r.festival_id === next.item.festival.id && r.status === 'planned')
       .map((r) => r.profile.display_name);
 
     return { ...next, friendNames: [...new Set(friendNames)] };
@@ -113,12 +113,11 @@ function useLastFestival(festivalId?: string) {
   const { data: catalog } = useFestivals();
   const { data: attendances } = useMyAttendances();
   const { data: myReviews } = useMyReviews();
-  const { data: friendsAttendance } = useFriendsFestivalAttendance();
   const { data: editionDates } = useAttendanceEditionDates(
     (attendances ?? []).map((a) => a.festival_id),
   );
 
-  return useMemo(() => {
+  const base = useMemo(() => {
     const byId = new Map((catalog ?? []).map((item) => [item.festival.id, item]));
     const today = new Date().toISOString().slice(0, 10);
     const pool = festivalId
@@ -156,17 +155,20 @@ function useLastFestival(festivalId?: string) {
     const review = (myReviews ?? []).find(
       (r) => r.festival_id === last.festival_id && (r.year == null || r.year === last.attended_year),
     );
-    const crewNames = (friendsAttendance ?? [])
-      .filter((r) => r.festival_id === last.festival_id && r.status === 'attended')
-      .map((r) => r.profile.display_name);
 
     return {
       item,
       year: last.attended_year,
       rating: review ? Number(review.overall_rating) : null,
-      crewNames: [...new Set(crewNames)],
     };
-  }, [catalog, attendances, myReviews, friendsAttendance, festivalId, editionDates]);
+  }, [catalog, attendances, myReviews, festivalId, editionDates]);
+
+  // A friend who went to some other year of this same festival must not
+  // show up on this specific edition's card — needs the year-precise
+  // lookup, not the ever-attended one useNextFestival uses.
+  const { data: crewNames } = useFriendsWhoAttendedYear(base?.item.festival.id, base?.year);
+
+  return useMemo(() => (base ? { ...base, crewNames: crewNames ?? [] } : null), [base, crewNames]);
 }
 
 export default function ShareScreen() {

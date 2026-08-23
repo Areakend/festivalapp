@@ -94,9 +94,8 @@
     "pickCalendar": "¿Qué calendario?",
     "pickCalendarDays": "¿Qué días añadir?",
     "dayNumber": "Día {{count}}",
-    "friendsHere": "Amigos",
-    "friendStatusAttended": "estuvo",
-    "friendStatusPlanned": "va a ir",
+    "friendsGoing": "Amigos que van",
+    "friendsAttended": "Amigos que ya estuvieron",
     "seeMoreArtists_one": "+{{count}} artista más",
     "seeMoreArtists_other": "+{{count}} artistas más"
   },

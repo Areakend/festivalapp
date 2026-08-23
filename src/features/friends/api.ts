@@ -182,6 +182,47 @@ export function useFriendsFestivalAttendance() {
   });
 }
 
+/**
+ * Friends who logged attending one specific (festival, year) pair — the
+ * share card's "crew" for a past edition needs this precision.
+ * useFriendsFestivalAttendance only knows "attended, ever" via
+ * user_festival_statuses, which can't tell a friend who went in 2019 apart
+ * from one who went this year, so it can't drive a specific edition's card.
+ */
+export function useFriendsWhoAttendedYear(festivalId: string | undefined, year: number | undefined) {
+  const userId = useSessionStore((s) => s.session?.user.id);
+  return useQuery({
+    queryKey: ['friends-attended-year', userId, festivalId, year],
+    enabled: !!userId && !!festivalId && !!year,
+    queryFn: async (): Promise<string[]> => {
+      const { data: friendships, error: friendshipError } = await supabase
+        .from('friendships')
+        .select(FRIEND_SELECT)
+        .eq('status', 'accepted');
+      if (friendshipError) throw friendshipError;
+      const profiles = new Map(
+        (friendships as unknown as FriendshipRow[]).map((r) => {
+          const p = r.requester_id === userId ? r.addressee : r.requester;
+          return [p.id, p] as const;
+        }),
+      );
+      if (profiles.size === 0) return [];
+
+      const { data, error } = await supabase
+        .from('user_attendances')
+        .select('user_id')
+        .eq('festival_id', festivalId!)
+        .eq('attended_year', year!)
+        .in('user_id', [...profiles.keys()]);
+      if (error) throw error;
+
+      return [...new Set((data as { user_id: string }[]).map((r) => r.user_id))]
+        .map((id) => profiles.get(id)?.display_name)
+        .filter((name): name is string => !!name);
+    },
+  });
+}
+
 export interface FriendProfileData {
   profile: Profile;
   // "attended" is publicly readable now (see 20260714100000 migration) so

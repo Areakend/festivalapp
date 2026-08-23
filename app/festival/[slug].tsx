@@ -193,6 +193,19 @@ export default function FestivalDetailScreen() {
   const calendarLocation = [festival.venue, festival.city, countryName(festival.country, i18n.language)]
     .filter(Boolean)
     .join(', ');
+
+  const openInMaps = () => {
+    const label = encodeURIComponent(festival.name);
+    const hasCoords = festival.latitude != null && festival.longitude != null;
+    const coords = hasCoords ? `${festival.latitude},${festival.longitude}` : '';
+    const textQuery = encodeURIComponent(calendarLocation || festival.name);
+    const webUrl = `https://www.google.com/maps/search/?api=1&query=${hasCoords ? coords : textQuery}`;
+    const nativeUrl = Platform.select({
+      ios: hasCoords ? `maps://?ll=${coords}&q=${label}` : `maps://?q=${textQuery}`,
+      android: hasCoords ? `geo:${coords}?q=${coords}(${label})` : `geo:0,0?q=${textQuery}`,
+    });
+    void Linking.openURL(nativeUrl ?? webUrl).catch(() => Linking.openURL(webUrl));
+  };
   const calendarDays = upcomingEdition
     ? eachDay(upcomingEdition.start_date!, upcomingEdition.end_date ?? upcomingEdition.start_date!)
     : [];
@@ -297,23 +310,24 @@ export default function FestivalDetailScreen() {
   // as "going" to whatever the festival's next edition happens to be now
   // (e.g. next year's, once its dates exist) — skip them instead, the same
   // staleness check the owning user's own client would apply.
-  const friendsHere = (() => {
-    const byProfile = new Map<string, { profile: PublicProfile; status: 'planned' | 'attended' }>();
+  const { friendsGoing, friendsAttended } = (() => {
+    const going = new Map<string, PublicProfile>();
+    const attended = new Map<string, PublicProfile>();
     for (const row of friendsAttendance ?? []) {
       if (row.festival_id !== festival.id) continue;
-      if (
-        row.status === 'planned' &&
-        latestPastEdition &&
-        row.createdAt < (latestPastEdition.end_date ?? latestPastEdition.start_date!)
-      ) {
-        continue;
-      }
-      const existing = byProfile.get(row.profile.id);
-      if (!existing || row.status === 'attended') {
-        byProfile.set(row.profile.id, { profile: row.profile, status: row.status });
+      if (row.status === 'planned') {
+        if (
+          latestPastEdition &&
+          row.createdAt < (latestPastEdition.end_date ?? latestPastEdition.start_date!)
+        ) {
+          continue;
+        }
+        going.set(row.profile.id, row.profile);
+      } else {
+        attended.set(row.profile.id, row.profile);
       }
     }
-    return [...byProfile.values()];
+    return { friendsGoing: [...going.values()], friendsAttended: [...attended.values()] };
   })();
 
   return (
@@ -352,9 +366,16 @@ export default function FestivalDetailScreen() {
             <Ionicons name="share-social-outline" size={20} color={colors.textSecondary} />
           </Pressable>
         </View>
-        <Text style={styles.location}>
-          {countryFlag(festival.country)} {[festival.city, festival.venue].filter(Boolean).join(' · ')}
-        </Text>
+        <View style={styles.locationRow}>
+          <Text style={styles.location}>
+            {countryFlag(festival.country)} {[festival.city, festival.venue].filter(Boolean).join(' · ')}
+          </Text>
+          {(festival.city || festival.venue) && (
+            <Pressable onPress={openInMaps} hitSlop={10}>
+              <Ionicons name="location-outline" size={16} color={colors.primary} />
+            </Pressable>
+          )}
+        </View>
         {nextEdition?.start_date && (
           <View style={styles.dateRow}>
             <Ionicons name="calendar-outline" size={15} color={colors.textSecondary} />
@@ -484,32 +505,41 @@ export default function FestivalDetailScreen() {
           onClose={() => setYearSheetOpen(false)}
         />
 
-        {/* Friends going or who went */}
-        {friendsHere.length > 0 && (
+        {/* Friends going */}
+        {friendsGoing.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>{t('festival.friendsHere')}</Text>
+            <Text style={styles.sectionTitle}>{t('festival.friendsGoing')}</Text>
             <View style={styles.friendsList}>
-              {friendsHere.map(({ profile, status }) => (
+              {friendsGoing.map((profile) => (
                 <Pressable
                   key={profile.id}
                   style={({ pressed }) => [styles.friendRow, pressed && { opacity: 0.7 }]}
                   onPress={() => router.push({ pathname: '/user/[id]', params: { id: profile.id } })}
                 >
-                  <Ionicons
-                    name={status === 'attended' ? 'checkmark-circle' : 'calendar'}
-                    size={18}
-                    color={status === 'attended' ? colors.statusAttended : colors.statusPlanned}
-                  />
+                  <Ionicons name="calendar" size={18} color={colors.statusPlanned} />
                   <Text style={styles.friendName} numberOfLines={1}>
                     {profile.display_name}
                   </Text>
-                  <Text
-                    style={[
-                      styles.friendStatus,
-                      { color: status === 'attended' ? colors.statusAttended : colors.statusPlanned },
-                    ]}
-                  >
-                    {t(status === 'attended' ? 'festival.friendStatusAttended' : 'festival.friendStatusPlanned')}
+                </Pressable>
+              ))}
+            </View>
+          </>
+        )}
+
+        {/* Friends who've already been */}
+        {friendsAttended.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>{t('festival.friendsAttended')}</Text>
+            <View style={styles.friendsList}>
+              {friendsAttended.map((profile) => (
+                <Pressable
+                  key={profile.id}
+                  style={({ pressed }) => [styles.friendRow, pressed && { opacity: 0.7 }]}
+                  onPress={() => router.push({ pathname: '/user/[id]', params: { id: profile.id } })}
+                >
+                  <Ionicons name="checkmark-circle" size={18} color={colors.statusAttended} />
+                  <Text style={styles.friendName} numberOfLines={1}>
+                    {profile.display_name}
                   </Text>
                 </Pressable>
               ))}
@@ -711,6 +741,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
     padding: spacing.sm,
   },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   location: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.md,
@@ -819,10 +850,6 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.sm,
     color: colors.text,
-  },
-  friendStatus: {
-    fontFamily: typography.fonts.body,
-    fontSize: typography.sizes.xs,
   },
   sectionTitle: {
     fontFamily: typography.fonts.headingMedium,

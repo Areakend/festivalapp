@@ -281,21 +281,25 @@ export default function ProfileScreen() {
         <StatBox
           value={String(stats.attended)}
           label={t('profile.festivalsAttended')}
+          active={statDetail === 'attended'}
           onPress={() => setStatDetail('attended')}
         />
         <StatBox
           value={String(stats.countries)}
           label={t('profile.countriesVisited')}
+          active={statDetail === 'countries'}
           onPress={() => setStatDetail('countries')}
         />
         <StatBox
           value={stats.avgRating != null ? stats.avgRating.toFixed(1) : '–'}
           label={t('profile.avgRatingGiven')}
+          active={statDetail === 'rating'}
           onPress={() => setStatDetail('rating')}
         />
         <StatBox
           value={`${stats.djmagCount}`}
           label={t('djmag.title')}
+          active={statDetail === 'djmag'}
           onPress={() => setStatDetail('djmag')}
         />
       </View>
@@ -505,17 +509,18 @@ export default function ProfileScreen() {
 function StatBox({
   value,
   label,
+  active,
   onPress,
 }: {
   value: string;
   label: string;
+  active?: boolean;
   onPress?: () => void;
 }) {
   return (
-    <Pressable style={styles.statBox} onPress={onPress}>
-      <Text style={styles.statValue}>{value}</Text>
+    <Pressable style={[styles.statBox, active && styles.statBoxActive]} onPress={onPress}>
+      <Text style={[styles.statValue, active && styles.statValueActive]}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
-      {onPress && <Ionicons name="chevron-down" size={10} color={colors.textMuted} />}
     </Pressable>
   );
 }
@@ -537,20 +542,26 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', gap: spacing.sm },
   statBox: {
     flex: 1,
+    aspectRatio: 1,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radii.md,
-    paddingVertical: spacing.md,
     paddingHorizontal: spacing.xs,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 2,
+  },
+  statBoxActive: {
+    backgroundColor: `${colors.primary}26`,
+    borderColor: colors.primary,
   },
   statValue: {
     fontFamily: typography.fonts.heading,
     fontSize: typography.sizes.lg,
     color: colors.text,
   },
+  statValueActive: { color: colors.primary },
   statLabel: {
     fontFamily: typography.fonts.body,
     fontSize: 10,
