@@ -4,6 +4,20 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const DIGEST_RECIPIENT = 'mainstage.app.contact@gmail.com';
 
+// Display names and review comments are user-controlled — interpolating
+// them into the email's HTML unescaped would let a crafted name or comment
+// inject markup (or worse) into whatever renders this in the operator's
+// inbox. Only the festival name skips this: it's catalog data, never
+// user-supplied.
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Weekly summary of content_reports, emailed to the operator. Reports have
  * no admin UI and no automated action — this is the only thing that
@@ -40,17 +54,21 @@ Deno.serve(async (req) => {
         ? '<p>No reports this week.</p>'
         : `<ul>${rows
             .map((r) => {
-              const reporter = (r.reporter as unknown as { display_name: string } | null)?.display_name ?? '—';
-              const reported = (r.reported as unknown as { display_name: string } | null)?.display_name ?? '—';
+              const reporter = escapeHtml(
+                (r.reporter as unknown as { display_name: string } | null)?.display_name ?? '—',
+              );
+              const reported = escapeHtml(
+                (r.reported as unknown as { display_name: string } | null)?.display_name ?? '—',
+              );
               const review = r.review as unknown as {
                 comment: string | null;
                 festival: { name: string } | null;
               } | null;
               const context = review
-                ? ` on a review of <b>${review.festival?.name ?? '—'}</b>${review.comment ? `: "${review.comment.slice(0, 200)}"` : ''}`
+                ? ` on a review of <b>${escapeHtml(review.festival?.name ?? '—')}</b>${review.comment ? `: "${escapeHtml(review.comment.slice(0, 200))}"` : ''}`
                 : '';
               const date = new Date(r.created_at).toLocaleString('en-GB', { timeZone: 'UTC' });
-              return `<li><b>${reporter}</b> reported <b>${reported}</b>${context} — ${r.reason} (${date} UTC)</li>`;
+              return `<li><b>${reporter}</b> reported <b>${reported}</b>${context} — ${escapeHtml(r.reason)} (${date} UTC)</li>`;
             })
             .join('')}</ul>`;
 

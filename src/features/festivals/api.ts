@@ -105,10 +105,14 @@ export function useFestivalIdsByArtistSearch(query: string) {
     queryKey: ['festival-ids-by-artist', q],
     enabled: q.length >= 2,
     queryFn: async () => {
+      // ilike treats % and _ as wildcards — escape them so a literal
+      // search term (an artist name with an underscore, say) doesn't turn
+      // into an accidental pattern match.
+      const escaped = q.replace(/[%_\\]/g, (m) => `\\${m}`);
       const { data, error } = await supabase
         .from('edition_artists')
         .select('festival_editions!inner(festival_id), artists!inner(name)')
-        .ilike('artists.name', `%${q}%`);
+        .ilike('artists.name', `%${escaped}%`);
       if (error) throw error;
       // One matching artist name per festival is enough to explain the
       // match in the UI ("matches artist: X") — first one found wins.
