@@ -94,6 +94,8 @@ export default function RootLayout() {
             <Stack.Screen name="request-festival" />
             <Stack.Screen name="invitations" />
             <Stack.Screen name="blocked-users" />
+            <Stack.Screen name="artists" />
+            <Stack.Screen name="artist/[id]" />
           </Stack.Protected>
           <Stack.Protected guard={!session}>
             <Stack.Screen name="(auth)" />

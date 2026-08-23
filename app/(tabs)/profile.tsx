@@ -449,6 +449,14 @@ export default function ProfileScreen() {
         </View>
       </Pressable>
 
+      <Pressable style={styles.invitesRow} onPress={() => router.push('/artists')}>
+        <View style={styles.invitesRowLeft}>
+          <Ionicons name="musical-notes-outline" size={20} color={colors.text} />
+          <Text style={styles.invitesRowText}>{t('artists.title')}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </Pressable>
+
       {/* Settings — name, language, session; collapsed by default so the
           screen stays about festivals, not forms. */}
       <View style={styles.card}>

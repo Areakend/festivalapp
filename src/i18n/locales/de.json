@@ -306,6 +306,20 @@
     "status_accepted": "Angenommen",
     "status_declined": "Abgelehnt"
   },
+  "artists": {
+    "title": "Künstler",
+    "searchPlaceholder": "Künstler suchen…",
+    "noResults": "Keine Künstler gefunden.",
+    "followed": "Gefolgt",
+    "noneFollowed": "Du folgst noch keinen Künstlern.",
+    "follow": "Folgen",
+    "following": "Gefolgt",
+    "upcoming": "Kommende Festivals",
+    "noUpcoming": "Noch kein kommendes Festival geplant.",
+    "seen": "Schon gesehen bei",
+    "noneSeen": "Du hast diesen Künstler noch nicht auf einem Festival gesehen.",
+    "seenCount": "{{count}}× gesehen"
+  },
   "home": {
     "nextFestival": "Dein nächstes Festival",
     "inDays_one": "In {{count}} Tag",

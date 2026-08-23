@@ -306,6 +306,20 @@
     "status_accepted": "Geaccepteerd",
     "status_declined": "Afgewezen"
   },
+  "artists": {
+    "title": "Artiesten",
+    "searchPlaceholder": "Zoek een artiest…",
+    "noResults": "Geen artiesten gevonden.",
+    "followed": "Gevolgd",
+    "noneFollowed": "Je volgt nog geen artiesten.",
+    "follow": "Volgen",
+    "following": "Gevolgd",
+    "upcoming": "Aankomende festivals",
+    "noUpcoming": "Nog geen aankomend festival gepland.",
+    "seen": "Al gezien op",
+    "noneSeen": "Je hebt deze artiest nog niet op een festival gezien.",
+    "seenCount": "{{count}} keer gezien"
+  },
   "home": {
     "nextFestival": "Je volgende festival",
     "inDays_one": "Over {{count}} dag",

@@ -306,6 +306,21 @@
     "status_accepted": "Aceptada",
     "status_declined": "Rechazada"
   },
+  "artists": {
+    "title": "Artistas",
+    "searchPlaceholder": "Buscar un artista…",
+    "noResults": "No se encontraron artistas.",
+    "followed": "Seguidos",
+    "noneFollowed": "Aún no sigues a ningún artista.",
+    "follow": "Seguir",
+    "following": "Siguiendo",
+    "upcoming": "Próximos festivales",
+    "noUpcoming": "Aún no hay ningún festival próximo programado.",
+    "seen": "Festivales donde lo has visto",
+    "noneSeen": "Aún no lo has visto en un festival.",
+    "seenCount_one": "Visto {{count}} vez",
+    "seenCount_other": "Visto {{count}} veces"
+  },
   "home": {
     "nextFestival": "Tu próximo festival",
     "inDays_one": "En {{count}} día",
