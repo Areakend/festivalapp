@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import * as Calendar from 'expo-calendar';
 import * as SecureStore from 'expo-secure-store';
 
@@ -15,9 +14,10 @@ export interface CalendarEvent {
 export interface WritableCalendar {
   id: string;
   title: string;
-  /** Account/source name (e.g. a Google address, or "Xiaomi Cloud") — the
-   *  only way to tell two same-looking "Calendar" entries apart on Android,
-   *  where multiple accounts each register their own. */
+  /** Account/source name (e.g. a Google address, "Xiaomi Cloud", or "Work
+   *  Exchange") — the only way to tell two same-looking "Calendar" entries
+   *  apart when multiple accounts each register their own, on either
+   *  platform. */
   source: string;
 }
 
@@ -28,8 +28,14 @@ export async function requestCalendarPermission(): Promise<boolean> {
   return status === 'granted';
 }
 
-/** Android only — iOS has a single OS-level default (Settings > Calendar)
- *  there's no equivalent multi-account ambiguity to resolve. */
+/**
+ * Every calendar the user can actually write an event to. iOS has just as
+ * much multi-account ambiguity as Android — EventKit's "default calendar"
+ * is whatever iOS Settings > Calendar > Default happens to be set to,
+ * which can just as easily be a work Exchange/Google Workspace calendar as
+ * a personal one, and silently writing festival dates there is a real
+ * privacy problem, not a hypothetical one.
+ */
 export async function getWritableCalendars(): Promise<WritableCalendar[]> {
   const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
   return calendars
@@ -61,9 +67,6 @@ function nextDay(isoDate: string): string {
 }
 
 async function getWritableCalendarId(preferredId?: string | null): Promise<string> {
-  if (Platform.OS === 'ios') {
-    return (await Calendar.getDefaultCalendarAsync()).id;
-  }
   const calendars = await getWritableCalendars();
   // A remembered choice wins outright — but only if that calendar still
   // exists (accounts get removed), otherwise fall through to picking one.

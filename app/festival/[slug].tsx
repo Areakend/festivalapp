@@ -250,11 +250,13 @@ export default function FestivalDetailScreen() {
       description: festival.official_website ?? undefined,
     }));
 
-    // Android has no single OS-level default calendar the way iOS does —
-    // silently picking the first writable one found isn't reliable (it can
-    // land in a manufacturer's own local calendar instead of e.g. Google).
-    // Ask once, remember the choice, skip this entirely from then on.
-    if (Platform.OS === 'android' && !(await getPreferredCalendarId())) {
+    // Neither platform has a reliable single "the" calendar — silently
+    // picking the first writable one found can land events in the wrong
+    // account (a manufacturer's own local calendar on Android, or a work
+    // Exchange/Google Workspace calendar on iOS if that's what Settings >
+    // Calendar > Default happens to be set to). Ask once, remember the
+    // choice, skip this entirely from then on.
+    if (!(await getPreferredCalendarId())) {
       setCalendarExporting(true);
       const permitted = await requestCalendarPermission();
       const calendars = permitted ? await getWritableCalendars() : [];
