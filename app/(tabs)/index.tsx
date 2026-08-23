@@ -230,7 +230,16 @@ export default function Home() {
       {/* Up next — the two or three after the hero, one quiet line each */}
       {upNext.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t('home.upNext')}</Text>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionLabel}>{t('home.upNext')}</Text>
+            <Pressable
+              onPress={() => router.push('/planning-calendar')}
+              hitSlop={12}
+              accessibilityLabel={t('home.calendarView')}
+            >
+              <Ionicons name="calendar-outline" size={20} color={colors.statusPlanned} />
+            </Pressable>
+          </View>
           {upNext.map(({ item }) => {
             const friends = friendsByFestival.get(item.festival.id) ?? [];
             return (
@@ -391,13 +400,18 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     gap: spacing.xs,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
   sectionLabel: {
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.xs,
     color: colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
-    marginBottom: spacing.sm,
   },
   row: {
     flexDirection: 'row',

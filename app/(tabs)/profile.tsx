@@ -208,7 +208,14 @@ export default function ProfileScreen() {
       .map((s) => ({ item: byId.get(s.festival_id), status: s.status }))
       .filter((row): row is { item: CatalogItem; status: 'attended' | 'planned' } => row.item != null)
       .filter((row) => {
-        if (row.status !== 'attended' || myYearFilter === 'all') return true;
+        if (myYearFilter === 'all') return true;
+        // A "planned" row has no attended year to match — it used to pass
+        // the year filter unconditionally instead, so picking a year with
+        // "All" selected silently pulled in every planned festival on top
+        // of that year's actual attended ones, while "Attended" + the same
+        // year correctly showed just the latter. Excluding it here makes
+        // both status filters agree once a year is picked.
+        if (row.status !== 'attended') return false;
         return (attendedYearsByFestival.get(row.item.festival.id) ?? []).includes(myYearFilter);
       });
 

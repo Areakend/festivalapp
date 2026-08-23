@@ -140,6 +140,15 @@ export default function FestivalsScreen() {
             ? customRange.to.getTime()
             : Infinity;
 
+    // When a query's active, a direct name match should always lead over a
+    // festival that only turned up because of its country, genre, or an
+    // artist on its lineup — otherwise "dec" surfacing Decibel Open Air and
+    // Awakenings in whatever order the active sort happens to produce reads
+    // as random. Filled in during the filter pass below, read back in the
+    // sort as the primary key (ties within the same tier still fall back
+    // to the active sort).
+    const matchRank = new Map<string, number>();
+
     const result = data.filter((item) => {
       const { festival, nextEdition } = item;
       if (q) {
@@ -154,6 +163,10 @@ export default function FestivalsScreen() {
         const genreMatch = festival.genres.some((g) => g.toLowerCase().includes(q));
         const artistMatch = artistMatchIds?.has(festival.id) ?? false;
         if (!nameMatch && !countryMatch && !genreMatch && !artistMatch) return false;
+        matchRank.set(
+          festival.id,
+          nameMatch ? 0 : countryMatch ? 1 : genreMatch ? 2 : 3,
+        );
       }
       if (genres.length > 0 && !festival.genres.some((g) => genres.includes(g))) return false;
       if (countries.length > 0 && !countries.includes(festival.country)) return false;
@@ -171,6 +184,10 @@ export default function FestivalsScreen() {
 
     const myRating = (item: CatalogItem) => myRatingByFestival.get(item.festival.id);
     return result.sort((a, b) => {
+      if (q) {
+        const rankDiff = (matchRank.get(a.festival.id) ?? 3) - (matchRank.get(b.festival.id) ?? 3);
+        if (rankDiff !== 0) return rankDiff;
+      }
       switch (sort) {
         case 'top100':
           return (a.djmagRank ?? 999) - (b.djmagRank ?? 999);
