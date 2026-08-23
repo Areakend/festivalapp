@@ -51,7 +51,10 @@ export default function FriendsScreen() {
       contentContainerStyle={{ paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xxl }}
     >
       <View style={styles.header}>
-        <Text style={styles.title}>{t('friends.title')}</Text>
+        <Text style={[styles.title, styles.titleFlex]}>{t('friends.title')}</Text>
+        <Pressable onPress={() => router.push('/blocked-users')} hitSlop={10}>
+          <Ionicons name="ban-outline" size={22} color={colors.textSecondary} />
+        </Pressable>
       </View>
 
       <TextInput
@@ -165,6 +168,7 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xl,
     color: colors.text,
   },
+  titleFlex: { flex: 1 },
   search: {
     backgroundColor: colors.surface,
     borderWidth: 1,

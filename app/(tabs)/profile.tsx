@@ -482,6 +482,11 @@ export default function ProfileScreen() {
               variant="ghost"
               onPress={() => router.push('/request-festival')}
             />
+            <Button
+              label={t('moderation.blockedUsers')}
+              variant="ghost"
+              onPress={() => router.push('/blocked-users')}
+            />
             <Button label={t('auth.signOut')} variant="ghost" onPress={() => void signOut()} />
             <Button
               label={t('profile.deleteAccount')}

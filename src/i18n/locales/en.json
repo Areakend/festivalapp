@@ -223,6 +223,12 @@
     "unblock": "Unblock {{name}}",
     "blockDone": "User blocked. You will no longer see their reviews."
   },
+  "moderation": {
+    "blockedUsers": "Blocked users",
+    "noBlockedUsers": "You haven't blocked anyone.",
+    "unblock": "Unblock",
+    "unblockConfirmTitle": "Unblock?"
+  },
   "djmag": {
     "title": "Press Top 100",
     "progress": "You have attended {{count}}/100 press Top 100 festivals",

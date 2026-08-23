@@ -223,6 +223,12 @@
     "unblock": "{{name}} deblokkeren",
     "blockDone": "Gebruiker geblokkeerd. Je ziet zijn/haar beoordelingen niet meer."
   },
+  "moderation": {
+    "blockedUsers": "Geblokkeerde gebruikers",
+    "noBlockedUsers": "Je hebt niemand geblokkeerd.",
+    "unblock": "Deblokkeren",
+    "unblockConfirmTitle": "Deblokkeren?"
+  },
   "djmag": {
     "title": "Pers-Top 100",
     "progress": "Je hebt {{count}}/100 festivals uit de pers-Top 100 bezocht",

@@ -223,6 +223,12 @@
     "unblock": "{{name}} entsperren",
     "blockDone": "Nutzer blockiert. Du siehst seine Bewertungen nicht mehr."
   },
+  "moderation": {
+    "blockedUsers": "Blockierte Nutzer",
+    "noBlockedUsers": "Du hast niemanden blockiert.",
+    "unblock": "Entsperren",
+    "unblockConfirmTitle": "Entsperren?"
+  },
   "djmag": {
     "title": "Presse-Top-100",
     "progress": "Du hast {{count}}/100 Festivals der Presse-Top-100 besucht",

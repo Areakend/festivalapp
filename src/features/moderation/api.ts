@@ -24,6 +24,33 @@ export function useMyBlockedIds() {
   });
 }
 
+export interface BlockedUser {
+  blockId: string;
+  profile: { id: string; display_name: string; avatar_url: string | null };
+}
+
+/** Full profiles of blocked users, for the "manage blocked users" screen. */
+export function useMyBlockedUsers() {
+  const userId = useSessionStore((s) => s.session?.user.id);
+  return useQuery({
+    queryKey: ['my-blocked-users', userId],
+    enabled: !!userId,
+    queryFn: async (): Promise<BlockedUser[]> => {
+      const { data, error } = await supabase
+        .from('user_blocks')
+        .select('id, profile:profiles!user_blocks_blocked_id_fkey(id, display_name, avatar_url)')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (
+        data as unknown as {
+          id: string;
+          profile: { id: string; display_name: string; avatar_url: string | null };
+        }[]
+      ).map((row) => ({ blockId: row.id, profile: row.profile }));
+    },
+  });
+}
+
 export function useReportReview() {
   const userId = useSessionStore((s) => s.session?.user.id);
   return useMutation({
@@ -61,6 +88,7 @@ export function useBlockUser() {
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ['my-blocked-ids'] });
+      void queryClient.invalidateQueries({ queryKey: ['my-blocked-users'] });
     },
   });
 }

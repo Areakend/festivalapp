@@ -223,6 +223,12 @@
     "unblock": "Débloquer {{name}}",
     "blockDone": "Utilisateur bloqué. Tu ne verras plus ses avis."
   },
+  "moderation": {
+    "blockedUsers": "Utilisateurs bloqués",
+    "noBlockedUsers": "Tu n'as bloqué personne.",
+    "unblock": "Débloquer",
+    "unblockConfirmTitle": "Débloquer ?"
+  },
   "djmag": {
     "title": "Top 100 Presse",
     "progress": "Tu as fait {{count}}/100 festivals du Top 100 presse",

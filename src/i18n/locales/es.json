@@ -223,6 +223,12 @@
     "unblock": "Desbloquear a {{name}}",
     "blockDone": "Usuario bloqueado. Ya no verás sus reseñas."
   },
+  "moderation": {
+    "blockedUsers": "Usuarios bloqueados",
+    "noBlockedUsers": "No has bloqueado a nadie.",
+    "unblock": "Desbloquear",
+    "unblockConfirmTitle": "¿Desbloquear?"
+  },
   "djmag": {
     "title": "Top 100 de prensa",
     "progress": "Has asistido a {{count}}/100 festivales del Top 100 de prensa",
