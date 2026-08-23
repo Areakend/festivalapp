@@ -327,25 +327,31 @@ export default function FestivalDetailScreen() {
           <Image
             source={{ uri: festival.cover_image_url }}
             style={StyleSheet.absoluteFill}
+            contentFit="cover"
             // Generated covers (assets/generated-covers) are square
-            // gradient+typography graphics with the festival name baked
-            // in — cropping them to this wide, short header with
-            // contentFit="cover" slices right through the text. Real
-            // Commons photos have no such constraint, so only the
-            // generated ones need the no-crop "contain" treatment.
-            contentFit={festival.cover_image_url.includes('/generated-covers/') ? 'contain' : 'cover'}
+            // gradient+typography graphics with the festival name baked in
+            // at the bottom-left — anchoring the crop there instead of
+            // centering it means widening/narrowing the header for
+            // different screens only ever eats into the top-right empty
+            // gradient, never the name. Real Commons photos have no such
+            // constraint, so they keep the default centered crop.
+            contentPosition={
+              festival.cover_image_url.includes('/generated-covers/') ? 'bottom left' : 'center'
+            }
             transition={150}
           />
         ) : (
           <Text style={styles.coverLetter}>{festival.name.charAt(0)}</Text>
         )}
-        <Pressable style={styles.coverShare} onPress={handleSharePress} hitSlop={10}>
-          <Ionicons name="share-social-outline" size={18} color={colors.text} />
-        </Pressable>
       </View>
 
       <View style={styles.body}>
-        <Text style={styles.name}>{festival.name}</Text>
+        <View style={styles.nameRow}>
+          <Text style={[styles.name, styles.nameText]}>{festival.name}</Text>
+          <Pressable style={styles.shareButton} onPress={handleSharePress} hitSlop={10}>
+            <Ionicons name="share-social-outline" size={20} color={colors.textSecondary} />
+          </Pressable>
+        </View>
         <Text style={styles.location}>
           {countryFlag(festival.country)} {[festival.city, festival.venue].filter(Boolean).join(' · ')}
         </Text>
@@ -677,24 +683,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-  coverShare: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
-    backgroundColor: 'rgba(11, 11, 20, 0.55)',
-    borderRadius: radii.full,
-    padding: spacing.sm,
-  },
   coverLetter: {
     fontFamily: typography.fonts.heading,
     fontSize: 72,
     color: colors.primary,
   },
   body: { padding: spacing.xl, gap: spacing.md },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   name: {
     fontFamily: typography.fonts.heading,
     fontSize: typography.sizes.xxl,
     color: colors.text,
+  },
+  nameText: { flex: 1 },
+  shareButton: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.full,
+    padding: spacing.sm,
   },
   location: {
     fontFamily: typography.fonts.body,
