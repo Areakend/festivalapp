@@ -58,6 +58,11 @@ export default function ArtistDetailScreen() {
       {artist && artist.genres.length > 0 && (
         <Text style={styles.genres}>{artist.genres.join(' · ')}</Text>
       )}
+      {!!history?.totalSeenCount && (
+        <Text style={styles.totalSeen}>
+          {t('artists.seenCount', { count: history.totalSeenCount })}
+        </Text>
+      )}
 
       <Text style={styles.sectionTitle}>{t('artists.upcoming')}</Text>
       {(history?.upcoming.length ?? 0) === 0 ? (
@@ -110,9 +115,7 @@ export default function ArtistDetailScreen() {
                   {[...entry.years].sort((a, b) => b - a).join(', ')}
                 </Text>
               </View>
-              <Text style={styles.seenCount}>
-                {t('artists.seenCount', { count: entry.years.length })}
-              </Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
             </Pressable>
           ))}
         </View>
@@ -148,6 +151,13 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     paddingHorizontal: spacing.xl,
     marginTop: spacing.xs,
+  },
+  totalSeen: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: typography.sizes.md,
+    color: colors.statusAttended,
+    paddingHorizontal: spacing.xl,
+    marginTop: spacing.sm,
   },
   followButton: {
     borderWidth: 1,
@@ -206,10 +216,5 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.xs,
     color: colors.textMuted,
-  },
-  seenCount: {
-    fontFamily: typography.fonts.bodyMedium,
-    fontSize: typography.sizes.sm,
-    color: colors.statusAttended,
   },
 });

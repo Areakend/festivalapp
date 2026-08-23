@@ -3,9 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { Button } from '@/components/ui/Button';
 import {
   useMyFollowedArtistProfiles,
   useSearchArtists,
@@ -35,11 +33,7 @@ export default function ArtistsScreen() {
       contentContainerStyle={{ paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xxl }}
     >
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </Pressable>
         <Text style={styles.title}>{t('artists.title')}</Text>
-        <View style={styles.headerSpacer} />
       </View>
 
       <TextInput
@@ -91,8 +85,6 @@ export default function ArtistsScreen() {
           </View>
         )}
       </View>
-
-      <Button label={t('common.done')} variant="ghost" onPress={() => router.back()} />
     </ScrollView>
   );
 }
@@ -140,20 +132,14 @@ function ArtistRow({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
     paddingHorizontal: spacing.xl,
     marginBottom: spacing.lg,
   },
   title: {
-    flex: 1,
     fontFamily: typography.fonts.heading,
     fontSize: typography.sizes.xl,
     color: colors.text,
-    textAlign: 'center',
   },
-  headerSpacer: { width: 24 },
   search: {
     marginHorizontal: spacing.xl,
     backgroundColor: colors.surface,

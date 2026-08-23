@@ -31,12 +31,11 @@ export function useMyFollowedArtistProfiles() {
     queryKey: ['my-followed-artist-profiles', userId],
     enabled: !!userId,
     queryFn: async (): Promise<ArtistProfile[]> => {
-      const { data, error } = await supabase
-        .from('artist_follows')
-        .select('artists(id, name, genres)')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('artist_follows').select('artists(id, name, genres)');
       if (error) throw error;
-      return (data as unknown as { artists: ArtistProfile }[]).map((r) => r.artists);
+      return (data as unknown as { artists: ArtistProfile }[])
+        .map((r) => r.artists)
+        .sort((a, b) => a.name.localeCompare(b.name));
     },
   });
 }
@@ -109,7 +108,11 @@ export function useArtistFestivals(artistId: string | undefined) {
   return useQuery({
     queryKey: ['artist-festivals', artistId],
     enabled: !!artistId,
-    queryFn: async (): Promise<{ upcoming: ArtistUpcomingFestival[]; seen: ArtistSeenFestival[] }> => {
+    queryFn: async (): Promise<{
+      upcoming: ArtistUpcomingFestival[];
+      seen: ArtistSeenFestival[];
+      totalSeenCount: number;
+    }> => {
       const { data, error } = await supabase
         .from('edition_artists')
         .select(
@@ -161,9 +164,16 @@ export function useArtistFestivals(artistId: string | undefined) {
           });
         }
       }
-      const seen = [...seenByFestival.values()].sort((a, b) => b.years.length - a.years.length);
+      const seen = [...seenByFestival.values()].sort((a, b) =>
+        a.festivalName.localeCompare(b.festivalName),
+      );
+      // Not seen.length — a festival attended in several different years
+      // with this artist on the bill each time counts once per year, which
+      // seen.length can't capture since it's already deduped to one entry
+      // per festival.
+      const totalSeenCount = seen.reduce((sum, s) => sum + s.years.length, 0);
 
-      return { upcoming, seen };
+      return { upcoming, seen, totalSeenCount };
     },
   });
 }
