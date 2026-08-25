@@ -26,6 +26,22 @@ function extractJson(text: string): unknown {
   return JSON.parse(fenced ? fenced[1] : text);
 }
 
+/** How many new reviews it takes to justify a regeneration, at this count. */
+function regenerationStep(count: number): number {
+  if (count < 10) return 1;
+  if (count < 100) return 10;
+  return 100;
+}
+
+/** True once the current count has moved into a different step-bucket
+ *  than the cached one — e.g. 9 -> 10 always regenerates (crossing into
+ *  the coarser range) even though the count only moved by one. */
+function needsRegeneration(cachedCount: number, currentCount: number): boolean {
+  if (cachedCount === currentCount) return false;
+  const step = regenerationStep(currentCount);
+  return Math.floor(currentCount / step) !== Math.floor(cachedCount / step);
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -59,16 +75,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Cache hit: same language and the review set hasn't changed size.
-    // `summary` stores the categories object as a JSON string — no schema
-    // change needed to go from one summary to several.
+    // Cache hit: same language and the review count hasn't moved into a
+    // new "bucket" since the cached summary was generated. Regenerating on
+    // every single new comment is wasteful once a festival has hundreds of
+    // reviews — one more comment barely shifts the consensus, but it's an
+    // API call every time regardless. Below 10 reviews each one still
+    // matters a lot, so that range regenerates on every change; the
+    // required gap widens as the review count grows.
     const { data: cached } = await supabase
       .from('festival_review_summaries')
       .select('summary, review_count')
       .eq('festival_id', festivalId)
       .eq('language', language)
       .maybeSingle();
-    if (cached && cached.review_count === reviews.length) {
+    if (cached && !needsRegeneration(cached.review_count, reviews.length)) {
       try {
         // Guards against rows written by the old single-string format —
         // treated as a cache miss (regenerated below) rather than a crash.
