@@ -73,7 +73,12 @@ async function getWritableCalendarId(preferredId?: string | null): Promise<strin
   if (preferredId && calendars.some((c) => c.id === preferredId)) return preferredId;
   const writable = calendars[0];
   if (writable) return writable.id;
-  return Calendar.createCalendarAsync({
+  // Nothing writable exists yet, so create one — but remember its id
+  // immediately, or every future export repeats this exact search, and on
+  // iOS a calendar created with a bare LOCAL source isn't reliably found
+  // again by a fresh getCalendarsAsync() scan, so it just creates another
+  // one each time instead of reusing the first.
+  const createdId = await Calendar.createCalendarAsync({
     title: 'Mainstage',
     color: '#8B5CF6',
     entityType: Calendar.EntityTypes.EVENT,
@@ -82,6 +87,8 @@ async function getWritableCalendarId(preferredId?: string | null): Promise<strin
     ownerAccount: 'Mainstage',
     accessLevel: Calendar.CalendarAccessLevel.OWNER,
   });
+  await setPreferredCalendarId(createdId);
+  return createdId;
 }
 
 export interface ExportResult {
