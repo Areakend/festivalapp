@@ -66,6 +66,8 @@ function nextDay(isoDate: string): string {
   return d.toISOString().slice(0, 10);
 }
 
+const MAINSTAGE_CALENDAR_TITLE = 'Mainstage';
+
 async function getWritableCalendarId(preferredId?: string | null): Promise<string> {
   const calendars = await getWritableCalendars();
   // A remembered choice wins outright — but only if that calendar still
@@ -73,18 +75,30 @@ async function getWritableCalendarId(preferredId?: string | null): Promise<strin
   if (preferredId && calendars.some((c) => c.id === preferredId)) return preferredId;
   const writable = calendars[0];
   if (writable) return writable.id;
-  // Nothing writable exists yet, so create one — but remember its id
-  // immediately, or every future export repeats this exact search, and on
-  // iOS a calendar created with a bare LOCAL source isn't reliably found
-  // again by a fresh getCalendarsAsync() scan, so it just creates another
-  // one each time instead of reusing the first.
+
+  // Nothing turned up in the writable-calendars scan above, but a
+  // Mainstage calendar this app created earlier might still exist — on
+  // iOS, a calendar with a bare LOCAL source isn't always reported back by
+  // a fresh getCalendarsAsync() scan the same way twice (remembering its id
+  // alone wasn't enough to stop duplicates), so fall back to matching it by
+  // title/source directly, across every calendar rather than just the
+  // ones that just passed the OWNER filter.
+  const all = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+  const existing = all.find(
+    (c) => c.title === MAINSTAGE_CALENDAR_TITLE && c.source?.name === MAINSTAGE_CALENDAR_TITLE,
+  );
+  if (existing) {
+    await setPreferredCalendarId(existing.id);
+    return existing.id;
+  }
+
   const createdId = await Calendar.createCalendarAsync({
-    title: 'Mainstage',
+    title: MAINSTAGE_CALENDAR_TITLE,
     color: '#8B5CF6',
     entityType: Calendar.EntityTypes.EVENT,
-    source: { isLocalAccount: true, name: 'Mainstage', type: 'LOCAL' },
-    name: 'Mainstage',
-    ownerAccount: 'Mainstage',
+    source: { isLocalAccount: true, name: MAINSTAGE_CALENDAR_TITLE, type: 'LOCAL' },
+    name: MAINSTAGE_CALENDAR_TITLE,
+    ownerAccount: MAINSTAGE_CALENDAR_TITLE,
     accessLevel: Calendar.CalendarAccessLevel.OWNER,
   });
   await setPreferredCalendarId(createdId);
