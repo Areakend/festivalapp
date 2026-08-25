@@ -201,6 +201,7 @@ export function useToggleArtistFollow() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['my-followed-artists'] });
+      void queryClient.invalidateQueries({ queryKey: ['my-followed-artist-profiles'] });
     },
   });
 }
