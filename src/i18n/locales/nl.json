@@ -211,6 +211,9 @@
         "mostAttendedCountry": "Vaakst bezocht land",
     "allYears": "Alle jaren",
     "commonWithMe": "Gemeenschappelijk met mij",
+    "inCommon": "Gemeenschappelijk",
+    "commonGenres": "Gedeelde genres",
+    "commonArtists": "Gedeelde gevolgde artiesten",
     "deleteAccount": "Mijn account verwijderen",
     "deleteAccountWarning": "Dit is definitief: je account en al je gegevens (beoordelingen, festivals, vrienden) worden verwijderd.",
     "deleteAccountFinal": "Laatste bevestiging — alles wordt direct gewist."

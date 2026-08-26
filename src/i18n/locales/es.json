@@ -211,6 +211,9 @@
         "mostAttendedCountry": "País más visitado",
     "allYears": "Todos los años",
     "commonWithMe": "En común conmigo",
+    "inCommon": "En común",
+    "commonGenres": "Géneros en común",
+    "commonArtists": "Artistas seguidos en común",
     "deleteAccount": "Eliminar mi cuenta",
     "deleteAccountWarning": "Esta acción es definitiva: tu cuenta y todos tus datos (reseñas, festivales, amigos) se eliminarán.",
     "deleteAccountFinal": "Última confirmación — todo se borrará de inmediato."

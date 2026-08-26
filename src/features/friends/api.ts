@@ -232,6 +232,7 @@ export interface FriendProfileData {
   statuses: UserFestivalStatus[];
   attendances: UserAttendance[]; // public read, see same migration
   reviews: Review[]; // public
+  followedArtists: { id: string; name: string }[]; // public read, see 20260825140000
 }
 
 export function useFriendProfile(friendId: string | undefined) {
@@ -239,7 +240,7 @@ export function useFriendProfile(friendId: string | undefined) {
     queryKey: ['friend-profile', friendId],
     enabled: !!friendId,
     queryFn: async (): Promise<FriendProfileData> => {
-      const [profile, statuses, attendances, reviews] = await Promise.all([
+      const [profile, statuses, attendances, reviews, artistFollows] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', friendId!).single(),
         supabase.from('user_festival_statuses').select('*').eq('user_id', friendId!),
         supabase
@@ -247,16 +248,21 @@ export function useFriendProfile(friendId: string | undefined) {
           .select('id, user_id, festival_id, edition_id, attended_year')
           .eq('user_id', friendId!),
         supabase.from('reviews').select('*').eq('user_id', friendId!),
+        supabase.from('artist_follows').select('artists(id, name)').eq('user_id', friendId!),
       ]);
       if (profile.error) throw profile.error;
       if (statuses.error) throw statuses.error;
       if (attendances.error) throw attendances.error;
       if (reviews.error) throw reviews.error;
+      if (artistFollows.error) throw artistFollows.error;
       return {
         profile: profile.data as Profile,
         statuses: (statuses.data ?? []) as UserFestivalStatus[],
         attendances: (attendances.data ?? []) as UserAttendance[],
         reviews: (reviews.data ?? []) as Review[],
+        followedArtists: (artistFollows.data as unknown as { artists: { id: string; name: string } }[]).map(
+          (r) => r.artists,
+        ),
       };
     },
   });

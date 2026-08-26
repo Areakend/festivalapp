@@ -10,6 +10,8 @@ import { ScheduleRow } from '@/components/festival/ScheduleRow';
 import { RatingBar, ratingColor } from '@/components/ui/RatingBar';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
 import { useFriendProfile, useFriendships, useRemoveFriendship } from '@/features/friends/api';
+import { useMyFollowedArtistProfiles } from '@/features/artists/api';
+import { useMyProfile } from '@/features/profile/api';
 import { useBlockUser, useMyBlockedIds } from '@/features/moderation/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
@@ -48,6 +50,8 @@ export default function FriendProfileScreen() {
   const { data } = useFriendProfile(id);
   const { data: catalog } = useFestivals();
   const { data: myStatuses } = useMyStatuses();
+  const { data: myProfile } = useMyProfile();
+  const { data: myFollowedArtists } = useMyFollowedArtistProfiles();
   const { data: blockedIds } = useMyBlockedIds();
   const blockUser = useBlockUser();
   const isBlocked = !!id && (blockedIds?.has(id) ?? false);
@@ -63,6 +67,7 @@ export default function FriendProfileScreen() {
   const [expandedSections, setExpandedSections] = useState<Set<FestivalStatus>>(new Set());
   const [countriesOpen, setCountriesOpen] = useState(false);
   const [reviewsOpen, setReviewsOpen] = useState(false);
+  const [affinityOpen, setAffinityOpen] = useState(false);
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null);
   const toggleSection = (status: FestivalStatus) => {
     setExpandedSections((prev) => {
@@ -191,6 +196,16 @@ export default function FriendProfileScreen() {
     };
   }, [data, catalog, statusFilter, yearFilter, commonOnly, myAttendedIds, myPlannedIds, myWishlistIds]);
 
+  const affinity = useMemo(() => {
+    if (!data) return { genres: [] as string[], artists: [] as { id: string; name: string }[] };
+    const myGenres = new Set(myProfile?.favorite_genres ?? []);
+    const genres = (data.profile.favorite_genres ?? []).filter((g) => myGenres.has(g));
+    const myArtistIds = new Set((myFollowedArtists ?? []).map((a) => a.id));
+    const artists = data.followedArtists.filter((a) => myArtistIds.has(a.id));
+    return { genres, artists };
+  }, [data, myProfile, myFollowedArtists]);
+  const affinityCount = affinity.genres.length + affinity.artists.length;
+
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
 
@@ -240,6 +255,11 @@ export default function FriendProfileScreen() {
               value={String(data!.reviews.length)}
               label={t('festival.reviews')}
               onPress={computed.reviewList.length > 0 ? () => setReviewsOpen(true) : undefined}
+            />
+            <Stat
+              value={String(affinityCount)}
+              label={t('profile.inCommon')}
+              onPress={affinityCount > 0 ? () => setAffinityOpen(true) : undefined}
             />
           </View>
 
@@ -411,6 +431,39 @@ export default function FriendProfileScreen() {
           </Pressable>
         </View>
       </Modal>
+
+      {/* Affinity detail sheet — shared favorite genres and followed artists */}
+      <Modal visible={affinityOpen} transparent animationType="slide" onRequestClose={() => setAffinityOpen(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setAffinityOpen(false)} />
+        <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
+          <Text style={styles.sheetTitle}>{t('profile.inCommon')}</Text>
+          <ScrollView style={styles.sheetScroll}>
+            {affinity.genres.length > 0 && (
+              <>
+                <Text style={styles.affinitySubtitle}>{t('profile.commonGenres')}</Text>
+                <View style={styles.affinityChipRow}>
+                  {affinity.genres.map((g) => (
+                    <Chip key={g} label={g} />
+                  ))}
+                </View>
+              </>
+            )}
+            {affinity.artists.length > 0 && (
+              <>
+                <Text style={styles.affinitySubtitle}>{t('profile.commonArtists')}</Text>
+                {affinity.artists.map((a) => (
+                  <View key={a.id} style={styles.sheetRow}>
+                    <Text style={styles.sheetRowText}>{a.name}</Text>
+                  </View>
+                ))}
+              </>
+            )}
+          </ScrollView>
+          <Pressable style={styles.sheetClose} onPress={() => setAffinityOpen(false)}>
+            <Text style={styles.sheetCloseText}>{t('common.done')}</Text>
+          </Pressable>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -556,6 +609,14 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   sheetScroll: { flexGrow: 0 },
+  affinitySubtitle: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  affinityChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, paddingBottom: spacing.sm },
   sheetRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
