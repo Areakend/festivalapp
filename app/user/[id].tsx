@@ -199,9 +199,12 @@ export default function FriendProfileScreen() {
   // derived from actual behavior instead: the genres of festivals each
   // person has actually attended, not a preference nobody filled in.
   // Score is a Jaccard similarity (intersection / union) over each
-  // person's combined genre+followed-artist "taste set" — a plain shared
-  // count doesn't say whether that's a lot or a little relative to
-  // everything either person is into, a percentage does.
+  // person's combined genre+followed-artist+tracked-festival "taste set"
+  // — a plain shared count doesn't say whether that's a lot or a little
+  // relative to everything either person is into, a percentage does.
+  // Tracked festivals (any of attended/planned/wishlist/favorite) feed
+  // the score but aren't listed in the sheet below — the existing
+  // "In common with me" filter on this screen already covers that.
   const affinity = useMemo(() => {
     if (!data || !catalog) {
       return { genres: [] as string[], artists: [] as { id: string; name: string }[], score: 0 };
@@ -211,6 +214,8 @@ export default function FriendProfileScreen() {
     const theirAttendedIds = new Set(
       data.statuses.filter((s) => s.status === 'attended').map((s) => s.festival_id),
     );
+    const myFestivalIds = new Set((myStatuses ?? []).map((s) => s.festival_id));
+    const theirFestivalIds = new Set(data.statuses.map((s) => s.festival_id));
 
     const myGenres = new Set<string>();
     for (const id of myAttendedIds) byId.get(id)?.festival.genres.forEach((g) => myGenres.add(g));
@@ -222,16 +227,22 @@ export default function FriendProfileScreen() {
     const theirArtistIds = new Set(data.followedArtists.map((a) => a.id));
     const artists = data.followedArtists.filter((a) => myArtistIds.has(a.id));
 
-    const myTaste = new Set([...myGenres].map((g) => `g:${g}`).concat([...myArtistIds].map((id) => `a:${id}`)));
+    const myTaste = new Set(
+      [...myGenres].map((g) => `g:${g}`)
+        .concat([...myArtistIds].map((id) => `a:${id}`))
+        .concat([...myFestivalIds].map((id) => `f:${id}`)),
+    );
     const theirTaste = new Set(
-      [...theirGenres].map((g) => `g:${g}`).concat([...theirArtistIds].map((id) => `a:${id}`)),
+      [...theirGenres].map((g) => `g:${g}`)
+        .concat([...theirArtistIds].map((id) => `a:${id}`))
+        .concat([...theirFestivalIds].map((id) => `f:${id}`)),
     );
     const union = new Set([...myTaste, ...theirTaste]).size;
     const intersection = [...myTaste].filter((x) => theirTaste.has(x)).length;
     const score = union > 0 ? Math.round((intersection / union) * 100) : 0;
 
     return { genres, artists, score };
-  }, [data, catalog, myAttendedIds, myFollowedArtists]);
+  }, [data, catalog, myStatuses, myAttendedIds, myFollowedArtists]);
   const affinityHasDetail = affinity.genres.length > 0 || affinity.artists.length > 0;
 
   const formatDate = (iso: string) =>
