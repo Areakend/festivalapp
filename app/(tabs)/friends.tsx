@@ -93,19 +93,22 @@ export default function FriendsScreen() {
             {friendships!.incoming.map(({ friendshipId, profile }) => (
               <UserRow key={friendshipId} user={profile}>
                 <View style={styles.requestActions}>
-                  <Button
-                    label={t('friends.accept')}
-                    onPress={() => acceptRequest.mutate(friendshipId)}
-                    loading={acceptRequest.isPending}
-                    style={styles.smallButton}
-                  />
-                  <Button
-                    label={t('friends.decline')}
-                    variant="ghost"
+                  <Pressable
+                    style={[styles.requestActionButton, styles.declineButton]}
                     onPress={() => removeFriendship.mutate(friendshipId)}
-                    loading={removeFriendship.isPending}
-                    style={styles.smallButton}
-                  />
+                    disabled={removeFriendship.isPending}
+                    hitSlop={8}
+                  >
+                    <Ionicons name="close" size={18} color={colors.danger} />
+                  </Pressable>
+                  <Pressable
+                    style={[styles.requestActionButton, styles.acceptButton]}
+                    onPress={() => acceptRequest.mutate(friendshipId)}
+                    disabled={acceptRequest.isPending}
+                    hitSlop={8}
+                  >
+                    <Ionicons name="checkmark" size={18} color={colors.success} />
+                  </Pressable>
                 </View>
               </UserRow>
             ))}
@@ -220,8 +223,17 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.md,
     color: colors.text,
   },
-  requestActions: { flexDirection: 'row', gap: spacing.sm },
   smallButton: { minHeight: 40, paddingVertical: spacing.sm },
+  requestActions: { flexDirection: 'row', gap: spacing.sm },
+  requestActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  declineButton: { backgroundColor: `${colors.danger}1A` },
+  acceptButton: { backgroundColor: `${colors.success}1A` },
   removeButton: { padding: spacing.xs },
   pendingLabel: {
     fontFamily: typography.fonts.body,
