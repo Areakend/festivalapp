@@ -11,7 +11,6 @@ import { RatingBar, ratingColor } from '@/components/ui/RatingBar';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
 import { useFriendProfile, useFriendships, useRemoveFriendship } from '@/features/friends/api';
 import { useMyFollowedArtistProfiles } from '@/features/artists/api';
-import { useMyProfile } from '@/features/profile/api';
 import { useBlockUser, useMyBlockedIds } from '@/features/moderation/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
@@ -50,7 +49,6 @@ export default function FriendProfileScreen() {
   const { data } = useFriendProfile(id);
   const { data: catalog } = useFestivals();
   const { data: myStatuses } = useMyStatuses();
-  const { data: myProfile } = useMyProfile();
   const { data: myFollowedArtists } = useMyFollowedArtistProfiles();
   const { data: blockedIds } = useMyBlockedIds();
   const blockUser = useBlockUser();
@@ -196,15 +194,36 @@ export default function FriendProfileScreen() {
     };
   }, [data, catalog, statusFilter, yearFilter, commonOnly, myAttendedIds, myPlannedIds, myWishlistIds]);
 
+  // No dedicated "follow a genre" feature exists (favorite_genres sits
+  // unused in every profile, nobody sets it) — genres in common are
+  // derived from actual behavior instead: the genres of festivals each
+  // person has actually attended, not a preference nobody filled in.
   const affinity = useMemo(() => {
-    if (!data) return { genres: [] as string[], artists: [] as { id: string; name: string }[] };
-    const myGenres = new Set(myProfile?.favorite_genres ?? []);
-    const genres = (data.profile.favorite_genres ?? []).filter((g) => myGenres.has(g));
+    if (!data || !catalog) {
+      return { festivals: [] as CatalogItem[], genres: [] as string[], artists: [] as { id: string; name: string }[] };
+    }
+    const byId = new Map(catalog.map((item) => [item.festival.id, item]));
+
+    const theirAttendedIds = new Set(
+      data.statuses.filter((s) => s.status === 'attended').map((s) => s.festival_id),
+    );
+    const festivals = [...theirAttendedIds]
+      .filter((id) => myAttendedIds.has(id))
+      .map((id) => byId.get(id))
+      .filter((item): item is CatalogItem => item != null);
+
+    const myGenres = new Set<string>();
+    for (const id of myAttendedIds) byId.get(id)?.festival.genres.forEach((g) => myGenres.add(g));
+    const theirGenres = new Set<string>();
+    for (const id of theirAttendedIds) byId.get(id)?.festival.genres.forEach((g) => theirGenres.add(g));
+    const genres = [...theirGenres].filter((g) => myGenres.has(g));
+
     const myArtistIds = new Set((myFollowedArtists ?? []).map((a) => a.id));
     const artists = data.followedArtists.filter((a) => myArtistIds.has(a.id));
-    return { genres, artists };
-  }, [data, myProfile, myFollowedArtists]);
-  const affinityCount = affinity.genres.length + affinity.artists.length;
+
+    return { festivals, genres, artists };
+  }, [data, catalog, myAttendedIds, myFollowedArtists]);
+  const affinityCount = affinity.festivals.length + affinity.genres.length + affinity.artists.length;
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
@@ -432,12 +451,37 @@ export default function FriendProfileScreen() {
         </View>
       </Modal>
 
-      {/* Affinity detail sheet — shared favorite genres and followed artists */}
+      {/* Affinity detail sheet — shared festivals, genres, and followed artists */}
       <Modal visible={affinityOpen} transparent animationType="slide" onRequestClose={() => setAffinityOpen(false)}>
         <Pressable style={styles.backdrop} onPress={() => setAffinityOpen(false)} />
         <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
           <Text style={styles.sheetTitle}>{t('profile.inCommon')}</Text>
           <ScrollView style={styles.sheetScroll}>
+            {affinity.festivals.length > 0 && (
+              <>
+                <Text style={styles.affinitySubtitle}>{t('profile.commonFestivals')}</Text>
+                <View style={styles.affinityFestivalList}>
+                  {affinity.festivals.map((item) => (
+                    <ScheduleRow
+                      key={item.festival.id}
+                      item={item}
+                      meta={
+                        item.nextEdition
+                          ? `${formatDate(item.nextEdition.start_date)}${
+                              item.nextEdition.end_date ? ` – ${formatDate(item.nextEdition.end_date)}` : ''
+                            }`
+                          : t('home.dateTbc')
+                      }
+                      locale={i18n.language}
+                      onPress={() => {
+                        setAffinityOpen(false);
+                        openFestival(item);
+                      }}
+                    />
+                  ))}
+                </View>
+              </>
+            )}
             {affinity.genres.length > 0 && (
               <>
                 <Text style={styles.affinitySubtitle}>{t('profile.commonGenres')}</Text>
@@ -617,6 +661,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   affinityChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, paddingBottom: spacing.sm },
+  affinityFestivalList: { gap: spacing.sm, paddingBottom: spacing.sm },
   sheetRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
