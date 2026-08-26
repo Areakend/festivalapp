@@ -19,10 +19,16 @@ type PlanningStatus = Extract<FestivalStatus, 'planned' | 'wishlist' | 'favorite
 // default/already-decided state, the other two are still-considering ones.
 const STATUS_PRIORITY: Record<PlanningStatus, number> = { favorite: 0, wishlist: 1, planned: 2 };
 
+const STATUS_COLOR: Record<PlanningStatus, string> = {
+  planned: colors.statusPlanned,
+  wishlist: colors.statusWishlist,
+  favorite: colors.statusFavorite,
+};
+
 const FILTERS: { status: PlanningStatus; labelKey: string; color: string }[] = [
-  { status: 'planned', labelKey: 'festival.planned', color: colors.statusPlanned },
-  { status: 'wishlist', labelKey: 'festival.wishlist', color: colors.statusWishlist },
-  { status: 'favorite', labelKey: 'festival.favorite', color: colors.statusFavorite },
+  { status: 'planned', labelKey: 'festival.planned', color: STATUS_COLOR.planned },
+  { status: 'wishlist', labelKey: 'festival.wishlist', color: STATUS_COLOR.wishlist },
+  { status: 'favorite', labelKey: 'festival.favorite', color: STATUS_COLOR.favorite },
 ];
 
 /** Calendar-grid view of the planned/wishlist/favorite lists — the flat
@@ -51,7 +57,7 @@ export default function PlanningCalendarScreen() {
     });
   };
 
-  const items = useMemo(() => {
+  const { items, statusColorByFestivalId } = useMemo(() => {
     const byId = new Map((catalog ?? []).map((item) => [item.festival.id, item]));
     const bestStatusByFestival = new Map<string, PlanningStatus>();
     for (const s of myStatuses ?? []) {
@@ -62,9 +68,13 @@ export default function PlanningCalendarScreen() {
         bestStatusByFestival.set(s.festival_id, status);
       }
     }
-    return [...bestStatusByFestival.keys()]
+    const items = [...bestStatusByFestival.keys()]
       .map((id) => byId.get(id))
       .filter((item): item is CatalogItem => item != null && item.nextEdition != null);
+    const statusColorByFestivalId = new Map(
+      [...bestStatusByFestival.entries()].map(([id, status]) => [id, STATUS_COLOR[status]]),
+    );
+    return { items, statusColorByFestivalId };
   }, [catalog, myStatuses, statusFilter]);
 
   return (
@@ -100,6 +110,7 @@ export default function PlanningCalendarScreen() {
       ) : (
         <PlanningCalendar
           items={items}
+          statusColorByFestivalId={statusColorByFestivalId}
           locale={i18n.language}
           onSelectFestival={(item) =>
             router.push({ pathname: '/festival/[slug]', params: { slug: item.festival.slug } })

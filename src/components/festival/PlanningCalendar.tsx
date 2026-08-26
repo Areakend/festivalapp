@@ -48,10 +48,15 @@ function buildMonthGrid(monthStart: Date): DayCell[] {
  */
 export function PlanningCalendar({
   items,
+  statusColorByFestivalId,
   locale,
   onSelectFestival,
 }: {
   items: CatalogItem[];
+  /** Festival id -> theme color for its status (planned/wishlist/favorite)
+   *  — lets the grid dots and agenda rows read at a glance instead of
+   *  looking identical regardless of which list a festival is coming from. */
+  statusColorByFestivalId: Map<string, string>;
   locale: string;
   onSelectFestival: (item: CatalogItem) => void;
 }) {
@@ -188,7 +193,14 @@ export function PlanningCalendar({
                     {dayItems.slice(0, 3).map((item) => (
                       <View
                         key={item.festival.id}
-                        style={[styles.dot, isSelected && styles.dotSelected]}
+                        style={[
+                          styles.dot,
+                          !isSelected && {
+                            backgroundColor:
+                              statusColorByFestivalId.get(item.festival.id) ?? colors.statusPlanned,
+                          },
+                          isSelected && styles.dotSelected,
+                        ]}
                       />
                     ))}
                   </View>
@@ -217,6 +229,7 @@ export function PlanningCalendar({
             item={item}
             meta={formatMeta(item)}
             locale={locale}
+            accentColor={statusColorByFestivalId.get(item.festival.id)}
             onPress={() => onSelectFestival(item)}
           />
         ))}
@@ -273,7 +286,7 @@ const styles = StyleSheet.create({
   cellDayOutMonth: { color: colors.textMuted },
   cellDaySelected: { color: colors.textOnPrimary, fontFamily: typography.fonts.bodySemiBold },
   dots: { flexDirection: 'row', gap: 2, height: 4 },
-  dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: colors.statusPlanned },
+  dot: { width: 4, height: 4, borderRadius: 2 },
   dotSelected: { backgroundColor: colors.textOnPrimary },
   agendaHint: {
     fontFamily: typography.fonts.bodyMedium,

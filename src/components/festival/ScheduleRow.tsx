@@ -12,11 +12,16 @@ export function ScheduleRow({
   item,
   meta,
   locale,
+  accentColor,
   onPress,
 }: {
   item: CatalogItem;
   meta: string;
   locale: string;
+  /** Defaults to the "planned" blue — only the planning calendar (which
+   *  mixes planned/wishlist/favorite in one list) needs to override this
+   *  per row. */
+  accentColor?: string;
   onPress: () => void;
 }) {
   return (
@@ -25,7 +30,7 @@ export function ScheduleRow({
         {item.nextEdition ? (
           <>
             <Text style={styles.day}>{new Date(item.nextEdition.start_date).getDate()}</Text>
-            <Text style={styles.month}>
+            <Text style={[styles.month, accentColor && { color: accentColor }]}>
               {new Date(item.nextEdition.start_date)
                 .toLocaleDateString(locale, { month: 'short' })
                 .replace('.', '')}
