@@ -68,6 +68,7 @@
     "stages": "Scènes",
     "genres": "Genres",
     "website": "Site officiel",
+    "editionCancelled": "Édition du {{date}} annulée",
     "attended": "Fait",
     "planned": "Prévu",
     "wishlist": "Wishlist",

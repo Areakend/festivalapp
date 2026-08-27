@@ -68,6 +68,7 @@
     "stages": "Escenarios",
     "genres": "Géneros",
     "website": "Sitio oficial",
+    "editionCancelled": "La edición del {{date}} fue cancelada",
     "attended": "Asistido",
     "planned": "Planeado",
     "wishlist": "Lista de deseos",

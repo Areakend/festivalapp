@@ -215,13 +215,19 @@ export default function FestivalDetailScreen() {
   // Soonest edition still upcoming (undefined if none) — the one "add to
   // calendar" exports, and what decides the share button's "next" vs
   // "last" kind. Genuinely absent, not defaulted, unlike nextEdition below.
+  // Cancelled editions are excluded — they were scheduled but aren't
+  // happening, so they shouldn't drive attendance tracking or calendar
+  // export (see the cancelledEdition banner below instead).
   const upcomingEdition = [...editions]
-    .filter((e) => e.start_date && e.start_date >= today)
+    .filter((e) => e.start_date && e.start_date >= today && !e.cancelled)
     .sort((a, b) => a.start_date!.localeCompare(b.start_date!))[0];
   // For display: same soonest-upcoming pick, but falls back to the most
   // recent past one (editions come back sorted year desc, so the first
   // dated row is it) so a past-only festival still shows *a* date.
-  const nextEdition = upcomingEdition ?? editions.find((e) => e.start_date) ?? null;
+  const nextEdition = upcomingEdition ?? editions.find((e) => e.start_date && !e.cancelled) ?? null;
+  // Only surfaced when there's no real upcoming edition to show instead —
+  // an old cancellation shouldn't shadow a festival that's since come back.
+  const cancelledEdition = !upcomingEdition ? editions.find((e) => e.cancelled) : undefined;
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' });
   const activeStatuses = new Set(
@@ -423,6 +429,16 @@ export default function FestivalDetailScreen() {
             <Text style={styles.dateText}>
               {formatDate(nextEdition.start_date)}
               {nextEdition.end_date ? ` – ${formatDate(nextEdition.end_date)}` : ''}
+            </Text>
+          </View>
+        )}
+        {cancelledEdition?.start_date && (
+          <View style={styles.cancelledRow}>
+            <Ionicons name="close-circle" size={15} color={colors.danger} />
+            <Text style={styles.cancelledText}>
+              {t('festival.editionCancelled', {
+                date: formatDate(cancelledEdition.start_date),
+              })}
             </Text>
           </View>
         )}
@@ -813,6 +829,12 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
+  },
+  cancelledRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  cancelledText: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.danger,
   },
   websiteRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   websiteText: {

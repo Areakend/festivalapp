@@ -68,6 +68,7 @@
     "stages": "Podia",
     "genres": "Genres",
     "website": "Officiële website",
+    "editionCancelled": "De editie van {{date}} is geannuleerd",
     "attended": "Bezocht",
     "planned": "Gepland",
     "wishlist": "Verlanglijst",

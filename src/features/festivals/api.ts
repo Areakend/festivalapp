@@ -40,6 +40,7 @@ export function useFestivals() {
           .from('festival_editions')
           .select('festival_id, year, start_date, end_date')
           .gte('start_date', today)
+          .eq('cancelled', false)
           .order('start_date'),
         supabase
           .from('djmag_rankings')

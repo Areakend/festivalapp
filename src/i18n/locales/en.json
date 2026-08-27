@@ -68,6 +68,7 @@
     "stages": "Stages",
     "genres": "Genres",
     "website": "Official website",
+    "editionCancelled": "The {{date}} edition was cancelled",
     "attended": "Attended",
     "planned": "Planned",
     "wishlist": "Wishlist",

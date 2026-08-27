@@ -45,6 +45,7 @@ export interface FestivalEdition {
   end_date: string | null;
   lineup_published: boolean;
   poster_image_url: string | null;
+  cancelled: boolean;
 }
 
 export interface Artist {

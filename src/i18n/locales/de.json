@@ -68,6 +68,7 @@
     "stages": "Bühnen",
     "genres": "Genres",
     "website": "Offizielle Website",
+    "editionCancelled": "Die Ausgabe vom {{date}} wurde abgesagt",
     "attended": "Besucht",
     "planned": "Geplant",
     "wishlist": "Wunschliste",
