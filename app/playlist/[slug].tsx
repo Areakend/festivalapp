@@ -1,15 +1,26 @@
 import { useState } from 'react';
-import { Linking, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
 import { useFestivalDetail } from '@/features/festivals/api';
 import { useFestivalPlaylistCache, useGeneratePlaylist } from '@/features/spotify/api';
-import { useGeneratePlaylistExport } from '@/features/export/api';
+import { useGeneratePlaylistExport, type ExportTrack } from '@/features/export/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { useQueryClient } from '@tanstack/react-query';
+
+type ExportProvider = 'deezer' | 'spotify' | 'youtubeMusic' | 'soundcloud';
+
+const EXPORT_PROVIDERS: { id: ExportProvider; labelKey: string; urlKey: keyof ExportTrack }[] = [
+  { id: 'deezer', labelKey: 'export.deezer', urlKey: 'deezerUrl' },
+  { id: 'spotify', labelKey: 'export.spotify', urlKey: 'spotifySearchUrl' },
+  { id: 'youtubeMusic', labelKey: 'export.youtubeMusic', urlKey: 'youtubeMusicSearchUrl' },
+  { id: 'soundcloud', labelKey: 'export.soundcloud', urlKey: 'soundcloudSearchUrl' },
+];
 
 export default function PlaylistScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -30,6 +41,10 @@ export default function PlaylistScreen() {
   const [exportResult, setExportResult] = useState<Awaited<
     ReturnType<typeof generateExport.mutateAsync>
   > | null>(null);
+  // One provider picked for the whole list instead of 4 links per track —
+  // most people stick to one streaming service, and a row per track with
+  // 4 buttons left almost no room for the track title itself.
+  const [exportProvider, setExportProvider] = useState<ExportProvider>('deezer');
 
   const generate = async () => {
     if (!detail || !edition) return;
@@ -116,6 +131,16 @@ export default function PlaylistScreen() {
               {t('spotify.skippedArtists')}: {exportResult.skippedArtists.join(', ')}
             </Text>
           )}
+          <View style={styles.providerRow}>
+            {EXPORT_PROVIDERS.map((provider) => (
+              <Chip
+                key={provider.id}
+                label={t(provider.labelKey)}
+                active={exportProvider === provider.id}
+                onPress={() => setExportProvider(provider.id)}
+              />
+            ))}
+          </View>
           {exportResult.tracks.map((track, index) => (
             <View key={index} style={styles.trackRow}>
               <View style={styles.trackInfo}>
@@ -126,28 +151,16 @@ export default function PlaylistScreen() {
                   {track.artistName}
                 </Text>
               </View>
-              <View style={styles.trackLinks}>
-                <Button
-                  label={t('export.deezer')}
-                  variant="ghost"
-                  onPress={() => void Linking.openURL(track.deezerUrl)}
-                />
-                <Button
-                  label={t('export.spotify')}
-                  variant="ghost"
-                  onPress={() => void Linking.openURL(track.spotifySearchUrl)}
-                />
-                <Button
-                  label={t('export.youtubeMusic')}
-                  variant="ghost"
-                  onPress={() => void Linking.openURL(track.youtubeMusicSearchUrl)}
-                />
-                <Button
-                  label={t('export.soundcloud')}
-                  variant="ghost"
-                  onPress={() => void Linking.openURL(track.soundcloudSearchUrl)}
-                />
-              </View>
+              <Pressable
+                style={styles.trackOpenButton}
+                onPress={() =>
+                  void Linking.openURL(
+                    track[EXPORT_PROVIDERS.find((p) => p.id === exportProvider)!.urlKey],
+                  )
+                }
+              >
+                <Ionicons name="open-outline" size={18} color={colors.primary} />
+              </Pressable>
             </View>
           ))}
         </View>
@@ -220,10 +233,14 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: colors.textMuted,
   },
+  providerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   trackRow: {
-    gap: spacing.xs,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
-  trackInfo: {},
+  trackInfo: { flexShrink: 1, flexGrow: 1 },
   trackTitle: {
     fontFamily: typography.fonts.bodySemiBold,
     fontSize: typography.sizes.sm,
@@ -234,5 +251,12 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: colors.textSecondary,
   },
-  trackLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  trackOpenButton: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.full,
+    backgroundColor: `${colors.primary}1A`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
