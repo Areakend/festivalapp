@@ -23,7 +23,6 @@ import { useMyReviews } from '@/features/reviews/api';
 import { useDjMagTop100, useMyProfile, useUpdateProfile } from '@/features/profile/api';
 import { useDeleteAccount } from '@/features/moderation/api';
 import { useMyInvites } from '@/features/invites/api';
-import { useConnectSpotify } from '@/features/spotify/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag, countryName } from '@/utils/format';
@@ -244,7 +243,6 @@ export default function ProfileScreen() {
     new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
 
   const deleteAccount = useDeleteAccount();
-  const connectSpotify = useConnectSpotify();
 
   // Genres aren't a fixed enum — this walks the catalog for whatever
   // strings festivals were actually tagged with, same as the discover
@@ -531,16 +529,6 @@ export default function ProfileScreen() {
               label={t('moderation.blockedUsers')}
               variant="ghost"
               onPress={() => router.push('/blocked-users')}
-            />
-            <Button
-              label={t('profile.connectSpotify')}
-              variant="ghost"
-              onPress={() =>
-                connectSpotify.mutate(undefined, {
-                  onError: (error) => Alert.alert(t('common.error'), error.message),
-                })
-              }
-              loading={connectSpotify.isPending}
             />
             <Button label={t('auth.signOut')} variant="ghost" onPress={() => void signOut()} />
             <Button
