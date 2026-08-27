@@ -15,6 +15,9 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
     // behaves exactly as before.
     const [revealed, setRevealed] = useState(false);
     const isPassword = !!secureTextEntry;
+    // Password fields keep the reveal toggle in this slot instead — a
+    // clear button there too would fight it for the same space.
+    const showClear = !isPassword && !!inputProps.onChangeText && !!String(inputProps.value ?? '').length;
 
     return (
       <View style={styles.container}>
@@ -25,7 +28,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
             placeholderTextColor={colors.textMuted}
             style={[
               styles.input,
-              isPassword && styles.inputWithIcon,
+              (isPassword || showClear) && styles.inputWithIcon,
               !!error && styles.inputError,
             ]}
             secureTextEntry={isPassword && !revealed}
@@ -42,6 +45,15 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
                 size={20}
                 color={colors.textMuted}
               />
+            </Pressable>
+          )}
+          {showClear && (
+            <Pressable
+              style={styles.reveal}
+              onPress={() => inputProps.onChangeText?.('')}
+              hitSlop={10}
+            >
+              <Ionicons name="close-circle" size={18} color={colors.textMuted} />
             </Pressable>
           )}
         </View>

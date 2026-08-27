@@ -186,6 +186,7 @@
     "add": "Ajouter un ami",
     "searchUsers": "Rechercher des utilisateurs",
     "requests": "Demandes d'amis",
+    "sentRequests": "Demandes envoyées",
     "accept": "Accepter",
     "requestSent": "Demande envoyée",
     "requestReceived": "T'a envoyé une demande",

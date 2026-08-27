@@ -186,6 +186,7 @@
     "add": "Add friend",
     "searchUsers": "Search users",
     "requests": "Friend requests",
+    "sentRequests": "Sent requests",
     "accept": "Accept",
     "requestSent": "Request sent",
     "requestReceived": "Sent you a request",

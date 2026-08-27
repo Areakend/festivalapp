@@ -57,14 +57,21 @@ export default function FriendsScreen() {
         </Pressable>
       </View>
 
-      <TextInput
-        style={styles.search}
-        placeholder={t('friends.searchUsers')}
-        placeholderTextColor={colors.textMuted}
-        value={search}
-        onChangeText={setSearch}
-        autoCapitalize="none"
-      />
+      <View style={styles.searchWrap}>
+        <TextInput
+          style={styles.search}
+          placeholder={t('friends.searchUsers')}
+          placeholderTextColor={colors.textMuted}
+          value={search}
+          onChangeText={setSearch}
+          autoCapitalize="none"
+        />
+        {search.length > 0 && (
+          <Pressable style={styles.searchClear} onPress={() => setSearch('')} hitSlop={10}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          </Pressable>
+        )}
+      </View>
       <View style={styles.listArea}>
         {(searchResults ?? []).map((user) => (
           <UserRow key={user.id} user={user}>
@@ -78,7 +85,7 @@ export default function FriendsScreen() {
               <Button
                 label={t('friends.add')}
                 variant="secondary"
-                onPress={() => sendRequest.mutate(user.id)}
+                onPress={() => sendRequest.mutate(user.id, { onSuccess: () => setSearch('') })}
                 loading={sendRequest.isPending}
                 style={styles.smallButton}
               />
@@ -110,6 +117,25 @@ export default function FriendsScreen() {
                     <Ionicons name="checkmark" size={18} color={colors.success} />
                   </Pressable>
                 </View>
+              </UserRow>
+            ))}
+          </>
+        )}
+
+        {/* Outgoing requests — pending, cancellable */}
+        {(friendships?.outgoing.length ?? 0) > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>{t('friends.sentRequests')}</Text>
+            {friendships!.outgoing.map(({ friendshipId, profile }) => (
+              <UserRow key={friendshipId} user={profile}>
+                <Pressable
+                  style={[styles.requestActionButton, styles.declineButton]}
+                  onPress={() => removeFriendship.mutate(friendshipId)}
+                  disabled={removeFriendship.isPending}
+                  hitSlop={8}
+                >
+                  <Ionicons name="close" size={18} color={colors.danger} />
+                </Pressable>
               </UserRow>
             ))}
           </>
@@ -172,6 +198,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   titleFlex: { flex: 1 },
+  searchWrap: { marginBottom: spacing.md, marginHorizontal: spacing.xl },
   search: {
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -179,11 +206,17 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+    paddingRight: spacing.xxl,
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.md,
     color: colors.text,
-    marginBottom: spacing.md,
-    marginHorizontal: spacing.xl,
+  },
+  searchClear: {
+    position: 'absolute',
+    right: spacing.md,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
   },
   listArea: { paddingHorizontal: spacing.xl },
   sectionTitle: {

@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import {
   useMyFollowedArtistProfiles,
@@ -36,14 +37,21 @@ export default function ArtistsScreen() {
         <Text style={styles.title}>{t('artists.title')}</Text>
       </View>
 
-      <TextInput
-        style={styles.search}
-        placeholder={t('artists.searchPlaceholder')}
-        placeholderTextColor={colors.textMuted}
-        value={search}
-        onChangeText={setSearch}
-        autoCapitalize="none"
-      />
+      <View style={styles.searchWrap}>
+        <TextInput
+          style={styles.search}
+          placeholder={t('artists.searchPlaceholder')}
+          placeholderTextColor={colors.textMuted}
+          value={search}
+          onChangeText={setSearch}
+          autoCapitalize="none"
+        />
+        {search.length > 0 && (
+          <Pressable style={styles.searchClear} onPress={() => setSearch('')} hitSlop={10}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          </Pressable>
+        )}
+      </View>
 
       {search.trim().length >= 2 && (
         <View style={styles.section}>
@@ -140,18 +148,25 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xl,
     color: colors.text,
   },
+  searchWrap: { marginHorizontal: spacing.xl, marginBottom: spacing.lg },
   search: {
-    marginHorizontal: spacing.xl,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radii.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+    paddingRight: spacing.xxl,
     color: colors.text,
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.md,
-    marginBottom: spacing.lg,
+  },
+  searchClear: {
+    position: 'absolute',
+    right: spacing.md,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
   },
   section: { paddingHorizontal: spacing.xl, marginBottom: spacing.lg },
   sectionTitle: {
