@@ -2,18 +2,15 @@ import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { useFriendships } from '@/features/friends/api';
 import { useMyInvites } from '@/features/invites/api';
 import { colors, typography } from '@/theme';
 
 export default function TabsLayout() {
   const { t } = useTranslation();
-  const { data: friendsData } = useFriendships();
   const { data: invitesData } = useMyInvites();
 
   // React Navigation's own badge rendering (tabBarBadge) — undefined hides
   // it, so no "0" ever shows up on a clean tab.
-  const incomingFriendRequests = friendsData?.incoming.length || undefined;
   const pendingInvites =
     invitesData?.received.filter((i) => i.status === 'pending').length || undefined;
 
@@ -53,14 +50,13 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="friends"
-        options={{
-          title: t('friends.title'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />,
-          tabBarBadge: incomingFriendRequests,
-        }}
-      />
+      {/* Not shown as a bottom tab — reachable from the "Amis" button in
+          Home's header instead, which frees up a tab and matches the fact
+          that this is a secondary destination, not one of the app's main
+          sections. Still a real route: Tabs.Screen (rather than moving the
+          file out of this group) is what keeps deep links and
+          router.push('/friends') working. */}
+      <Tabs.Screen name="friends" options={{ href: null }} />
       <Tabs.Screen
         name="profile"
         options={{

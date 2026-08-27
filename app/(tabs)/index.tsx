@@ -14,7 +14,7 @@ import {
   useMyStatuses,
   type CatalogItem,
 } from '@/features/festivals/api';
-import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/friends/api';
+import { useFriendships, useFriendsFestivalAttendance, type PublicProfile } from '@/features/friends/api';
 import { useUpdateProfile } from '@/features/profile/api';
 import { useRegisterPushToken } from '@/features/notifications/api';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
@@ -52,6 +52,8 @@ export default function Home() {
   const { data: catalog, isRefetching } = useFestivals();
   const { data: myStatuses } = useMyStatuses();
   const { data: friendsAttendance } = useFriendsFestivalAttendance();
+  const { data: friendships } = useFriendships();
+  const incomingFriendRequests = friendships?.incoming.length ?? 0;
   const updateProfile = useUpdateProfile();
   useAutoAdvancePlannedFestivals();
   useRegisterPushToken();
@@ -147,7 +149,15 @@ export default function Home() {
       <View style={styles.header}>
         <Text style={styles.title}>{t('common.appName')}</Text>
         <Pressable style={styles.friendsButton} onPress={() => router.push('/friends')} hitSlop={8}>
-          <Ionicons name="people" size={22} color={colors.primary} />
+          <Ionicons name="people" size={20} color={colors.primary} />
+          <Text style={styles.friendsButtonLabel}>{t('friends.title')}</Text>
+          {incomingFriendRequests > 0 && (
+            <View style={styles.friendsButtonBadge}>
+              <Text style={styles.friendsButtonBadgeText}>
+                {incomingFriendRequests > 9 ? '9+' : incomingFriendRequests}
+              </Text>
+            </View>
+          )}
         </Pressable>
       </View>
 
@@ -323,11 +333,34 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   friendsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radii.full,
-    padding: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  friendsButtonLabel: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.sm,
+    color: colors.primary,
+  },
+  friendsButtonBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: radii.full,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  friendsButtonBadgeText: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: 10,
+    color: colors.textOnPrimary,
   },
   hero: {
     alignItems: 'center',

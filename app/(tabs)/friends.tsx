@@ -51,6 +51,13 @@ export default function FriendsScreen() {
       contentContainerStyle={{ paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xxl }}
     >
       <View style={styles.header}>
+        {/* Not a bottom tab anymore (reached from Home's header button
+            instead), so unlike the other tab screens this needs its own
+            way back — the tab bar below no longer highlights this as the
+            active tab, since it's hidden from it. */}
+        <Pressable onPress={() => router.back()} hitSlop={12}>
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
+        </Pressable>
         <Text style={[styles.title, styles.titleFlex]}>{t('friends.title')}</Text>
         <Pressable onPress={() => router.push('/blocked-users')} hitSlop={10}>
           <Ionicons name="ban-outline" size={22} color={colors.textSecondary} />
@@ -196,6 +203,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.heading,
     fontSize: typography.sizes.xl,
     color: colors.text,
+    textAlign: 'center',
   },
   titleFlex: { flex: 1 },
   searchWrap: { marginBottom: spacing.md, marginHorizontal: spacing.xl },
