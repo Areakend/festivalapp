@@ -67,39 +67,48 @@ Deno.serve(async (req) => {
       artists: { id: string; name: string; deezer_artist_id: string | null };
     }[]) {
       const artist = entry.artists;
-      let deezerArtistId = artist.deezer_artist_id;
+      try {
+        let deezerArtistId = artist.deezer_artist_id;
 
-      if (!deezerArtistId) {
-        const search = await searchDeezerArtist(artist.name);
-        deezerArtistId = search.data?.[0]?.id != null ? String(search.data[0].id) : null;
-        if (deezerArtistId) {
-          await supabase.from('artists').update({ deezer_artist_id: deezerArtistId }).eq('id', artist.id);
+        if (!deezerArtistId) {
+          const search = await searchDeezerArtist(artist.name);
+          deezerArtistId = search.data?.[0]?.id != null ? String(search.data[0].id) : null;
+          if (deezerArtistId) {
+            await supabase.from('artists').update({ deezer_artist_id: deezerArtistId }).eq('id', artist.id);
+          }
         }
-      }
 
-      if (!deezerArtistId) {
+        if (!deezerArtistId) {
+          skippedArtists.push(artist.name);
+          continue;
+        }
+
+        const topTracks = await getDeezerArtistTopTracks(deezerArtistId, TRACKS_PER_ARTIST);
+        matchedArtists += 1;
+        for (const track of topTracks.data ?? []) {
+          const query = encodeURIComponent(`${artist.name} ${track.title}`);
+          tracks.push({
+            artistName: artist.name,
+            title: track.title,
+            deezerUrl: `https://www.deezer.com/track/${track.id}`,
+            // Neither Spotify (no catalog access outside the curator's own Web
+            // API session — see spotify-auth), YouTube Music (no public API at
+            // all, only the quota-limited authenticated YouTube Data API) nor
+            // SoundCloud (closed app registrations, see 20260705130000) can be
+            // resolved to a real track link here — these three are all search
+            // deep links instead, the user picks the matching result themselves.
+            spotifySearchUrl: `https://open.spotify.com/search/${query}`,
+            youtubeMusicSearchUrl: `https://music.youtube.com/search?q=${query}`,
+            soundcloudSearchUrl: `https://soundcloud.com/search?q=${query}`,
+          });
+        }
+      } catch (artistError) {
+        // One artist still failing after deezer.ts's own throttling and
+        // retries (e.g. a sustained quota hit on a huge lineup) shouldn't
+        // sink the whole export — treat it like "not found on Deezer" and
+        // keep going, same as the app's own "some tracks skipped" UI.
+        console.error(`Deezer lookup failed for ${artist.name}:`, (artistError as Error).message);
         skippedArtists.push(artist.name);
-        continue;
-      }
-
-      matchedArtists += 1;
-      const topTracks = await getDeezerArtistTopTracks(deezerArtistId, TRACKS_PER_ARTIST);
-      for (const track of topTracks.data ?? []) {
-        const query = encodeURIComponent(`${artist.name} ${track.title}`);
-        tracks.push({
-          artistName: artist.name,
-          title: track.title,
-          deezerUrl: `https://www.deezer.com/track/${track.id}`,
-          // Neither Spotify (no catalog access outside the curator's own Web
-          // API session — see spotify-auth), YouTube Music (no public API at
-          // all, only the quota-limited authenticated YouTube Data API) nor
-          // SoundCloud (closed app registrations, see 20260705130000) can be
-          // resolved to a real track link here — these three are all search
-          // deep links instead, the user picks the matching result themselves.
-          spotifySearchUrl: `https://open.spotify.com/search/${query}`,
-          youtubeMusicSearchUrl: `https://music.youtube.com/search?q=${query}`,
-          soundcloudSearchUrl: `https://soundcloud.com/search?q=${query}`,
-        });
       }
     }
 
