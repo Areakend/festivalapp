@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Keyboard, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
+import { InlineDatePicker } from '@/components/ui/InlineDatePicker';
 import { colors, radii, spacing, typography } from '@/theme';
 
 interface AddPersonalEventSheetProps {
@@ -19,12 +19,9 @@ function toYmd(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Bottom-sheet form for a custom calendar entry — title + a date range.
- *  On Android the picker only expands once its row is tapped (and the
- *  keyboard is dismissed first) — an always-inline spinner next to a
- *  text field meant the keyboard and the picker fought for the same
- *  space, effectively hiding whichever lost. iOS keeps 'compact' mode,
- *  which is already its own tap target and doesn't need this wrapping. */
+/** Bottom-sheet form for a custom calendar entry — title + a date range,
+ *  each date collapsed behind a "Du: 27 août 2026" row until tapped, so
+ *  it never competes with the keyboard for space while typing the title. */
 export function AddPersonalEventSheet({ visible, onSave, onClose }: AddPersonalEventSheetProps) {
   const { t, i18n } = useTranslation();
   const [title, setTitle] = useState('');
@@ -51,35 +48,27 @@ export function AddPersonalEventSheet({ visible, onSave, onClose }: AddPersonalE
 
   const dateField = (field: DateField, labelKey: string, value: Date, onChange: (d: Date) => void) => (
     <View>
-      {Platform.OS === 'android' ? (
-        <>
-          <Pressable
-            style={styles.row}
-            onPress={() => {
-              Keyboard.dismiss();
-              setOpenField((f) => (f === field ? null : field));
-            }}
-          >
-            <Text style={styles.label}>{t(labelKey)}</Text>
-            <Text style={styles.dateValue}>
-              {value.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' })}
-            </Text>
-          </Pressable>
-          {openField === field && (
-            <DateTimePicker
-              value={value}
-              mode="date"
-              display="spinner"
-              onChange={(_, date) => date && onChange(date)}
-              themeVariant="dark"
-            />
-          )}
-        </>
-      ) : (
-        <View style={styles.row}>
-          <Text style={styles.label}>{t(labelKey)}</Text>
-          <DateTimePicker value={value} mode="date" display="compact" onChange={(_, date) => date && onChange(date)} />
-        </View>
+      <Pressable
+        style={styles.row}
+        onPress={() => {
+          Keyboard.dismiss();
+          setOpenField((f) => (f === field ? null : field));
+        }}
+      >
+        <Text style={styles.label}>{t(labelKey)}</Text>
+        <Text style={styles.dateValue}>
+          {value.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' })}
+        </Text>
+      </Pressable>
+      {openField === field && (
+        <InlineDatePicker
+          value={value}
+          onChange={(d) => {
+            onChange(d);
+            setOpenField(null);
+          }}
+          locale={i18n.language}
+        />
       )}
     </View>
   );

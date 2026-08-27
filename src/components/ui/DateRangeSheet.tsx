@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { Button } from '@/components/ui/Button';
+import { InlineDatePicker } from '@/components/ui/InlineDatePicker';
 import { colors, radii, spacing, typography } from '@/theme';
 
 interface DateRangeSheetProps {
@@ -14,11 +14,16 @@ interface DateRangeSheetProps {
   onClose: () => void;
 }
 
-/** Bottom-sheet custom date-range picker, for the Festivals period filter. */
+type DateField = 'from' | 'to';
+
+/** Bottom-sheet custom date-range picker, for the Festivals period filter.
+ *  Each date collapses behind a summary row until tapped — same pattern as
+ *  AddPersonalEventSheet. */
 export function DateRangeSheet({ visible, from, to, onApply, onClose }: DateRangeSheetProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [draftFrom, setDraftFrom] = useState(from);
   const [draftTo, setDraftTo] = useState(to);
+  const [openField, setOpenField] = useState<DateField | null>(null);
 
   const apply = () => {
     const [lo, hi] = draftFrom <= draftTo ? [draftFrom, draftTo] : [draftTo, draftFrom];
@@ -26,36 +31,35 @@ export function DateRangeSheet({ visible, from, to, onApply, onClose }: DateRang
     onClose();
   };
 
+  const dateField = (field: DateField, labelKey: string, value: Date, onChange: (d: Date) => void) => (
+    <View>
+      <Pressable style={styles.row} onPress={() => setOpenField((f) => (f === field ? null : field))}>
+        <Text style={styles.label}>{t(labelKey)}</Text>
+        <Text style={styles.dateValue}>
+          {value.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' })}
+        </Text>
+      </Pressable>
+      {openField === field && (
+        <InlineDatePicker
+          value={value}
+          onChange={(d) => {
+            onChange(d);
+            setOpenField(null);
+          }}
+          locale={i18n.language}
+        />
+      )}
+    </View>
+  );
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={styles.sheet}>
         <Text style={styles.title}>{t('discover.periodCustom')}</Text>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>{t('discover.periodFrom')}</Text>
-          <DateTimePicker
-            value={draftFrom}
-            mode="date"
-            // 'default' on Android opens its own system dialog, which steals
-            // window focus from this sheet's Modal and closes it after a
-            // single pick. 'spinner' renders inline instead, so both fields
-            // stay open until "Terminé" is tapped.
-            display={Platform.OS === 'ios' ? 'compact' : 'spinner'}
-            onChange={(_, date) => date && setDraftFrom(date)}
-            themeVariant="dark"
-          />
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>{t('discover.periodTo')}</Text>
-          <DateTimePicker
-            value={draftTo}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'compact' : 'spinner'}
-            onChange={(_, date) => date && setDraftTo(date)}
-            themeVariant="dark"
-          />
-        </View>
+        {dateField('from', 'discover.periodFrom', draftFrom, setDraftFrom)}
+        {dateField('to', 'discover.periodTo', draftTo, setDraftTo)}
 
         <Button label={t('common.done')} onPress={apply} />
         <Button label={t('common.cancel')} variant="ghost" onPress={onClose} />
@@ -87,5 +91,10 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.md,
     color: colors.textSecondary,
+  },
+  dateValue: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.md,
+    color: colors.primary,
   },
 });
