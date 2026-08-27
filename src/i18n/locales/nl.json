@@ -80,6 +80,10 @@
     "generatePlaylist": "Playlist genereren",
     "communityRating": "Communitybeoordeling",
     "ratingsCount": "{{count}} beoordelingen",
+    "communityRatingExplainer": "Dit cijfer is een gewogen gemiddelde: bij weinig beoordelingen wordt het licht naar een algemeen gemiddelde getrokken om betrouwbaar te blijven. Hoe meer beoordelingen een festival krijgt, hoe dichter het bij zijn werkelijke, ruwe gemiddelde komt.",
+    "myRating": "Mijn beoordeling",
+    "myRatingsCount_one": "{{count}} jaar beoordeeld",
+    "myRatingsCount_other": "{{count}} jaar beoordeeld",
     "djmagRank": "Perspositie",
     "bestRank": "Beste positie ooit",
     "rankingHistory": "Ranggeschiedenis",
@@ -102,6 +106,7 @@
   },
   "review": {
     "yourRating": "Jouw beoordeling",
+    "yearUnknown": "Jaar niet opgegeven",
     "comment": "Reactie (optioneel) — sfeer, podium, verblijf, vervoer, tips, organisatie...",
     "lineupRating": "Line-up",
     "productionRating": "Productie",

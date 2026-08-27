@@ -80,6 +80,10 @@
     "generatePlaylist": "Generar playlist",
     "communityRating": "Valoración de la comunidad",
     "ratingsCount": "{{count}} valoraciones",
+    "communityRatingExplainer": "Esta nota es una media ponderada: con pocas valoraciones, se acerca ligeramente a una media general para seguir siendo fiable. Cuantas más valoraciones recibe un festival, más se aproxima a su media real sin ponderar.",
+    "myRating": "Mi valoración",
+    "myRatingsCount_one": "{{count}} año valorado",
+    "myRatingsCount_other": "{{count}} años valorados",
     "djmagRank": "Puesto en prensa",
     "bestRank": "Mejor puesto histórico",
     "rankingHistory": "Historial de ranking",
@@ -102,6 +106,7 @@
   },
   "review": {
     "yourRating": "Tu valoración",
+    "yearUnknown": "Año no especificado",
     "comment": "Comentario (opcional) — ambiente, escenario, alojamiento, transporte, consejos, organización...",
     "lineupRating": "Lineup",
     "productionRating": "Producción",

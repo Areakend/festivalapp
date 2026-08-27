@@ -80,6 +80,10 @@
     "generatePlaylist": "Generate playlist",
     "communityRating": "Community rating",
     "ratingsCount": "{{count}} ratings",
+    "communityRatingExplainer": "This score is a weighted average: with few ratings, it's pulled slightly toward an overall average to stay reliable. The more ratings a festival gets, the closer it moves to its real, raw average.",
+    "myRating": "My rating",
+    "myRatingsCount_one": "{{count}} year rated",
+    "myRatingsCount_other": "{{count}} years rated",
     "djmagRank": "Press ranking",
     "bestRank": "Best rank ever",
     "rankingHistory": "Ranking history",
@@ -102,6 +106,7 @@
   },
   "review": {
     "yourRating": "Your rating",
+    "yearUnknown": "Year not specified",
     "comment": "Comment (optional) — ambiance, stages, lodging, transport, tips, organization...",
     "lineupRating": "Lineup",
     "productionRating": "Production",
