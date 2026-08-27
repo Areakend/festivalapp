@@ -189,7 +189,8 @@
     "filterSearchGenre": "Zoek een genre…",
     "filterSearchCountry": "Zoek een land…",
     "filterNoMatch": "Geen resultaten",
-    "applyFilters": "Toepassen"
+    "applyFilters": "Toepassen",
+    "communityRatingHint": "Waarom deze volgorde?"
   },
   "friends": {
     "title": "Vrienden",

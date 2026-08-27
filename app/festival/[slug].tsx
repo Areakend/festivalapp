@@ -23,7 +23,6 @@ import { RatingBar } from '@/components/ui/RatingBar';
 import { AttendanceYearSheet } from '@/components/ui/AttendanceYearSheet';
 import { CalendarDaysSheet, eachDay } from '@/components/ui/CalendarDaysSheet';
 import { CalendarPickerSheet } from '@/components/ui/CalendarPickerSheet';
-import { InfoSheet } from '@/components/ui/InfoSheet';
 import { MyReviewsSheet } from '@/components/festival/MyReviewsSheet';
 import { ReviewCard } from '@/components/review/ReviewCard';
 import {
@@ -149,7 +148,6 @@ export default function FestivalDetailScreen() {
     [reviews, userId],
   );
   const [myReviewsOpen, setMyReviewsOpen] = useState(false);
-  const [ratingInfoOpen, setRatingInfoOpen] = useState(false);
   const toggleStatus = useToggleStatus();
   const { data: myAttendances } = useMyAttendances();
   const addAttendance = useAddAttendance();
@@ -586,12 +584,6 @@ export default function FestivalDetailScreen() {
           onClose={() => setYearSheetOpen(false)}
         />
 
-        <InfoSheet
-          visible={ratingInfoOpen}
-          title={t('festival.communityRating')}
-          body={t('festival.communityRatingExplainer')}
-          onClose={() => setRatingInfoOpen(false)}
-        />
         <MyReviewsSheet
           visible={myReviewsOpen}
           reviews={myFestivalReviews}
@@ -651,7 +643,6 @@ export default function FestivalDetailScreen() {
             label={t('festival.communityRating')}
             value={stats && stats.rating_count > 0 ? `${stats.avg_rating.toFixed(1)}/20` : '–'}
             hint={stats ? t('festival.ratingsCount', { count: stats.rating_count }) : undefined}
-            onInfoPress={() => setRatingInfoOpen(true)}
           />
           <StatBox
             label={t('festival.myRating')}
@@ -810,7 +801,6 @@ function StatBox({
   value,
   hint,
   onPress,
-  onInfoPress,
 }: {
   label: string;
   value: string;
@@ -819,22 +809,11 @@ function StatBox({
    *  year-by-year detail instead of only ever being readable at the
    *  bottom of the page in the full review list. */
   onPress?: () => void;
-  /** Small "?" next to the label for a tile whose number isn't
-   *  self-explanatory (the community score is a weighted average, not a
-   *  plain mean) — separate from onPress so both can coexist. */
-  onInfoPress?: () => void;
 }) {
   const inner = (
     <>
       <Text style={styles.statValue}>{value}</Text>
-      <View style={styles.statLabelRow}>
-        <Text style={styles.statLabel}>{label}</Text>
-        {onInfoPress && (
-          <Pressable onPress={onInfoPress} hitSlop={8}>
-            <Ionicons name="help-circle-outline" size={13} color={colors.textMuted} />
-          </Pressable>
-        )}
-      </View>
+      <Text style={styles.statLabel}>{label}</Text>
       {hint ? <Text style={styles.statHint}>{hint}</Text> : null}
     </>
   );
@@ -1035,7 +1014,6 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xl,
     color: colors.text,
   },
-  statLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   statLabel: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.xs,

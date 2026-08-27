@@ -189,7 +189,8 @@
     "filterSearchGenre": "Buscar un género…",
     "filterSearchCountry": "Buscar un país…",
     "filterNoMatch": "Sin resultados",
-    "applyFilters": "Aplicar"
+    "applyFilters": "Aplicar",
+    "communityRatingHint": "¿Por qué este orden?"
   },
   "friends": {
     "title": "Amigos",

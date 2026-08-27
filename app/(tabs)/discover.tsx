@@ -16,6 +16,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Chip } from '@/components/ui/Chip';
 import { FilterSheet } from '@/components/ui/FilterSheet';
+import { InfoSheet } from '@/components/ui/InfoSheet';
 import { FestivalFiltersSheet, type PeriodKey } from '@/components/festival/FestivalFiltersSheet';
 import {
   useFestivalIdsByArtistSearch,
@@ -67,6 +68,7 @@ export default function FestivalsScreen() {
   const [customRange, setCustomRange] = useState<{ from: Date; to: Date } | null>(null);
   const [sort, setSort] = useState<SortKey>('community');
   const [openSheet, setOpenSheet] = useState<SheetKey>(null);
+  const [ratingInfoOpen, setRatingInfoOpen] = useState(false);
 
   const SORT_LABELS: Record<SortKey, string> = {
     top100: t('discover.sortTop100'),
@@ -345,6 +347,16 @@ export default function FestivalsScreen() {
         </View>
       )}
 
+      {/* Only relevant while actually sorting by it — a festival with one
+          perfect rating can sit below one with a slightly lower average
+          backed by more reviews, which reads as a bug without this. */}
+      {sort === 'community' && (
+        <Pressable style={styles.sortHint} onPress={() => setRatingInfoOpen(true)}>
+          <Ionicons name="help-circle-outline" size={14} color={colors.textMuted} />
+          <Text style={styles.sortHintText}>{t('discover.communityRatingHint')}</Text>
+        </Pressable>
+      )}
+
       {isLoading ? (
         <ActivityIndicator style={styles.loader} color={colors.primary} />
       ) : (
@@ -426,6 +438,12 @@ export default function FestivalsScreen() {
         selected={sort}
         onSelect={(v) => setSort((v as SortKey) ?? 'community')}
         onClose={() => setOpenSheet(null)}
+      />
+      <InfoSheet
+        visible={ratingInfoOpen}
+        title={t('discover.sortCommunity')}
+        body={t('festival.communityRatingExplainer')}
+        onClose={() => setRatingInfoOpen(false)}
       />
     </View>
   );
@@ -595,6 +613,17 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: radii.full,
     backgroundColor: colors.statusAttended,
+  },
+  sortHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  sortHintText: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
   },
   list: { gap: spacing.sm },
   loader: { marginTop: spacing.xxxl },
