@@ -349,7 +349,8 @@
   "calendar": {
     "addEvent": "Termin hinzufügen",
     "eventTitle": "Titel",
-    "eventTitlePlaceholder": "Hochzeit, Reise, Prüfung…"
+    "eventTitlePlaceholder": "Hochzeit, Reise, Prüfung…",
+    "you": "Du"
   },
   "share": {
     "nextTitle": "Mein nächstes Festival teilen",

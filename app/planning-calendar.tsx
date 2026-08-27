@@ -7,9 +7,11 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Chip } from '@/components/ui/Chip';
 import { AddPersonalEventSheet } from '@/components/ui/AddPersonalEventSheet';
-import { PlanningCalendar } from '@/components/festival/PlanningCalendar';
+import { MultiFilterSheet } from '@/components/ui/MultiFilterSheet';
+import { PlanningCalendar, type FriendPlanningItem } from '@/components/festival/PlanningCalendar';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
 import { useAddPersonalEvent, useDeletePersonalEvent, useMyPersonalEvents } from '@/features/calendar/api';
+import { useFriendships, useFriendsPlanningStatuses } from '@/features/friends/api';
 import type { FestivalStatus } from '@/types/domain';
 import { colors, spacing, typography } from '@/theme';
 
@@ -48,6 +50,11 @@ export default function PlanningCalendarScreen() {
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<Set<PlanningStatus>>(new Set(['planned']));
 
+  const { data: friendships } = useFriendships();
+  const [selectedFriendIds, setSelectedFriendIds] = useState<string[]>([]);
+  const [friendsSheetOpen, setFriendsSheetOpen] = useState(false);
+  const { data: friendsStatuses } = useFriendsPlanningStatuses(selectedFriendIds);
+
   const toggleFilter = (status: PlanningStatus) => {
     setStatusFilter((prev) => {
       const next = new Set(prev);
@@ -83,6 +90,31 @@ export default function PlanningCalendarScreen() {
     return { items, statusColorByFestivalId };
   }, [catalog, myStatuses, statusFilter]);
 
+  // One entry per (friend, festival) they're tracking — same
+  // planned-beats-favorite-beats-wishlist dedup as the user's own items,
+  // just scoped per friend instead of pooled across all of them.
+  const friendItems = useMemo<FriendPlanningItem[]>(() => {
+    const byId = new Map((catalog ?? []).map((item) => [item.festival.id, item]));
+    const profileById = new Map((friendships?.friends ?? []).map((f) => [f.profile.id, f.profile]));
+    const bestByFriendFestival = new Map<string, PlanningStatus>();
+    for (const s of friendsStatuses ?? []) {
+      const key = `${s.profile_id}:${s.festival_id}`;
+      const current = bestByFriendFestival.get(key);
+      if (!current || STATUS_PRIORITY[s.status] < STATUS_PRIORITY[current]) {
+        bestByFriendFestival.set(key, s.status);
+      }
+    }
+    const result: FriendPlanningItem[] = [];
+    for (const [key, status] of bestByFriendFestival) {
+      const [friendId, festivalId] = key.split(':') as [string, string];
+      const item = byId.get(festivalId);
+      const profile = profileById.get(friendId);
+      if (!item?.nextEdition || !profile) continue;
+      result.push({ item, profile, color: STATUS_COLOR[status] });
+    }
+    return result;
+  }, [catalog, friendsStatuses, friendships]);
+
   return (
     <ScrollView
       style={styles.container}
@@ -111,9 +143,20 @@ export default function PlanningCalendarScreen() {
             onPress={() => toggleFilter(status)}
           />
         ))}
+        {(friendships?.friends.length ?? 0) > 0 && (
+          <Chip
+            label={
+              selectedFriendIds.length === 0
+                ? t('tabs.friends')
+                : `${t('tabs.friends')} (${selectedFriendIds.length})`
+            }
+            active={selectedFriendIds.length > 0}
+            onPress={() => setFriendsSheetOpen(true)}
+          />
+        )}
       </View>
 
-      {items.length === 0 && (personalEvents?.length ?? 0) === 0 ? (
+      {items.length === 0 && (personalEvents?.length ?? 0) === 0 && friendItems.length === 0 ? (
         <Text style={styles.empty}>{t('empty.noFestivals')}</Text>
       ) : (
         <PlanningCalendar
@@ -121,12 +164,22 @@ export default function PlanningCalendarScreen() {
           statusColorByFestivalId={statusColorByFestivalId}
           personalEvents={personalEvents ?? []}
           onDeletePersonalEvent={(id) => deletePersonalEvent.mutate(id)}
+          friendItems={friendItems}
           locale={i18n.language}
           onSelectFestival={(item) =>
             router.push({ pathname: '/festival/[slug]', params: { slug: item.festival.slug } })
           }
         />
       )}
+
+      <MultiFilterSheet
+        visible={friendsSheetOpen}
+        title={t('tabs.friends')}
+        options={(friendships?.friends ?? []).map((f) => ({ value: f.profile.id, label: f.profile.display_name }))}
+        selected={selectedFriendIds}
+        onChange={setSelectedFriendIds}
+        onClose={() => setFriendsSheetOpen(false)}
+      />
 
       <AddPersonalEventSheet
         visible={addEventOpen}

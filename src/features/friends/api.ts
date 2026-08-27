@@ -182,6 +182,41 @@ export function useFriendsFestivalAttendance() {
   });
 }
 
+export interface FriendPlanningStatus {
+  festival_id: string;
+  status: 'planned' | 'wishlist' | 'favorite';
+  profile_id: string;
+}
+
+/**
+ * Planned/wishlist/favorite statuses for a chosen subset of friends — the
+ * planning calendar's "see a friend's calendar too" overlay. Scoped to
+ * just the selected friends (not every accepted friendship, unlike
+ * useFriendsFestivalAttendance) since this is opt-in and a user could have
+ * many friends with a lot tracked. Readable via the same "statuses friends
+ * read" RLS policy — no separate grant needed.
+ */
+export function useFriendsPlanningStatuses(friendIds: string[]) {
+  const key = [...friendIds].sort().join(',');
+  return useQuery({
+    queryKey: ['friends-planning-statuses', key],
+    enabled: friendIds.length > 0,
+    queryFn: async (): Promise<FriendPlanningStatus[]> => {
+      const { data, error } = await supabase
+        .from('user_festival_statuses')
+        .select('user_id, festival_id, status')
+        .in('user_id', friendIds)
+        .in('status', ['planned', 'wishlist', 'favorite']);
+      if (error) throw error;
+      return (data ?? []).map((s) => ({
+        festival_id: s.festival_id as string,
+        status: s.status as 'planned' | 'wishlist' | 'favorite',
+        profile_id: s.user_id as string,
+      }));
+    },
+  });
+}
+
 /**
  * Friends who logged attending one specific (festival, year) pair — the
  * share card's "crew" for a past edition needs this precision.

@@ -349,7 +349,8 @@
   "calendar": {
     "addEvent": "Evenement toevoegen",
     "eventTitle": "Titel",
-    "eventTitlePlaceholder": "Bruiloft, reis, examen…"
+    "eventTitlePlaceholder": "Bruiloft, reis, examen…",
+    "you": "Jij"
   },
   "share": {
     "nextTitle": "Deel mijn volgende festival",

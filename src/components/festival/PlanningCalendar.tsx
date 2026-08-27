@@ -8,18 +8,33 @@ import { PersonalEventRow } from '@/components/festival/PersonalEventRow';
 import { eachDay } from '@/components/ui/CalendarDaysSheet';
 import type { CatalogItem } from '@/features/festivals/api';
 import type { PersonalEvent } from '@/types/domain';
+import type { PublicProfile } from '@/features/friends/api';
 import { colors, radii, spacing, typography } from '@/theme';
+
+export interface FriendPlanningItem {
+  item: CatalogItem;
+  profile: PublicProfile;
+  /** Precomputed by the caller (same status → color table as the user's
+   *  own items) so this component doesn't need to know about
+   *  planned/wishlist/favorite at all, just "a color". */
+  color: string;
+}
 
 type PlanningEntry =
   | { kind: 'festival'; item: CatalogItem }
+  | { kind: 'friend'; friendItem: FriendPlanningItem }
   | { kind: 'personal'; event: PersonalEvent };
 
 function entryKey(entry: PlanningEntry): string {
-  return entry.kind === 'festival' ? `f:${entry.item.festival.id}` : `p:${entry.event.id}`;
+  if (entry.kind === 'festival') return `f:${entry.item.festival.id}`;
+  if (entry.kind === 'friend') return `fr:${entry.friendItem.profile.id}:${entry.friendItem.item.festival.id}`;
+  return `p:${entry.event.id}`;
 }
 
 function entryStartDate(entry: PlanningEntry): string {
-  return entry.kind === 'festival' ? entry.item.nextEdition!.start_date : entry.event.start_date;
+  if (entry.kind === 'festival') return entry.item.nextEdition!.start_date;
+  if (entry.kind === 'friend') return entry.friendItem.item.nextEdition!.start_date;
+  return entry.event.start_date;
 }
 
 const REFERENCE_MONDAY = Date.UTC(2024, 0, 1); // 2024-01-01 was a Monday
@@ -65,6 +80,7 @@ export function PlanningCalendar({
   statusColorByFestivalId,
   personalEvents,
   onDeletePersonalEvent,
+  friendItems,
   locale,
   onSelectFestival,
 }: {
@@ -78,6 +94,11 @@ export function PlanningCalendar({
    *  whole point is spotting a clash before buying tickets. */
   personalEvents: PersonalEvent[];
   onDeletePersonalEvent: (id: string) => void;
+  /** Selected friends' planned/wishlist/favorite festivals — grid dots
+   *  render as a hollow ring (filled = mine, ring = a friend's) and the
+   *  agenda groups them under their own name instead of mixing rows in
+   *  with the user's own list. */
+  friendItems: FriendPlanningItem[];
   locale: string;
   onSelectFestival: (item: CatalogItem) => void;
 }) {
@@ -94,6 +115,16 @@ export function PlanningCalendar({
         map.set(day, arr);
       }
     }
+    for (const friendItem of friendItems) {
+      const e = friendItem.item.nextEdition;
+      if (!e) continue;
+      const days = eachDay(e.start_date, e.end_date ?? e.start_date);
+      for (const day of days) {
+        const arr = map.get(day) ?? [];
+        arr.push({ kind: 'friend', friendItem });
+        map.set(day, arr);
+      }
+    }
     for (const event of personalEvents) {
       const days = eachDay(event.start_date, event.end_date ?? event.start_date);
       for (const day of days) {
@@ -103,11 +134,12 @@ export function PlanningCalendar({
       }
     }
     return map;
-  }, [items, personalEvents]);
+  }, [items, friendItems, personalEvents]);
 
   const [month, setMonth] = useState(() => {
     const dates = [
       ...items.map((i) => i.nextEdition?.start_date),
+      ...friendItems.map((f) => f.item.nextEdition?.start_date),
       ...personalEvents.map((e) => e.start_date),
     ].filter((d): d is string => !!d).sort();
     const first = dates[0];
@@ -149,6 +181,31 @@ export function PlanningCalendar({
     return inMonth.sort((a, b) => entryStartDate(a).localeCompare(entryStartDate(b)));
   }, [selectedDate, itemsByDate, monthKey]);
 
+  // "Toi" (personal events + own tracked festivals) stays one list; each
+  // selected friend gets their own section below it instead of every row
+  // being mixed together — the whole reason this wasn't just one more dot
+  // color was to keep whose-is-whose obvious without reading each row.
+  const { mine, friendGroups } = useMemo(() => {
+    const mine: PlanningEntry[] = [];
+    const byFriend = new Map<string, { profile: PublicProfile; entries: PlanningEntry[] }>();
+    for (const entry of agendaItems) {
+      if (entry.kind === 'friend') {
+        const p = entry.friendItem.profile;
+        const group = byFriend.get(p.id) ?? { profile: p, entries: [] };
+        group.entries.push(entry);
+        byFriend.set(p.id, group);
+      } else {
+        mine.push(entry);
+      }
+    }
+    return {
+      mine,
+      friendGroups: [...byFriend.values()].sort((a, b) =>
+        a.profile.display_name.localeCompare(b.profile.display_name),
+      ),
+    };
+  }, [agendaItems]);
+
   const changeMonth = (delta: number) => {
     setMonth((m) => new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + delta, 1)));
     setSelectedDate(null);
@@ -168,6 +225,41 @@ export function PlanningCalendar({
       timeZone: 'UTC',
     });
     return `${start} – ${end}`;
+  };
+
+  const renderEntry = (entry: PlanningEntry) => {
+    if (entry.kind === 'festival') {
+      return (
+        <ScheduleRow
+          key={entryKey(entry)}
+          item={entry.item}
+          meta={formatMeta(entry.item)}
+          locale={locale}
+          accentColor={statusColorByFestivalId.get(entry.item.festival.id)}
+          onPress={() => onSelectFestival(entry.item)}
+        />
+      );
+    }
+    if (entry.kind === 'friend') {
+      return (
+        <ScheduleRow
+          key={entryKey(entry)}
+          item={entry.friendItem.item}
+          meta={formatMeta(entry.friendItem.item)}
+          locale={locale}
+          accentColor={entry.friendItem.color}
+          onPress={() => onSelectFestival(entry.friendItem.item)}
+        />
+      );
+    }
+    return (
+      <PersonalEventRow
+        key={entryKey(entry)}
+        event={entry.event}
+        locale={locale}
+        onDelete={() => onDeletePersonalEvent(entry.event.id)}
+      />
+    );
   };
 
   return (
@@ -221,21 +313,36 @@ export function PlanningCalendar({
                 </Text>
                 {dayItems.length > 0 && (
                   <View style={styles.dots}>
-                    {dayItems.slice(0, 3).map((entry) => (
-                      <View
-                        key={entryKey(entry)}
-                        style={[
-                          styles.dot,
-                          !isSelected && {
-                            backgroundColor:
-                              entry.kind === 'festival'
-                                ? statusColorByFestivalId.get(entry.item.festival.id) ?? colors.statusPlanned
-                                : colors.customEvent,
-                          },
-                          isSelected && styles.dotSelected,
-                        ]}
-                      />
-                    ))}
+                    {dayItems.slice(0, 3).map((entry) => {
+                      if (entry.kind === 'friend') {
+                        // Hollow ring = a friend's, filled = mine — same
+                        // status colors either way, just the fill vs
+                        // outline reads "whose" at a glance.
+                        return (
+                          <View
+                            key={entryKey(entry)}
+                            style={[
+                              styles.dotRing,
+                              !isSelected && { borderColor: entry.friendItem.color },
+                              isSelected && styles.dotRingSelected,
+                            ]}
+                          />
+                        );
+                      }
+                      const color = entry.kind === 'festival'
+                        ? statusColorByFestivalId.get(entry.item.festival.id) ?? colors.statusPlanned
+                        : colors.customEvent;
+                      return (
+                        <View
+                          key={entryKey(entry)}
+                          style={[
+                            styles.dot,
+                            !isSelected && { backgroundColor: color },
+                            isSelected && styles.dotSelected,
+                          ]}
+                        />
+                      );
+                    })}
                   </View>
                 )}
               </View>
@@ -256,25 +363,19 @@ export function PlanningCalendar({
       </Text>
 
       <View style={styles.agenda}>
-        {agendaItems.map((entry) =>
-          entry.kind === 'festival' ? (
-            <ScheduleRow
-              key={entryKey(entry)}
-              item={entry.item}
-              meta={formatMeta(entry.item)}
-              locale={locale}
-              accentColor={statusColorByFestivalId.get(entry.item.festival.id)}
-              onPress={() => onSelectFestival(entry.item)}
-            />
-          ) : (
-            <PersonalEventRow
-              key={entryKey(entry)}
-              event={entry.event}
-              locale={locale}
-              onDelete={() => onDeletePersonalEvent(entry.event.id)}
-            />
-          ),
-        )}
+        {friendGroups.length > 0 && mine.length > 0 && <Text style={styles.sectionLabel}>{t('calendar.you')}</Text>}
+        {mine.map((entry) => renderEntry(entry))}
+        {friendGroups.map(({ profile, entries }) => (
+          <View key={profile.id} style={styles.friendSection}>
+            <View style={styles.friendSectionHeader}>
+              <View style={styles.friendAvatar}>
+                <Text style={styles.friendAvatarLetter}>{profile.display_name.charAt(0).toUpperCase()}</Text>
+              </View>
+              <Text style={styles.sectionLabel}>{profile.display_name}</Text>
+            </View>
+            {entries.map((entry) => renderEntry(entry))}
+          </View>
+        ))}
         {agendaItems.length === 0 && <Text style={styles.agendaEmpty}>{t('empty.noFestivals')}</Text>}
       </View>
     </View>
@@ -327,9 +428,11 @@ const styles = StyleSheet.create({
   },
   cellDayOutMonth: { color: colors.textMuted },
   cellDaySelected: { color: colors.textOnPrimary, fontFamily: typography.fonts.bodySemiBold },
-  dots: { flexDirection: 'row', gap: 2, height: 4 },
-  dot: { width: 4, height: 4, borderRadius: 2 },
+  dots: { flexDirection: 'row', gap: 3, height: 6 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
   dotSelected: { backgroundColor: colors.textOnPrimary },
+  dotRing: { width: 6, height: 6, borderRadius: 3, borderWidth: 1.5 },
+  dotRingSelected: { borderColor: colors.textOnPrimary },
   agendaHint: {
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.sm,
@@ -343,5 +446,25 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     paddingVertical: spacing.lg,
+  },
+  sectionLabel: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+  },
+  friendSection: { gap: spacing.sm, marginTop: spacing.sm },
+  friendSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  friendAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: radii.full,
+    backgroundColor: colors.surfaceElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  friendAvatarLetter: {
+    fontFamily: typography.fonts.heading,
+    fontSize: typography.sizes.xs,
+    color: colors.primary,
   },
 });

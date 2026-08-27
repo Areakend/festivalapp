@@ -350,7 +350,8 @@
   "calendar": {
     "addEvent": "Añadir un evento",
     "eventTitle": "Título",
-    "eventTitlePlaceholder": "Boda, viaje, examen…"
+    "eventTitlePlaceholder": "Boda, viaje, examen…",
+    "you": "Tú"
   },
   "share": {
     "nextTitle": "Compartir mi próximo festival",
