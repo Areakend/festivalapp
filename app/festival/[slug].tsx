@@ -2,6 +2,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { Chip } from '@/components/ui/Chip';
 import { Button } from '@/components/ui/Button';
@@ -32,6 +33,7 @@ import {
   useRemoveAttendance,
   useToggleStatus,
 } from '@/features/festivals/api';
+import { useFestivalNavContext } from '@/features/festivals/nav-context';
 import {
   REVIEW_SUMMARY_CATEGORIES,
   useFestivalReviews,
@@ -82,6 +84,36 @@ export default function FestivalDetailScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  // Set by the list screen this was opened from (wishlist/favorites/planned)
+  // so a swipe can move to the next/previous festival in that same list —
+  // empty (so no swipe) when opened any other way (search, an artist page,
+  // a share link…). router.replace instead of push so swiping repeatedly
+  // doesn't stack up history entries — "back" from here always exits to
+  // the list, not back through every festival swiped past.
+  const navSlugs = useFestivalNavContext((s) => s.slugs);
+  const navIndex = slug ? navSlugs.indexOf(slug) : -1;
+  const prevSlug = navIndex > 0 ? navSlugs[navIndex - 1] : null;
+  const nextSlug = navIndex !== -1 && navIndex < navSlugs.length - 1 ? navSlugs[navIndex + 1] : null;
+  // PanResponder is created once and never again (useRef), so its handlers
+  // must read from a ref rather than close over prevSlug/nextSlug directly
+  // — otherwise they'd keep seeing whatever those were on first render.
+  const navRef = useRef({ prevSlug, nextSlug });
+  navRef.current = { prevSlug, nextSlug };
+  const swipeResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponderCapture: (_evt, gesture) =>
+        Math.abs(gesture.dx) > 20 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 2,
+      onPanResponderRelease: (_evt, gesture) => {
+        const { prevSlug: prev, nextSlug: next } = navRef.current;
+        if (gesture.dx < -60 && next) {
+          router.replace({ pathname: '/festival/[slug]', params: { slug: next } });
+        } else if (gesture.dx > 60 && prev) {
+          router.replace({ pathname: '/festival/[slug]', params: { slug: prev } });
+        }
+      },
+    }),
+  ).current;
 
   const [reviewSort, setReviewSort] = useState<ReviewSort>('newest');
   const { data, isLoading } = useFestivalDetail(slug);
@@ -332,10 +364,11 @@ export default function FestivalDetailScreen() {
   })();
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xxl }}
-    >
+    <View style={styles.swipeArea} {...swipeResponder.panHandlers}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xxl }}
+      >
       {/* Header / cover */}
       <View style={styles.cover}>
         {festival.cover_image_url ? (
@@ -357,6 +390,13 @@ export default function FestivalDetailScreen() {
           />
         ) : (
           <Text style={styles.coverLetter}>{festival.name.charAt(0)}</Text>
+        )}
+        {navIndex !== -1 && (
+          <View style={[styles.navPill, { top: insets.top + spacing.sm }]}>
+            <Text style={styles.navPillText}>
+              {navIndex + 1} / {navSlugs.length}
+            </Text>
+          </View>
         )}
       </View>
 
@@ -698,7 +738,8 @@ export default function FestivalDetailScreen() {
           <Text style={styles.noReviews}>{t('empty.noReviews')}</Text>
         )}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -713,12 +754,26 @@ function StatBox({ label, value, hint }: { label: string; value: string; hint?: 
 }
 
 const styles = StyleSheet.create({
+  swipeArea: { flex: 1 },
   container: { flex: 1, backgroundColor: colors.background },
   loaderContainer: {
     flex: 1,
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  navPill: {
+    position: 'absolute',
+    right: spacing.lg,
+    backgroundColor: 'rgba(11, 11, 20, 0.65)',
+    borderRadius: radii.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  navPillText: {
+    fontFamily: typography.fonts.bodySemiBold,
+    fontSize: typography.sizes.xs,
+    color: colors.text,
   },
   cover: {
     height: 200,

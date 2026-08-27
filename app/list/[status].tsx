@@ -7,6 +7,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { ScheduleRow } from '@/components/festival/ScheduleRow';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
+import { setFestivalNavContext } from '@/features/festivals/nav-context';
 import { colors, spacing, typography } from '@/theme';
 
 const TITLE_KEYS: Record<string, string> = {
@@ -85,9 +86,10 @@ export default function MyListScreen() {
                 : t('home.dateTbc')
             }
             locale={i18n.language}
-            onPress={() =>
-              router.push({ pathname: '/festival/[slug]', params: { slug: item.festival.slug } })
-            }
+            onPress={() => {
+              setFestivalNavContext(items.map((i) => i.festival.slug));
+              router.push({ pathname: '/festival/[slug]', params: { slug: item.festival.slug } });
+            }}
           />
         ))}
         {items.length === 0 && <Text style={styles.empty}>{t('empty.noFestivals')}</Text>}
