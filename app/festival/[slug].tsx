@@ -41,6 +41,7 @@ import {
   type ReviewSummaryCategory,
 } from '@/features/reviews/api';
 import { useMyFollowedArtists, useToggleArtistFollow } from '@/features/artists/api';
+import { useMyProfile, useUpdateProfile } from '@/features/profile/api';
 import { useFriendsFestivalAttendance, type PublicProfile } from '@/features/friends/api';
 import { InviteFriendsSheet } from '@/components/festival/InviteFriendsSheet';
 import { useMyBlockedIds } from '@/features/moderation/api';
@@ -112,7 +113,17 @@ export default function FestivalDetailScreen() {
   const [lineupExpanded, setLineupExpanded] = useState(false);
   const { data: followedArtistIds } = useMyFollowedArtists();
   const toggleArtistFollow = useToggleArtistFollow();
+  const { data: myProfile } = useMyProfile();
+  const updateProfile = useUpdateProfile();
   const { data: friendsAttendance } = useFriendsFestivalAttendance();
+
+  const toggleFavoriteGenre = (genre: string) => {
+    const current = myProfile?.favorite_genres ?? [];
+    const next = current.includes(genre)
+      ? current.filter((g) => g !== genre)
+      : [...current, genre];
+    updateProfile.mutate({ favorite_genres: next });
+  };
 
   const lineupEdition = data?.editions.find((e) => e.lineup_published);
   const { data: lineup } = useEditionLineup(lineupEdition?.id);
@@ -400,7 +411,12 @@ export default function FestivalDetailScreen() {
 
         <View style={styles.genreRow}>
           {festival.genres.map((g) => (
-            <Chip key={g} label={g} />
+            <Chip
+              key={g}
+              label={g}
+              active={(myProfile?.favorite_genres ?? []).includes(g)}
+              onPress={() => toggleFavoriteGenre(g)}
+            />
           ))}
         </View>
 

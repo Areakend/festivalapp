@@ -11,6 +11,7 @@ import { RatingBar, ratingColor } from '@/components/ui/RatingBar';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
 import { useFriendProfile, useFriendships, useRemoveFriendship } from '@/features/friends/api';
 import { useMyFollowedArtistProfiles } from '@/features/artists/api';
+import { useMyProfile } from '@/features/profile/api';
 import { useBlockUser, useMyBlockedIds } from '@/features/moderation/api';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag } from '@/utils/format';
@@ -33,6 +34,11 @@ const SECTIONS: { status: FestivalStatus; labelKey: string; icon: string; color:
   { status: 'wishlist', labelKey: 'festival.wishlist', icon: 'heart', color: colors.statusWishlist },
 ];
 
+// Tracked festivals are weighted highest for the affinity score below —
+// having actually gone to, or planned, the same festivals says more than
+// sharing a genre tag or a followed artist.
+const AFFINITY_WEIGHTS = { festivals: 0.5, genres: 0.25, artists: 0.25 };
+
 /**
  * A user's public festival history: stats, tracked festivals grouped
  * exactly like Home (same ScheduleRow — date block, name, meta,
@@ -50,6 +56,7 @@ export default function FriendProfileScreen() {
   const { data: catalog } = useFestivals();
   const { data: myStatuses } = useMyStatuses();
   const { data: myFollowedArtists } = useMyFollowedArtistProfiles();
+  const { data: myProfile } = useMyProfile();
   const { data: blockedIds } = useMyBlockedIds();
   const blockUser = useBlockUser();
   const isBlocked = !!id && (blockedIds?.has(id) ?? false);
@@ -194,55 +201,55 @@ export default function FriendProfileScreen() {
     };
   }, [data, catalog, statusFilter, yearFilter, commonOnly, myAttendedIds, myPlannedIds, myWishlistIds]);
 
-  // No dedicated "follow a genre" feature exists (favorite_genres sits
-  // unused in every profile, nobody sets it) — genres in common are
-  // derived from actual behavior instead: the genres of festivals each
-  // person has actually attended, not a preference nobody filled in.
-  // Score is a Jaccard similarity (intersection / union) over each
-  // person's combined genre+followed-artist+tracked-festival "taste set"
-  // — a plain shared count doesn't say whether that's a lot or a little
-  // relative to everything either person is into, a percentage does.
-  // Tracked festivals (any of attended/planned/wishlist/favorite) feed
-  // the score but aren't listed in the sheet below — the existing
-  // "In common with me" filter on this screen already covers that.
+  // Genres come from each person's followed genres (favorite_genres, set
+  // from the genre chips in Settings), not from festival history — an
+  // explicit preference beats a guess from attended shows alone. The
+  // score is a weighted average of three separate Jaccard similarities
+  // (intersection / union), not one pooled set — pooling let genres/
+  // artists dilute festival overlap whenever someone had a lot of one and
+  // little of the other. A category is left out of the average (not
+  // scored as 0) when both people have nothing in it, since 0/0 isn't "no
+  // overlap", it's "no data". Tracked festivals aren't listed in the
+  // sheet below despite feeding the score — the existing "In common with
+  // me" filter on this screen already covers that.
   const affinity = useMemo(() => {
-    if (!data || !catalog) {
+    if (!data || !myProfile) {
       return { genres: [] as string[], artists: [] as { id: string; name: string }[], score: 0 };
     }
-    const byId = new Map(catalog.map((item) => [item.festival.id, item]));
-
-    const theirAttendedIds = new Set(
-      data.statuses.filter((s) => s.status === 'attended').map((s) => s.festival_id),
-    );
-    const myFestivalIds = new Set((myStatuses ?? []).map((s) => s.festival_id));
-    const theirFestivalIds = new Set(data.statuses.map((s) => s.festival_id));
-
-    const myGenres = new Set<string>();
-    for (const id of myAttendedIds) byId.get(id)?.festival.genres.forEach((g) => myGenres.add(g));
-    const theirGenres = new Set<string>();
-    for (const id of theirAttendedIds) byId.get(id)?.festival.genres.forEach((g) => theirGenres.add(g));
+    const myGenres = new Set(myProfile.favorite_genres);
+    const theirGenres = new Set(data.profile.favorite_genres);
     const genres = [...theirGenres].filter((g) => myGenres.has(g));
 
     const myArtistIds = new Set((myFollowedArtists ?? []).map((a) => a.id));
     const theirArtistIds = new Set(data.followedArtists.map((a) => a.id));
     const artists = data.followedArtists.filter((a) => myArtistIds.has(a.id));
 
-    const myTaste = new Set(
-      [...myGenres].map((g) => `g:${g}`)
-        .concat([...myArtistIds].map((id) => `a:${id}`))
-        .concat([...myFestivalIds].map((id) => `f:${id}`)),
-    );
-    const theirTaste = new Set(
-      [...theirGenres].map((g) => `g:${g}`)
-        .concat([...theirArtistIds].map((id) => `a:${id}`))
-        .concat([...theirFestivalIds].map((id) => `f:${id}`)),
-    );
-    const union = new Set([...myTaste, ...theirTaste]).size;
-    const intersection = [...myTaste].filter((x) => theirTaste.has(x)).length;
-    const score = union > 0 ? Math.round((intersection / union) * 100) : 0;
+    const myFestivalIds = new Set((myStatuses ?? []).map((s) => s.festival_id));
+    const theirFestivalIds = new Set(data.statuses.map((s) => s.festival_id));
+
+    const jaccard = (a: Set<string>, b: Set<string>) => {
+      const union = new Set([...a, ...b]).size;
+      if (union === 0) return null;
+      const intersection = [...a].filter((x) => b.has(x)).length;
+      return intersection / union;
+    };
+    const categoryScores: Record<keyof typeof AFFINITY_WEIGHTS, number | null> = {
+      festivals: jaccard(myFestivalIds, theirFestivalIds),
+      genres: jaccard(myGenres, theirGenres),
+      artists: jaccard(myArtistIds, theirArtistIds),
+    };
+    let weightedSum = 0;
+    let weightTotal = 0;
+    for (const key of Object.keys(categoryScores) as (keyof typeof AFFINITY_WEIGHTS)[]) {
+      const categoryScore = categoryScores[key];
+      if (categoryScore === null) continue;
+      weightedSum += categoryScore * AFFINITY_WEIGHTS[key];
+      weightTotal += AFFINITY_WEIGHTS[key];
+    }
+    const score = weightTotal > 0 ? Math.round((weightedSum / weightTotal) * 100) : 0;
 
     return { genres, artists, score };
-  }, [data, catalog, myStatuses, myAttendedIds, myFollowedArtists]);
+  }, [data, myProfile, myStatuses, myFollowedArtists]);
   const affinityHasDetail = affinity.genres.length > 0 || affinity.artists.length > 0;
 
   const formatDate = (iso: string) =>

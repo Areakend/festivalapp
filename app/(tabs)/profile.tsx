@@ -245,6 +245,23 @@ export default function ProfileScreen() {
 
   const deleteAccount = useDeleteAccount();
   const connectSpotify = useConnectSpotify();
+
+  // Genres aren't a fixed enum — this walks the catalog for whatever
+  // strings festivals were actually tagged with, same as the discover
+  // filter chips, so the picker never drifts from real data.
+  const genreOptions = useMemo(() => {
+    const genres = new Set<string>();
+    (catalog ?? []).forEach((item) => item.festival.genres.forEach((g) => genres.add(g)));
+    return [...genres].sort();
+  }, [catalog]);
+
+  const toggleFavoriteGenre = (genre: string) => {
+    const current = profile?.favorite_genres ?? [];
+    const next = current.includes(genre)
+      ? current.filter((g) => g !== genre)
+      : [...current, genre];
+    updateProfile.mutate({ favorite_genres: next });
+  };
   const { data: invitesData } = useMyInvites();
   const pendingInviteCount =
     invitesData?.received.filter((i) => i.status === 'pending').length ?? 0;
@@ -490,6 +507,21 @@ export default function ProfileScreen() {
                 />
               ))}
             </View>
+            {genreOptions.length > 0 && (
+              <>
+                <Text style={styles.subLabel}>{t('profile.favoriteGenres')}</Text>
+                <View style={styles.langRow}>
+                  {genreOptions.map((genre) => (
+                    <Chip
+                      key={genre}
+                      label={genre}
+                      active={(profile?.favorite_genres ?? []).includes(genre)}
+                      onPress={() => toggleFavoriteGenre(genre)}
+                    />
+                  ))}
+                </View>
+              </>
+            )}
             <Button
               label={t('requestFestival.entryPoint')}
               variant="ghost"
