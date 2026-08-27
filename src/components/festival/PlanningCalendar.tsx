@@ -4,9 +4,23 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 
 import { ScheduleRow } from '@/components/festival/ScheduleRow';
+import { PersonalEventRow } from '@/components/festival/PersonalEventRow';
 import { eachDay } from '@/components/ui/CalendarDaysSheet';
 import type { CatalogItem } from '@/features/festivals/api';
+import type { PersonalEvent } from '@/types/domain';
 import { colors, radii, spacing, typography } from '@/theme';
+
+type PlanningEntry =
+  | { kind: 'festival'; item: CatalogItem }
+  | { kind: 'personal'; event: PersonalEvent };
+
+function entryKey(entry: PlanningEntry): string {
+  return entry.kind === 'festival' ? `f:${entry.item.festival.id}` : `p:${entry.event.id}`;
+}
+
+function entryStartDate(entry: PlanningEntry): string {
+  return entry.kind === 'festival' ? entry.item.nextEdition!.start_date : entry.event.start_date;
+}
 
 const REFERENCE_MONDAY = Date.UTC(2024, 0, 1); // 2024-01-01 was a Monday
 
@@ -49,6 +63,8 @@ function buildMonthGrid(monthStart: Date): DayCell[] {
 export function PlanningCalendar({
   items,
   statusColorByFestivalId,
+  personalEvents,
+  onDeletePersonalEvent,
   locale,
   onSelectFestival,
 }: {
@@ -57,30 +73,44 @@ export function PlanningCalendar({
    *  — lets the grid dots and agenda rows read at a glance instead of
    *  looking identical regardless of which list a festival is coming from. */
   statusColorByFestivalId: Map<string, string>;
+  /** Custom real-life entries (a wedding, a work trip) — shown alongside
+   *  tracked festivals regardless of the status filter above, since the
+   *  whole point is spotting a clash before buying tickets. */
+  personalEvents: PersonalEvent[];
+  onDeletePersonalEvent: (id: string) => void;
   locale: string;
   onSelectFestival: (item: CatalogItem) => void;
 }) {
   const { t } = useTranslation();
 
   const itemsByDate = useMemo(() => {
-    const map = new Map<string, CatalogItem[]>();
+    const map = new Map<string, PlanningEntry[]>();
     for (const item of items) {
       if (!item.nextEdition) continue;
       const days = eachDay(item.nextEdition.start_date, item.nextEdition.end_date ?? item.nextEdition.start_date);
       for (const day of days) {
         const arr = map.get(day) ?? [];
-        arr.push(item);
+        arr.push({ kind: 'festival', item });
+        map.set(day, arr);
+      }
+    }
+    for (const event of personalEvents) {
+      const days = eachDay(event.start_date, event.end_date ?? event.start_date);
+      for (const day of days) {
+        const arr = map.get(day) ?? [];
+        arr.push({ kind: 'personal', event });
         map.set(day, arr);
       }
     }
     return map;
-  }, [items]);
+  }, [items, personalEvents]);
 
   const [month, setMonth] = useState(() => {
-    const sorted = [...items].sort((a, b) =>
-      a.nextEdition!.start_date.localeCompare(b.nextEdition!.start_date),
-    );
-    const first = sorted[0]?.nextEdition?.start_date;
+    const dates = [
+      ...items.map((i) => i.nextEdition?.start_date),
+      ...personalEvents.map((e) => e.start_date),
+    ].filter((d): d is string => !!d).sort();
+    const first = dates[0];
     if (!first) return new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
     const [y, m] = first.split('-').map(Number) as [number, number];
     return new Date(Date.UTC(y, m - 1, 1));
@@ -106,16 +136,17 @@ export function PlanningCalendar({
   const agendaItems = useMemo(() => {
     if (selectedDate) return itemsByDate.get(selectedDate) ?? [];
     const seen = new Set<string>();
-    const inMonth: CatalogItem[] = [];
+    const inMonth: PlanningEntry[] = [];
     for (const [date, arr] of itemsByDate) {
       if (!date.startsWith(monthKey)) continue;
-      for (const item of arr) {
-        if (seen.has(item.festival.id)) continue;
-        seen.add(item.festival.id);
-        inMonth.push(item);
+      for (const entry of arr) {
+        const key = entryKey(entry);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        inMonth.push(entry);
       }
     }
-    return inMonth.sort((a, b) => a.nextEdition!.start_date.localeCompare(b.nextEdition!.start_date));
+    return inMonth.sort((a, b) => entryStartDate(a).localeCompare(entryStartDate(b)));
   }, [selectedDate, itemsByDate, monthKey]);
 
   const changeMonth = (delta: number) => {
@@ -190,14 +221,16 @@ export function PlanningCalendar({
                 </Text>
                 {dayItems.length > 0 && (
                   <View style={styles.dots}>
-                    {dayItems.slice(0, 3).map((item) => (
+                    {dayItems.slice(0, 3).map((entry) => (
                       <View
-                        key={item.festival.id}
+                        key={entryKey(entry)}
                         style={[
                           styles.dot,
                           !isSelected && {
                             backgroundColor:
-                              statusColorByFestivalId.get(item.festival.id) ?? colors.statusPlanned,
+                              entry.kind === 'festival'
+                                ? statusColorByFestivalId.get(entry.item.festival.id) ?? colors.statusPlanned
+                                : colors.customEvent,
                           },
                           isSelected && styles.dotSelected,
                         ]}
@@ -223,16 +256,25 @@ export function PlanningCalendar({
       </Text>
 
       <View style={styles.agenda}>
-        {agendaItems.map((item) => (
-          <ScheduleRow
-            key={item.festival.id}
-            item={item}
-            meta={formatMeta(item)}
-            locale={locale}
-            accentColor={statusColorByFestivalId.get(item.festival.id)}
-            onPress={() => onSelectFestival(item)}
-          />
-        ))}
+        {agendaItems.map((entry) =>
+          entry.kind === 'festival' ? (
+            <ScheduleRow
+              key={entryKey(entry)}
+              item={entry.item}
+              meta={formatMeta(entry.item)}
+              locale={locale}
+              accentColor={statusColorByFestivalId.get(entry.item.festival.id)}
+              onPress={() => onSelectFestival(entry.item)}
+            />
+          ) : (
+            <PersonalEventRow
+              key={entryKey(entry)}
+              event={entry.event}
+              locale={locale}
+              onDelete={() => onDeletePersonalEvent(entry.event.id)}
+            />
+          ),
+        )}
         {agendaItems.length === 0 && <Text style={styles.agendaEmpty}>{t('empty.noFestivals')}</Text>}
       </View>
     </View>

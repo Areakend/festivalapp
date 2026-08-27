@@ -346,6 +346,11 @@
     "calendarView": "Kalenderweergave",
     "calendarHint": "Tik op een dag om het programma te zien"
   },
+  "calendar": {
+    "addEvent": "Evenement toevoegen",
+    "eventTitle": "Titel",
+    "eventTitlePlaceholder": "Bruiloft, reis, examen…"
+  },
   "share": {
     "nextTitle": "Deel mijn volgende festival",
     "lastTitle": "Deel mijn laatste festival",

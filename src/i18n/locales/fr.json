@@ -346,6 +346,11 @@
     "calendarView": "Vue calendrier",
     "calendarHint": "Appuie sur un jour pour voir le programme"
   },
+  "calendar": {
+    "addEvent": "Ajouter un événement",
+    "eventTitle": "Titre",
+    "eventTitlePlaceholder": "Mariage, voyage, examen…"
+  },
   "share": {
     "nextTitle": "Partager mon prochain festival",
     "lastTitle": "Partager mon dernier festival",

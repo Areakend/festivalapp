@@ -6,8 +6,10 @@ import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Chip } from '@/components/ui/Chip';
+import { AddPersonalEventSheet } from '@/components/ui/AddPersonalEventSheet';
 import { PlanningCalendar } from '@/components/festival/PlanningCalendar';
 import { useFestivals, useMyStatuses, type CatalogItem } from '@/features/festivals/api';
+import { useAddPersonalEvent, useDeletePersonalEvent, useMyPersonalEvents } from '@/features/calendar/api';
 import type { FestivalStatus } from '@/types/domain';
 import { colors, spacing, typography } from '@/theme';
 
@@ -40,6 +42,10 @@ export default function PlanningCalendarScreen() {
 
   const { data: catalog } = useFestivals();
   const { data: myStatuses } = useMyStatuses();
+  const { data: personalEvents } = useMyPersonalEvents();
+  const addPersonalEvent = useAddPersonalEvent();
+  const deletePersonalEvent = useDeletePersonalEvent();
+  const [addEventOpen, setAddEventOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<Set<PlanningStatus>>(new Set(['planned']));
 
   const toggleFilter = (status: PlanningStatus) => {
@@ -90,7 +96,9 @@ export default function PlanningCalendarScreen() {
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>{t('home.planning')}</Text>
-        <View style={styles.headerSpacer} />
+        <Pressable onPress={() => setAddEventOpen(true)} hitSlop={12} accessibilityLabel={t('calendar.addEvent')}>
+          <Ionicons name="add-circle-outline" size={24} color={colors.customEvent} />
+        </Pressable>
       </View>
 
       <View style={styles.filterRow}>
@@ -105,18 +113,26 @@ export default function PlanningCalendarScreen() {
         ))}
       </View>
 
-      {items.length === 0 ? (
+      {items.length === 0 && (personalEvents?.length ?? 0) === 0 ? (
         <Text style={styles.empty}>{t('empty.noFestivals')}</Text>
       ) : (
         <PlanningCalendar
           items={items}
           statusColorByFestivalId={statusColorByFestivalId}
+          personalEvents={personalEvents ?? []}
+          onDeletePersonalEvent={(id) => deletePersonalEvent.mutate(id)}
           locale={i18n.language}
           onSelectFestival={(item) =>
             router.push({ pathname: '/festival/[slug]', params: { slug: item.festival.slug } })
           }
         />
       )}
+
+      <AddPersonalEventSheet
+        visible={addEventOpen}
+        onSave={(input) => addPersonalEvent.mutate(input)}
+        onClose={() => setAddEventOpen(false)}
+      />
     </ScrollView>
   );
 }
@@ -132,7 +148,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
   },
-  headerSpacer: { width: 24 },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   empty: {
     fontFamily: typography.fonts.body,

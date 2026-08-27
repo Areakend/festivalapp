@@ -347,6 +347,11 @@
     "calendarView": "Calendar view",
     "calendarHint": "Tap a day to see the lineup"
   },
+  "calendar": {
+    "addEvent": "Add an event",
+    "eventTitle": "Title",
+    "eventTitlePlaceholder": "Wedding, trip, exam…"
+  },
   "share": {
     "nextTitle": "Share my next festival",
     "lastTitle": "Share my last festival",

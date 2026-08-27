@@ -17,6 +17,17 @@ export interface Profile {
   updated_at: string;
 }
 
+/** A user's own real-life commitment, shown alongside tracked festivals on
+ *  the planning calendar so a clash is visible before buying tickets. */
+export interface PersonalEvent {
+  id: string;
+  user_id: string;
+  title: string;
+  start_date: string;
+  end_date: string | null;
+  created_at: string;
+}
+
 export interface Festival {
   id: string;
   name: string;

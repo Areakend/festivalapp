@@ -35,6 +35,11 @@ export const colors = {
   statusPlanned: '#60A5FA',
   statusWishlist: '#F472B6',
   statusFavorite: '#FBBF24',
+
+  // custom personal calendar entries — deliberately outside the
+  // festival-status palette above so a real-life commitment never reads
+  // as another kind of festival status
+  customEvent: '#92400E',
 } as const;
 
 export const spacing = {
