@@ -14,10 +14,10 @@ import { colors, spacing, typography } from '@/theme';
 type PlanningStatus = Extract<FestivalStatus, 'planned' | 'wishlist' | 'favorite'>;
 
 // A festival counts once even if it matches several active filters — this
-// order decides which one "wins" for dedup purposes. Only favorite-over-
-// wishlist was explicitly asked for; planned is lowest since it's the
-// default/already-decided state, the other two are still-considering ones.
-const STATUS_PRIORITY: Record<PlanningStatus, number> = { favorite: 0, wishlist: 1, planned: 2 };
+// order decides which one "wins" for dedup purposes: planned (already
+// decided) beats favorite (locked in but not yet planned) beats wishlist
+// (still just considering).
+const STATUS_PRIORITY: Record<PlanningStatus, number> = { planned: 0, favorite: 1, wishlist: 2 };
 
 const STATUS_COLOR: Record<PlanningStatus, string> = {
   planned: colors.statusPlanned,
