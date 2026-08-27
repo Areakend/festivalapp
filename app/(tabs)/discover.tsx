@@ -16,8 +16,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Chip } from '@/components/ui/Chip';
 import { FilterSheet } from '@/components/ui/FilterSheet';
-import { MultiFilterSheet } from '@/components/ui/MultiFilterSheet';
-import { DateRangeSheet } from '@/components/ui/DateRangeSheet';
+import { FestivalFiltersSheet, type PeriodKey } from '@/components/festival/FestivalFiltersSheet';
 import {
   useFestivalIdsByArtistSearch,
   useFestivals,
@@ -31,8 +30,7 @@ import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag, countryName } from '@/utils/format';
 
 type SortKey = 'top100' | 'community' | 'myRating' | 'date' | 'name' | 'followedArtists';
-type PeriodKey = 'all' | 'upcoming' | '3m' | '6m' | 'custom';
-type SheetKey = 'genre' | 'country' | 'sort' | 'period' | 'customDates' | null;
+type SheetKey = 'filters' | 'sort' | null;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -79,12 +77,11 @@ export default function FestivalsScreen() {
     followedArtists: t('discover.sortFollowedArtists'),
   };
   const sortOptions = Object.keys(SORT_LABELS) as SortKey[];
-  const PERIOD_LABELS: Record<PeriodKey, string> = {
+  const PERIOD_LABELS: Record<Exclude<PeriodKey, 'custom'>, string> = {
     all: t('discover.periodAll'),
     upcoming: t('discover.periodUpcoming'),
     '3m': t('discover.period3m'),
     '6m': t('discover.period6m'),
-    custom: t('discover.periodCustom'),
   };
 
   const attendedIds = useMemo(
@@ -120,11 +117,17 @@ export default function FestivalsScreen() {
     });
     return {
       genreOptions: [...genres].sort().map((g) => ({ value: g, label: g })),
+      // searchText carries the localized name so typing "France" finds
+      // 🇫🇷 FR even though the chip itself just shows the flag + code.
       countryOptions: [...countries]
         .sort()
-        .map((c) => ({ value: c, label: `${countryFlag(c)}  ${c}` })),
+        .map((c) => ({
+          value: c,
+          label: `${countryFlag(c)} ${countryName(c, i18n.language)}`,
+          searchText: c,
+        })),
     };
-  }, [data]);
+  }, [data, i18n.language]);
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -258,31 +261,42 @@ export default function FestivalsScreen() {
   const formatDate = (iso: string | Date) =>
     new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
 
-  const periodChipLabel =
-    period === 'all'
-      ? t('discover.period')
-      : period === 'custom' && customRange
-        ? `${formatDate(customRange.from)} – ${formatDate(customRange.to)}`
-        : PERIOD_LABELS[period];
+  const activeFilterCount = genres.length + countries.length + (period !== 'all' ? 1 : 0);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
       <Text style={styles.title}>{t('tabs.festivals')}</Text>
 
-      <View style={styles.searchWrap}>
-        <TextInput
-          style={styles.search}
-          placeholder={t('discover.searchPlaceholder')}
-          placeholderTextColor={colors.textMuted}
-          value={search}
-          onChangeText={setSearch}
-          autoCapitalize="none"
-        />
-        {search.length > 0 && (
-          <Pressable style={styles.searchClear} onPress={() => setSearch('')} hitSlop={10}>
-            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
-          </Pressable>
-        )}
+      <View style={styles.searchRow}>
+        <View style={styles.searchWrap}>
+          <TextInput
+            style={styles.search}
+            placeholder={t('discover.searchPlaceholder')}
+            placeholderTextColor={colors.textMuted}
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+          />
+          {search.length > 0 && (
+            <Pressable style={styles.searchClear} onPress={() => setSearch('')} hitSlop={10}>
+              <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+            </Pressable>
+          )}
+        </View>
+        {/* Sort isn't a filter — it doesn't shrink the list, just its
+            order — so it gets its own control instead of sitting in the
+            chip row where it used to look like one more filter. */}
+        <Pressable
+          style={[styles.sortButton, openSheet === 'sort' && styles.sortButtonActive]}
+          onPress={() => setOpenSheet('sort')}
+          accessibilityLabel={t('discover.sort')}
+        >
+          <Ionicons
+            name="swap-vertical"
+            size={18}
+            color={openSheet === 'sort' ? colors.primary : colors.textSecondary}
+          />
+        </Pressable>
       </View>
 
       <View style={styles.filterRow}>
@@ -312,37 +326,12 @@ export default function FestivalsScreen() {
         />
         <Chip
           label={
-            genres.length === 0
-              ? t('festival.genres')
-              : genres.length === 1
-                ? (genres[0] ?? '')
-                : `${t('festival.genres')} (${genres.length})`
+            activeFilterCount === 0
+              ? t('discover.filters')
+              : `${t('discover.filters')} (${activeFilterCount})`
           }
-          active={genres.length > 0}
-          onPress={() => setOpenSheet('genre')}
-        />
-        <Chip
-          label={
-            countries.length === 0
-              ? t('djmag.filterCountry')
-              : countries.length === 1
-                ? `${countryFlag(countries[0] ?? '')} ${countries[0]}`
-                : `${t('djmag.filterCountry')} (${countries.length})`
-          }
-          active={countries.length > 0}
-          onPress={() => setOpenSheet('country')}
-        />
-        <Chip
-          label={periodChipLabel}
-          active={period !== 'all'}
-          activeColor={colors.statusPlanned}
-          onPress={() => setOpenSheet('period')}
-        />
-        <Chip
-          label={SORT_LABELS[sort]}
-          active
-          activeColor={colors.accent}
-          onPress={() => setOpenSheet('sort')}
+          active={activeFilterCount > 0}
+          onPress={() => setOpenSheet('filters')}
         />
       </View>
 
@@ -411,50 +400,20 @@ export default function FestivalsScreen() {
         />
       )}
 
-      <MultiFilterSheet
-        visible={openSheet === 'genre'}
-        title={t('festival.genres')}
-        options={genreOptions}
-        selected={genres}
-        onChange={setGenres}
-        onClose={() => setOpenSheet(null)}
-      />
-      <MultiFilterSheet
-        visible={openSheet === 'country'}
-        title={t('djmag.filterCountry')}
-        options={countryOptions}
-        selected={countries}
-        onChange={setCountries}
-        onClose={() => setOpenSheet(null)}
-      />
-      <FilterSheet
-        visible={openSheet === 'period'}
-        title={t('discover.period')}
-        options={(Object.keys(PERIOD_LABELS) as PeriodKey[]).map((key) => ({
-          value: key,
-          label: PERIOD_LABELS[key],
-        }))}
-        selected={period}
-        onSelect={(v) => {
-          if (v === 'custom') {
-            // Opens its own sheet instead of applying immediately —
-            // FilterSheet's onClose (called right after onSelect) would
-            // otherwise dismiss it before the user picks any dates.
-            setOpenSheet('customDates');
-            return;
-          }
-          setPeriod((v as PeriodKey) ?? 'all');
-        }}
-        onClose={() => setOpenSheet((s) => (s === 'period' ? null : s))}
-      />
-      <DateRangeSheet
-        visible={openSheet === 'customDates'}
-        from={customRange?.from ?? new Date()}
-        to={customRange?.to ?? new Date(Date.now() + 30 * DAY_MS)}
-        onApply={(from, to) => {
-          setCustomRange({ from, to });
-          setPeriod('custom');
-        }}
+      <FestivalFiltersSheet
+        visible={openSheet === 'filters'}
+        locale={i18n.language}
+        genreOptions={genreOptions}
+        genres={genres}
+        onChangeGenres={setGenres}
+        countryOptions={countryOptions}
+        countries={countries}
+        onChangeCountries={setCountries}
+        period={period}
+        periodLabels={PERIOD_LABELS}
+        customRange={customRange}
+        onChangePeriod={setPeriod}
+        onChangeCustomRange={(from, to) => setCustomRange({ from, to })}
         onClose={() => setOpenSheet(null)}
       />
       <FilterSheet
@@ -569,7 +528,24 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: spacing.lg,
   },
-  searchWrap: { marginBottom: spacing.md },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  searchWrap: { flex: 1 },
+  sortButton: {
+    width: 46,
+    height: 46,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sortButtonActive: { borderColor: colors.primary, backgroundColor: `${colors.primary}1A` },
   search: {
     backgroundColor: colors.surface,
     borderWidth: 1,

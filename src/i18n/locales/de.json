@@ -179,7 +179,12 @@
     "sortFollowedArtists": "Artists, denen ich folge",
     "searchPlaceholder": "Name, Land, Genre oder Künstler…",
     "artistMatchHint": "Passt zu Künstler {{name}}",
-    "toRate": "Zu bewerten"
+    "toRate": "Zu bewerten",
+    "filters": "Filter",
+    "filterSearchGenre": "Genre suchen…",
+    "filterSearchCountry": "Land suchen…",
+    "filterNoMatch": "Keine Treffer",
+    "applyFilters": "Anwenden"
   },
   "friends": {
     "title": "Freunde",

@@ -179,7 +179,12 @@
     "sortFollowedArtists": "Artiesten die ik volg",
     "searchPlaceholder": "Naam, land, genre of artiest…",
     "artistMatchHint": "Komt overeen met artiest {{name}}",
-    "toRate": "Te beoordelen"
+    "toRate": "Te beoordelen",
+    "filters": "Filters",
+    "filterSearchGenre": "Zoek een genre…",
+    "filterSearchCountry": "Zoek een land…",
+    "filterNoMatch": "Geen resultaten",
+    "applyFilters": "Toepassen"
   },
   "friends": {
     "title": "Vrienden",
