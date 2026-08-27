@@ -2,7 +2,6 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -57,6 +56,7 @@ import {
 } from '@/lib/calendar';
 import { colors, radii, spacing, typography } from '@/theme';
 import { countryFlag, countryName, formatCompact } from '@/utils/format';
+import { openInMaps } from '@/utils/maps';
 import type { FestivalStatus } from '@/types/domain';
 
 const STATUS_CONFIG: { status: FestivalStatus; icon: string; color: string; labelKey: string }[] = [
@@ -205,18 +205,6 @@ export default function FestivalDetailScreen() {
     .filter(Boolean)
     .join(', ');
 
-  const openInMaps = () => {
-    const label = encodeURIComponent(festival.name);
-    const hasCoords = festival.latitude != null && festival.longitude != null;
-    const coords = hasCoords ? `${festival.latitude},${festival.longitude}` : '';
-    const textQuery = encodeURIComponent(calendarLocation || festival.name);
-    const webUrl = `https://www.google.com/maps/search/?api=1&query=${hasCoords ? coords : textQuery}`;
-    const nativeUrl = Platform.select({
-      ios: hasCoords ? `maps://?ll=${coords}&q=${label}` : `maps://?q=${textQuery}`,
-      android: hasCoords ? `geo:${coords}?q=${coords}(${label})` : `geo:0,0?q=${textQuery}`,
-    });
-    void Linking.openURL(nativeUrl ?? webUrl).catch(() => Linking.openURL(webUrl));
-  };
   const calendarDays = upcomingEdition
     ? eachDay(upcomingEdition.start_date!, upcomingEdition.end_date ?? upcomingEdition.start_date!)
     : [];
@@ -384,7 +372,7 @@ export default function FestivalDetailScreen() {
             {countryFlag(festival.country)} {[festival.city, festival.venue].filter(Boolean).join(' · ')}
           </Text>
           {(festival.city || festival.venue) && (
-            <Pressable onPress={openInMaps} hitSlop={10}>
+            <Pressable onPress={() => openInMaps(festival, i18n.language)} hitSlop={10}>
               <Ionicons name="location-outline" size={16} color={colors.primary} />
             </Pressable>
           )}
