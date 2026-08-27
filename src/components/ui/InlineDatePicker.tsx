@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { buildMonthGrid, ymd } from '@/utils/calendarGrid';
@@ -50,6 +50,17 @@ export function InlineDatePicker({
     setMonth((m) => new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + delta, 1)));
   };
 
+  const swipeResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponderCapture: (_evt, gesture) =>
+        Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+      onPanResponderRelease: (_evt, gesture) => {
+        if (gesture.dx < -60) changeMonth(1);
+        else if (gesture.dx > 60) changeMonth(-1);
+      },
+    }),
+  ).current;
+
   const selectDay = (dateStr: string) => {
     const [y, m, d] = dateStr.split('-').map(Number) as [number, number, number];
     onChange(new Date(Date.UTC(y, m - 1, d)));
@@ -75,7 +86,7 @@ export function InlineDatePicker({
         ))}
       </View>
 
-      <View style={styles.grid}>
+      <View style={styles.grid} {...swipeResponder.panHandlers}>
         {grid.map((cell) => {
           const isSelected = cell.date === selectedYmd;
           const isToday = cell.date === todayYmd;

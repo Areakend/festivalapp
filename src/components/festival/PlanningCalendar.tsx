@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 
@@ -181,6 +181,22 @@ export function PlanningCalendar({
     setSelectedDate(null);
   };
 
+  // Same threshold as the festival-detail swipe: dx just needs to beat dy,
+  // not double it, since a real swipe rarely tracks perfectly horizontal
+  // from the first sampled move. changeMonth updates via a functional
+  // setState, so capturing it once here (rather than through a ref, like
+  // the festival swipe needs) is safe — it never closes over stale state.
+  const monthSwipeResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponderCapture: (_evt, gesture) =>
+        Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+      onPanResponderRelease: (_evt, gesture) => {
+        if (gesture.dx < -60) changeMonth(1);
+        else if (gesture.dx > 60) changeMonth(-1);
+      },
+    }),
+  ).current;
+
   const formatMeta = (item: CatalogItem) => {
     const e = item.nextEdition!;
     const start = new Date(`${e.start_date}T00:00:00Z`).toLocaleDateString(locale, {
@@ -252,7 +268,7 @@ export function PlanningCalendar({
         ))}
       </View>
 
-      <View style={styles.grid}>
+      <View style={styles.grid} {...monthSwipeResponder.panHandlers}>
         {grid.map((cell) => {
           const dayItems = itemsByDate.get(cell.date) ?? [];
           const isToday = cell.date === todayStr;
