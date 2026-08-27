@@ -147,8 +147,8 @@ export default function PlanningCalendarScreen() {
           <Chip
             label={
               selectedFriendIds.length === 0
-                ? t('tabs.friends')
-                : `${t('tabs.friends')} (${selectedFriendIds.length})`
+                ? t('friends.title')
+                : `${t('friends.title')} (${selectedFriendIds.length})`
             }
             active={selectedFriendIds.length > 0}
             onPress={() => setFriendsSheetOpen(true)}
@@ -174,7 +174,7 @@ export default function PlanningCalendarScreen() {
 
       <MultiFilterSheet
         visible={friendsSheetOpen}
-        title={t('tabs.friends')}
+        title={t('friends.title')}
         options={(friendships?.friends ?? []).map((f) => ({ value: f.profile.id, label: f.profile.display_name }))}
         selected={selectedFriendIds}
         onChange={setSelectedFriendIds}

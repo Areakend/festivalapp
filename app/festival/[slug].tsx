@@ -102,8 +102,13 @@ export default function FestivalDetailScreen() {
   navRef.current = { prevSlug, nextSlug };
   const swipeResponder = useRef(
     PanResponder.create({
+      // A real swipe rarely tracks perfectly horizontal from the first
+      // sampled move, so requiring dx to beat dy by 2x (and 20px minimum)
+      // was missing genuine attempts to the ScrollView's own vertical
+      // responder, which never gives the gesture back once it's claimed
+      // it. Lower bar here, same 60px commit distance on release below.
       onMoveShouldSetPanResponderCapture: (_evt, gesture) =>
-        Math.abs(gesture.dx) > 20 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 2,
+        Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
       onPanResponderRelease: (_evt, gesture) => {
         const { prevSlug: prev, nextSlug: next } = navRef.current;
         if (gesture.dx < -60 && next) {

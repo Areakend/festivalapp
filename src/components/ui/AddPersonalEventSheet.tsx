@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -13,22 +13,30 @@ interface AddPersonalEventSheetProps {
   onClose: () => void;
 }
 
+type DateField = 'from' | 'to';
+
 function toYmd(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Bottom-sheet form for a custom calendar entry — title + a date range,
- *  same picker pattern as DateRangeSheet. */
+/** Bottom-sheet form for a custom calendar entry — title + a date range.
+ *  On Android the picker only expands once its row is tapped (and the
+ *  keyboard is dismissed first) — an always-inline spinner next to a
+ *  text field meant the keyboard and the picker fought for the same
+ *  space, effectively hiding whichever lost. iOS keeps 'compact' mode,
+ *  which is already its own tap target and doesn't need this wrapping. */
 export function AddPersonalEventSheet({ visible, onSave, onClose }: AddPersonalEventSheetProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [title, setTitle] = useState('');
   const [from, setFrom] = useState(new Date());
   const [to, setTo] = useState(new Date());
+  const [openField, setOpenField] = useState<DateField | null>(null);
 
   const reset = () => {
     setTitle('');
     setFrom(new Date());
     setTo(new Date());
+    setOpenField(null);
   };
 
   const save = () => {
@@ -41,6 +49,41 @@ export function AddPersonalEventSheet({ visible, onSave, onClose }: AddPersonalE
     onClose();
   };
 
+  const dateField = (field: DateField, labelKey: string, value: Date, onChange: (d: Date) => void) => (
+    <View>
+      {Platform.OS === 'android' ? (
+        <>
+          <Pressable
+            style={styles.row}
+            onPress={() => {
+              Keyboard.dismiss();
+              setOpenField((f) => (f === field ? null : field));
+            }}
+          >
+            <Text style={styles.label}>{t(labelKey)}</Text>
+            <Text style={styles.dateValue}>
+              {value.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' })}
+            </Text>
+          </Pressable>
+          {openField === field && (
+            <DateTimePicker
+              value={value}
+              mode="date"
+              display="spinner"
+              onChange={(_, date) => date && onChange(date)}
+              themeVariant="dark"
+            />
+          )}
+        </>
+      ) : (
+        <View style={styles.row}>
+          <Text style={styles.label}>{t(labelKey)}</Text>
+          <DateTimePicker value={value} mode="date" display="compact" onChange={(_, date) => date && onChange(date)} />
+        </View>
+      )}
+    </View>
+  );
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
@@ -51,27 +94,10 @@ export function AddPersonalEventSheet({ visible, onSave, onClose }: AddPersonalE
           value={title}
           onChangeText={setTitle}
           placeholder={t('calendar.eventTitlePlaceholder')}
+          onFocus={() => setOpenField(null)}
         />
-        <View style={styles.row}>
-          <Text style={styles.label}>{t('discover.periodFrom')}</Text>
-          <DateTimePicker
-            value={from}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'compact' : 'spinner'}
-            onChange={(_, date) => date && setFrom(date)}
-            themeVariant="dark"
-          />
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>{t('discover.periodTo')}</Text>
-          <DateTimePicker
-            value={to}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'compact' : 'spinner'}
-            onChange={(_, date) => date && setTo(date)}
-            themeVariant="dark"
-          />
-        </View>
+        {dateField('from', 'discover.periodFrom', from, setFrom)}
+        {dateField('to', 'discover.periodTo', to, setTo)}
         <Button label={t('common.save')} onPress={save} disabled={!title.trim()} />
         <Button
           label={t('common.cancel')}
@@ -105,5 +131,10 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.md,
     color: colors.textSecondary,
+  },
+  dateValue: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.md,
+    color: colors.primary,
   },
 });
