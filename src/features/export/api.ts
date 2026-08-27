@@ -8,6 +8,8 @@ export interface ExportTrack {
   title: string;
   deezerUrl: string;
   spotifySearchUrl: string;
+  youtubeMusicSearchUrl: string;
+  soundcloudSearchUrl: string;
 }
 
 export interface GeneratePlaylistExportResult {
@@ -19,9 +21,11 @@ export interface GeneratePlaylistExportResult {
 }
 
 /**
- * Builds a shareable track list without requiring a Spotify or Deezer
- * account: each track links to its real Deezer page (public catalog lookup,
- * no OAuth needed) and to a Spotify search for the same artist/title.
+ * Builds a shareable track list without requiring an account on any of
+ * these services: each track links to its real Deezer page (public catalog
+ * lookup, no OAuth needed) plus a search deep link for Spotify, YouTube
+ * Music and SoundCloud — none of those three can be resolved to an actual
+ * track here (see generate-playlist-export), so the user picks the match.
  */
 export function useGeneratePlaylistExport() {
   return useMutation({

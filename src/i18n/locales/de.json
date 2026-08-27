@@ -259,10 +259,12 @@
   },
   "export": {
     "title": "Universeller Export",
-    "description": "Kein Konto nötig: Jeder Titel öffnet sich direkt in Deezer oder als Spotify-Suche.",
+    "description": "Kein Konto nötig: Jeder Titel öffnet sich direkt in Deezer oder als Suche bei Spotify, YouTube Music oder SoundCloud.",
     "generate": "Export erstellen",
     "deezer": "Deezer",
-    "spotify": "Spotify"
+    "spotify": "Spotify",
+    "youtubeMusic": "YouTube Music",
+    "soundcloud": "SoundCloud"
   },
   "settings": {
     "title": "Einstellungen",

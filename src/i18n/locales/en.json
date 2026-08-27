@@ -259,10 +259,12 @@
   },
   "export": {
     "title": "Universal export",
-    "description": "No account needed: each track opens directly in Deezer or as a Spotify search.",
+    "description": "No account needed: each track opens directly in Deezer, or as a Spotify, YouTube Music or SoundCloud search.",
     "generate": "Generate export",
     "deezer": "Deezer",
-    "spotify": "Spotify"
+    "spotify": "Spotify",
+    "youtubeMusic": "YouTube Music",
+    "soundcloud": "SoundCloud"
   },
   "settings": {
     "title": "Settings",

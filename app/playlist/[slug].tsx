@@ -137,6 +137,16 @@ export default function PlaylistScreen() {
                   variant="ghost"
                   onPress={() => void Linking.openURL(track.spotifySearchUrl)}
                 />
+                <Button
+                  label={t('export.youtubeMusic')}
+                  variant="ghost"
+                  onPress={() => void Linking.openURL(track.youtubeMusicSearchUrl)}
+                />
+                <Button
+                  label={t('export.soundcloud')}
+                  variant="ghost"
+                  onPress={() => void Linking.openURL(track.soundcloudSearchUrl)}
+                />
               </View>
             </View>
           ))}
@@ -211,12 +221,9 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   trackRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
-  trackInfo: { flexShrink: 1, flexGrow: 1 },
+  trackInfo: {},
   trackTitle: {
     fontFamily: typography.fonts.bodySemiBold,
     fontSize: typography.sizes.sm,
@@ -227,5 +234,5 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: colors.textSecondary,
   },
-  trackLinks: { flexDirection: 'row', gap: spacing.xs },
+  trackLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
 });

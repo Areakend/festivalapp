@@ -10,6 +10,8 @@ interface ExportTrack {
   title: string;
   deezerUrl: string;
   spotifySearchUrl: string;
+  youtubeMusicSearchUrl: string;
+  soundcloudSearchUrl: string;
 }
 
 Deno.serve(async (req) => {
@@ -83,15 +85,20 @@ Deno.serve(async (req) => {
       matchedArtists += 1;
       const topTracks = await getDeezerArtistTopTracks(deezerArtistId, TRACKS_PER_ARTIST);
       for (const track of topTracks.data ?? []) {
+        const query = encodeURIComponent(`${artist.name} ${track.title}`);
         tracks.push({
           artistName: artist.name,
           title: track.title,
           deezerUrl: `https://www.deezer.com/track/${track.id}`,
-          // No Spotify catalog access without going through the Web API (currently
-          // blocked — see spotify-auth), so this is a search deep link rather than
-          // a resolved track: it opens Spotify's app/site with the right query,
-          // the user picks the matching result themselves.
-          spotifySearchUrl: `https://open.spotify.com/search/${encodeURIComponent(`${artist.name} ${track.title}`)}`,
+          // Neither Spotify (no catalog access outside the curator's own Web
+          // API session — see spotify-auth), YouTube Music (no public API at
+          // all, only the quota-limited authenticated YouTube Data API) nor
+          // SoundCloud (closed app registrations, see 20260705130000) can be
+          // resolved to a real track link here — these three are all search
+          // deep links instead, the user picks the matching result themselves.
+          spotifySearchUrl: `https://open.spotify.com/search/${query}`,
+          youtubeMusicSearchUrl: `https://music.youtube.com/search?q=${query}`,
+          soundcloudSearchUrl: `https://soundcloud.com/search?q=${query}`,
         });
       }
     }

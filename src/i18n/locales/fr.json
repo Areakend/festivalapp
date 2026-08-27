@@ -259,10 +259,12 @@
   },
   "export": {
     "title": "Export universel",
-    "description": "Sans compte : chaque titre s'ouvre directement dans Deezer ou dans une recherche Spotify.",
+    "description": "Sans compte : chaque titre s'ouvre directement dans Deezer, ou dans une recherche Spotify, YouTube Music ou SoundCloud.",
     "generate": "Générer l'export",
     "deezer": "Deezer",
-    "spotify": "Spotify"
+    "spotify": "Spotify",
+    "youtubeMusic": "YouTube Music",
+    "soundcloud": "SoundCloud"
   },
   "settings": {
     "title": "Paramètres",

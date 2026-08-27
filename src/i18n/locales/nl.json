@@ -259,10 +259,12 @@
   },
   "export": {
     "title": "Universele export",
-    "description": "Geen account nodig: elk nummer opent direct in Deezer of als Spotify-zoekopdracht.",
+    "description": "Geen account nodig: elk nummer opent direct in Deezer of als zoekopdracht in Spotify, YouTube Music of SoundCloud.",
     "generate": "Export genereren",
     "deezer": "Deezer",
-    "spotify": "Spotify"
+    "spotify": "Spotify",
+    "youtubeMusic": "YouTube Music",
+    "soundcloud": "SoundCloud"
   },
   "settings": {
     "title": "Instellingen",

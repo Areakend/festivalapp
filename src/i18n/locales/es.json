@@ -259,10 +259,12 @@
   },
   "export": {
     "title": "Exportación universal",
-    "description": "Sin cuenta: cada pista se abre directamente en Deezer o como búsqueda en Spotify.",
+    "description": "Sin cuenta: cada pista se abre directamente en Deezer o como búsqueda en Spotify, YouTube Music o SoundCloud.",
     "generate": "Generar exportación",
     "deezer": "Deezer",
-    "spotify": "Spotify"
+    "spotify": "Spotify",
+    "youtubeMusic": "YouTube Music",
+    "soundcloud": "SoundCloud"
   },
   "settings": {
     "title": "Ajustes",
