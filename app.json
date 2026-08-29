@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mainstage",
     "slug": "festiq",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "platforms": [
       "ios",
       "android"
