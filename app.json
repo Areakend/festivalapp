@@ -35,6 +35,7 @@
       ]
     },
     "plugins": [
+      "./plugins/withLargeScreenCompat.js",
       "expo-router",
       "expo-secure-store",
       "expo-localization",
