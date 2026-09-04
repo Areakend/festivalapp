@@ -14,6 +14,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
     // Only password-type fields get the reveal toggle; everything else
     // behaves exactly as before.
     const [revealed, setRevealed] = useState(false);
+    const [focused, setFocused] = useState(false);
     const isPassword = !!secureTextEntry;
     // Password fields keep the reveal toggle in this slot instead — a
     // clear button there too would fight it for the same space.
@@ -29,10 +30,19 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
             style={[
               styles.input,
               (isPassword || showClear) && styles.inputWithIcon,
+              focused && styles.inputFocused,
               !!error && styles.inputError,
             ]}
             secureTextEntry={isPassword && !revealed}
             {...inputProps}
+            onFocus={(e) => {
+              setFocused(true);
+              inputProps.onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              setFocused(false);
+              inputProps.onBlur?.(e);
+            }}
           />
           {isPassword && (
             <Pressable
@@ -86,6 +96,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
   },
   inputWithIcon: { paddingRight: spacing.xxxl },
+  inputFocused: { borderColor: colors.primary },
   inputError: { borderColor: colors.danger },
   reveal: {
     position: 'absolute',

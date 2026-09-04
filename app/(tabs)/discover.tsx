@@ -267,7 +267,17 @@ export default function FestivalsScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
-      <Text style={styles.title}>{t('tabs.festivals')}</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>{t('tabs.festivals')}</Text>
+        <Pressable
+          style={styles.addButton}
+          onPress={() => router.push('/request-festival')}
+          hitSlop={8}
+          accessibilityLabel={t('requestFestival.entryPoint')}
+        >
+          <Ionicons name="add" size={22} color={colors.primary} />
+        </Pressable>
+      </View>
 
       <View style={styles.searchRow}>
         <View style={styles.searchWrap}>
@@ -540,11 +550,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     paddingHorizontal: spacing.xl,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
   title: {
     fontFamily: typography.fonts.heading,
     fontSize: typography.sizes.xxl,
     color: colors.text,
-    marginBottom: spacing.lg,
+  },
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.full,
+    backgroundColor: `${colors.primary}1A`,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchRow: {
     flexDirection: 'row',

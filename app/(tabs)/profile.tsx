@@ -473,6 +473,14 @@ export default function ProfileScreen() {
         </View>
       </Pressable>
 
+      <Pressable style={styles.invitesRow} onPress={() => router.push('/request-festival')}>
+        <View style={styles.invitesRowLeft}>
+          <Ionicons name="add-circle-outline" size={20} color={colors.text} />
+          <Text style={styles.invitesRowText}>{t('requestFestival.entryPoint')}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </Pressable>
+
       {/* Settings — name, language, session; collapsed by default so the
           screen stays about festivals, not forms. */}
       <View style={styles.card}>
@@ -520,11 +528,6 @@ export default function ProfileScreen() {
                 </View>
               </>
             )}
-            <Button
-              label={t('requestFestival.entryPoint')}
-              variant="ghost"
-              onPress={() => router.push('/request-festival')}
-            />
             <Button
               label={t('moderation.blockedUsers')}
               variant="ghost"
