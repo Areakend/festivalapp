@@ -111,6 +111,26 @@ jobs:
         if: ${{ inputs.local }}
         run: eas build --platform ${{ inputs.platform }} --profile ${{ inputs.profile }} --local --non-interactive --output "${{ github.workspace }}/app.${{ steps.vars.outputs.ext }}"
 
+      # `autoIncrement` (production profile) bumps versionCode/buildNumber in
+      # app.json on this runner only — nothing persisted it, so every later
+      # build started from the last *committed* number and re-used one Apple
+      # / Play had already accepted (three rejected submissions in one week).
+      # Commit the bump straight after the build, before submit, so a failed
+      # submission can't lose it either.
+      - name: Sync bumped version back to git
+        if: ${{ inputs.local && inputs.profile == 'production' }}
+        run: |
+          if git diff --quiet -- app.json; then
+            echo "app.json unchanged, nothing to sync"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.json
+          git commit -m "chore: sync ${{ inputs.platform }} build number after production build ${{ github.run_number }}"
+          git pull --rebase origin "${{ github.ref_name }}"
+          git push origin "HEAD:${{ github.ref_name }}"
+
       - name: Upload build
         if: ${{ inputs.local }}
         uses: actions/upload-artifact@v4

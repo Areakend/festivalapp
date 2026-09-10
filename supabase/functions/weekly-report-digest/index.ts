@@ -29,11 +29,21 @@ function escapeHtml(s: string): string {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  // The gateway's JWT check accepts any valid token — including the public
+  // anon key shipped inside the app — so it alone doesn't stop a user from
+  // firing this (and spamming the operator inbox / Resend quota). pg_cron
+  // calls with the service-role key; require it.
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const bearer = req.headers.get('Authorization')?.replace('Bearer ', '');
+  if (bearer !== serviceRoleKey) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, serviceRoleKey);
 
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data: reports, error } = await supabase

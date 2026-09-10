@@ -17,7 +17,13 @@ export function useMyFollowedArtists() {
     queryKey: ['my-followed-artists', userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase.from('artist_follows').select('artist_id');
+      // Explicit user_id filter: the "artist follows public read" policy
+      // lets every user's rows through (needed for friend affinity), so
+      // without it this returned everyone's follows as "mine".
+      const { data, error } = await supabase
+        .from('artist_follows')
+        .select('artist_id')
+        .eq('user_id', userId!);
       if (error) throw error;
       return new Set((data ?? []).map((r) => r.artist_id as string));
     },
@@ -31,7 +37,10 @@ export function useMyFollowedArtistProfiles() {
     queryKey: ['my-followed-artist-profiles', userId],
     enabled: !!userId,
     queryFn: async (): Promise<ArtistProfile[]> => {
-      const { data, error } = await supabase.from('artist_follows').select('artists(id, name, genres)');
+      const { data, error } = await supabase
+        .from('artist_follows')
+        .select('artists(id, name, genres)')
+        .eq('user_id', userId!);
       if (error) throw error;
       return (data as unknown as { artists: ArtistProfile }[])
         .map((r) => r.artists)

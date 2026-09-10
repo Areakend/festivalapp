@@ -87,7 +87,6 @@ export interface UserAttendance {
   festival_id: string;
   edition_id: string | null;
   attended_year: number;
-  notes: string | null;
   created_at: string;
   updated_at: string;
 }

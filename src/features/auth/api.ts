@@ -46,16 +46,12 @@ export async function signInWithEmail(email: string, password: string) {
  * inside the same transaction as the auth.users insert.
  */
 export async function checkUsernameAvailable(username: string): Promise<boolean> {
-  // ilike treats % and _ as wildcards — escape them so the check is a real
-  // case-insensitive equality, not an accidental pattern match.
-  const escaped = username.replace(/[%_\\]/g, (m) => `\\${m}`);
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id')
-    .ilike('display_name', escaped)
-    .maybeSingle();
+  // Runs before the user has a session, and profiles is no longer readable
+  // anonymously — a security-definer RPC answers with a boolean instead of
+  // handing anon the table (see 20260911120000_security_checkup).
+  const { data, error } = await supabase.rpc('is_username_available', { candidate: username });
   if (error) throw error;
-  return !data;
+  return data === true;
 }
 
 export async function signUpWithEmail(email: string, password: string, username: string) {

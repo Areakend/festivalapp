@@ -40,9 +40,7 @@
       "expo-secure-store",
       "expo-localization",
       "expo-web-browser",
-      "expo-updates",
       "expo-apple-authentication",
-      "@react-native-community/datetimepicker",
       [
         "expo-image-picker",
         {

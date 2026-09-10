@@ -498,7 +498,15 @@ export default function FestivalDetailScreen() {
                   size={22}
                   color={active ? color : colors.textSecondary}
                 />
-                <Text style={[styles.statusLabel, active && { color }]}>{t(labelKey)}</Text>
+                {/* "Planned" has no edition attached (statuses are per
+                    festival), so say which edition it currently means —
+                    right after an edition ends, a bare "Planned" reads as
+                    stale when it actually points at next year. */}
+                <Text style={[styles.statusLabel, active && { color }]}>
+                  {status === 'planned' && active && nextEdition
+                    ? `${t(labelKey)} ${nextEdition.year}`
+                    : t(labelKey)}
+                </Text>
               </Pressable>
             );
           })}
