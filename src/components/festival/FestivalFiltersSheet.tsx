@@ -96,50 +96,10 @@ export function FestivalFiltersSheet({
       <View style={styles.sheet}>
         <View style={styles.grip} />
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('festival.genres')}</Text>
-            <SearchBox
-              value={genreQuery}
-              onChangeText={setGenreQuery}
-              placeholder={t('discover.filterSearchGenre')}
-            />
-            <View style={styles.chipList}>
-              {filteredGenres.map((option) => (
-                <Chip
-                  key={option.value}
-                  label={option.label}
-                  active={genres.includes(option.value)}
-                  onPress={() => onChangeGenres(toggleValue(genres, option.value))}
-                />
-              ))}
-              {filteredGenres.length === 0 && (
-                <Text style={styles.emptyText}>{t('discover.filterNoMatch')}</Text>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('djmag.filterCountry')}</Text>
-            <SearchBox
-              value={countryQuery}
-              onChangeText={setCountryQuery}
-              placeholder={t('discover.filterSearchCountry')}
-            />
-            <View style={styles.chipList}>
-              {filteredCountries.map((option) => (
-                <Chip
-                  key={option.value}
-                  label={option.label}
-                  active={countries.includes(option.value)}
-                  onPress={() => onChangeCountries(toggleValue(countries, option.value))}
-                />
-              ))}
-              {filteredCountries.length === 0 && (
-                <Text style={styles.emptyText}>{t('discover.filterNoMatch')}</Text>
-              )}
-            </View>
-          </View>
-
+          {/* Period first: it's a fixed, short list of chips (never grows),
+              unlike Genres/Pays below whose chip lists keep growing as the
+              catalog does — burying it last meant scrolling past an
+              ever-longer list just to pick a date range. */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('discover.period')}</Text>
             <View style={styles.chipList}>
@@ -199,6 +159,50 @@ export function FestivalFiltersSheet({
                 )}
               </View>
             )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('festival.genres')}</Text>
+            <SearchBox
+              value={genreQuery}
+              onChangeText={setGenreQuery}
+              placeholder={t('discover.filterSearchGenre')}
+            />
+            <View style={styles.chipList}>
+              {filteredGenres.map((option) => (
+                <Chip
+                  key={option.value}
+                  label={option.label}
+                  active={genres.includes(option.value)}
+                  onPress={() => onChangeGenres(toggleValue(genres, option.value))}
+                />
+              ))}
+              {filteredGenres.length === 0 && (
+                <Text style={styles.emptyText}>{t('discover.filterNoMatch')}</Text>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('djmag.filterCountry')}</Text>
+            <SearchBox
+              value={countryQuery}
+              onChangeText={setCountryQuery}
+              placeholder={t('discover.filterSearchCountry')}
+            />
+            <View style={styles.chipList}>
+              {filteredCountries.map((option) => (
+                <Chip
+                  key={option.value}
+                  label={option.label}
+                  active={countries.includes(option.value)}
+                  onPress={() => onChangeCountries(toggleValue(countries, option.value))}
+                />
+              ))}
+              {filteredCountries.length === 0 && (
+                <Text style={styles.emptyText}>{t('discover.filterNoMatch')}</Text>
+              )}
+            </View>
           </View>
         </ScrollView>
         <Button label={t('discover.applyFilters')} onPress={onClose} style={styles.applyButton} />
