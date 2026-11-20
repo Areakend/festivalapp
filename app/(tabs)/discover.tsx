@@ -18,6 +18,7 @@ import { Chip } from '@/components/ui/Chip';
 import { FilterSheet } from '@/components/ui/FilterSheet';
 import { InfoSheet } from '@/components/ui/InfoSheet';
 import { FestivalFiltersSheet, type PeriodKey } from '@/components/festival/FestivalFiltersSheet';
+import { defaultCustomRange } from '@/utils/periodRange';
 import {
   useFestivalIdsByArtistSearch,
   useFestivals,
@@ -135,14 +136,19 @@ export default function FestivalsScreen() {
     if (!data) return [];
     const q = search.trim().toLowerCase();
     const now = Date.now();
-    const periodStart = period === 'custom' && customRange ? customRange.from.getTime() : now;
+    // Same fallback the filter sheet displays while customRange is still
+    // null — applying a different implicit window here (from "now", no end)
+    // is what made "Personnalisée" with untouched dates ignore the range the
+    // sheet showed. Whole UTC days, so a festival starting today is in.
+    const customWindow = period === 'custom' ? (customRange ?? defaultCustomRange()) : null;
+    const periodStart = customWindow ? customWindow.from.getTime() : now;
     const periodEnd =
       period === '3m'
         ? now + 92 * DAY_MS
         : period === '6m'
           ? now + 183 * DAY_MS
-          : period === 'custom' && customRange
-            ? customRange.to.getTime()
+          : customWindow
+            ? customWindow.to.getTime()
             : Infinity;
 
     // When a query's active, a direct name match should always lead over a
@@ -434,7 +440,12 @@ export default function FestivalsScreen() {
         period={period}
         periodLabels={PERIOD_LABELS}
         customRange={customRange}
-        onChangePeriod={setPeriod}
+        onChangePeriod={(next) => {
+          setPeriod(next);
+          // Make the default window real state the moment "Personnalisée" is
+          // chosen, so what the sheet shows and what's applied can't diverge.
+          if (next === 'custom') setCustomRange((current) => current ?? defaultCustomRange());
+        }}
         onChangeCustomRange={(from, to) => setCustomRange({ from, to })}
         onClose={() => setOpenSheet(null)}
       />
