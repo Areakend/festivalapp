@@ -6,6 +6,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Chip } from '@/components/ui/Chip';
 import { Button } from '@/components/ui/Button';
 import { InlineDatePicker } from '@/components/ui/InlineDatePicker';
+import { defaultCustomRange, withFrom, withTo } from '@/utils/periodRange';
 import { colors, radii, spacing, typography } from '@/theme';
 
 /** 'custom' needs a date range (customRange below); the others are fixed
@@ -87,8 +88,16 @@ export function FestivalFiltersSheet({
   );
 
   const periodKeys = Object.keys(periodLabels) as Exclude<PeriodKey, 'custom'>[];
-  const customFrom = customRange?.from ?? new Date();
-  const customTo = customRange?.to ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  // The same window the list applies while customRange is still null (see
+  // utils/periodRange) — what's shown here must be what's filtered.
+  const range = customRange ?? defaultCustomRange();
+  const customFrom = range.from;
+  const customTo = range.to;
+  // Dates are whole UTC days (InlineDatePicker's convention), so they have to
+  // be formatted in UTC too: in the local zone a viewer behind UTC read the
+  // day before the one they had picked.
+  const formatDay = (d: Date) =>
+    d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -124,15 +133,14 @@ export function FestivalFiltersSheet({
                   onPress={() => setOpenCustomField((f) => (f === 'from' ? null : 'from'))}
                 >
                   <Text style={styles.customLabel}>{t('discover.periodFrom')}</Text>
-                  <Text style={styles.customValue}>
-                    {customFrom.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </Text>
+                  <Text style={styles.customValue}>{formatDay(customFrom)}</Text>
                 </Pressable>
                 {openCustomField === 'from' && (
                   <InlineDatePicker
                     value={customFrom}
                     onChange={(d) => {
-                      onChangeCustomRange(d, customTo);
+                      const next = withFrom(range, d);
+                      onChangeCustomRange(next.from, next.to);
                       setOpenCustomField(null);
                     }}
                     locale={locale}
@@ -143,15 +151,14 @@ export function FestivalFiltersSheet({
                   onPress={() => setOpenCustomField((f) => (f === 'to' ? null : 'to'))}
                 >
                   <Text style={styles.customLabel}>{t('discover.periodTo')}</Text>
-                  <Text style={styles.customValue}>
-                    {customTo.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </Text>
+                  <Text style={styles.customValue}>{formatDay(customTo)}</Text>
                 </Pressable>
                 {openCustomField === 'to' && (
                   <InlineDatePicker
                     value={customTo}
                     onChange={(d) => {
-                      onChangeCustomRange(customFrom, d);
+                      const next = withTo(range, d);
+                      onChangeCustomRange(next.from, next.to);
                       setOpenCustomField(null);
                     }}
                     locale={locale}
